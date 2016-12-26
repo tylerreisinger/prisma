@@ -1,9 +1,13 @@
 use std::fmt;
+use std::slice;
+use std::mem;
 use num::{Float, NumCast};
 use channel::{ColorChannel, BoundedChannel, cast};
 use approx;
 
 use color;
+
+pub struct RgbTag;
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Rgb<T> { 
@@ -27,36 +31,28 @@ impl<T: ColorChannel> Rgb<T> {
             b: BoundedChannel::new(blue)}
     }
 
+    #[inline]
+    pub fn from_array(values: &[T; 3]) -> Self {
+        Rgb{r: BoundedChannel::new(values[0]),
+            g: BoundedChannel::new(values[1]),
+            b: BoundedChannel::new(values[2])}
+    }
+
     pub fn broadcast(value: T) -> Self {
         Rgb::from_channels(value.clone(), value.clone(), value.clone())
     }
 
-    pub fn clamp(&self, val: T) -> Self {
-        Rgb{
-            r: self.r.clone().clamp(val.clone()),
-            g: self.g.clone().clamp(val.clone()),
-            b: self.b.clone().clamp(val.clone())}
-    }
-
-    pub fn invert(&self) -> Self {
-        Rgb{
-            r: self.r.clone().invert(),
-            g: self.g.clone().invert(),
-            b: self.b.clone().invert(),
-        }
-    }
-
     #[inline]
-    pub fn red(&self) -> &T {
-        &self.r.0
+    pub fn red(&self) -> T {
+        self.r.0.clone()
     }
     #[inline]
-    pub fn green(&self) -> &T {
-        &self.g.0
+    pub fn green(&self) -> T {
+        self.g.0.clone()
     }
     #[inline]
-    pub fn blue(&self) -> &T {
-        &self.b.0
+    pub fn blue(&self) -> T {
+        self.b.0.clone()
     }
     #[inline]
     pub fn red_mut(&mut self) -> &mut T {
@@ -99,6 +95,100 @@ impl<T: ColorChannel> Rgb<T> {
     }
 }
 
+impl<T: ColorChannel> color::Color for Rgb<T> {
+    type Component = T;
+    type Tag = RgbTag;
+
+    fn num_channels() -> u32 {
+        3
+    }
+
+    fn from_slice(values: &[Self::Component]) -> Self {
+        Rgb{r: BoundedChannel::new(values[0]),
+            g: BoundedChannel::new(values[1]),
+            b: BoundedChannel::new(values[2])}
+    }
+
+    fn as_slice(&self) -> &[Self::Component] {
+        unsafe {
+            let ptr: *const Self::Component = mem::transmute(self);
+            slice::from_raw_parts(ptr, Self::num_channels() as usize)
+        }
+    }
+
+}
+
+impl<T: ColorChannel> color::Color3 for Rgb<T> {
+    fn as_tuple(&self) -> (Self::Component, Self::Component, Self::Component) {
+        (self.r.0, self.g.0, self.b.0)
+    }
+
+    fn as_array(&self) -> [Self::Component; 3] {
+        [self.r.0, self.g.0, self.b.0]
+    }
+
+    #[inline]
+    fn from_tuple(values: &(Self::Component, Self::Component, Self::Component)) -> Self {
+        Rgb{r: BoundedChannel::new(values.0),
+            g: BoundedChannel::new(values.1),
+            b: BoundedChannel::new(values.2)}
+    }
+
+}
+
+impl<T: ColorChannel> color::ComponentMap for Rgb<T> {
+    fn component_map<F> (&self, mut f: F) -> Self 
+            where F: FnMut(Self::Component) -> Self::Component {
+        Rgb{r: BoundedChannel::new(f(self.red().clone())),
+            g: BoundedChannel::new(f(self.green().clone())),
+            b: BoundedChannel::new(f(self.blue().clone()))}
+    }
+
+    fn component_map_binary<F>(&self, other: &Self, mut f: F) -> Self 
+            where F: FnMut(Self::Component, Self::Component) -> Self::Component {
+        Rgb{r: BoundedChannel::new(
+                f(self.red(), other.red())),
+            g: BoundedChannel::new(
+                f(self.green(), other.green())),
+            b: BoundedChannel::new(
+                f(self.blue(), other.blue()))}
+    }
+}
+
+impl<T: ColorChannel> color::Invert for Rgb<T> {
+    fn invert(&self) -> Self {
+        Rgb{
+            r: self.r.clone().invert(),
+            g: self.g.clone().invert(),
+            b: self.b.clone().invert(),
+        }
+    }
+}
+
+impl<T: ColorChannel> color::Bounded for Rgb<T> {
+    fn clamp(&self, min: Self::Component, max: Self::Component) -> Self {
+        Rgb{r: self.r.clamp(min, max),
+            g: self.g.clamp(min, max),
+            b: self.b.clamp(min, max)}
+    }
+
+    fn normalize(&self) -> Self {
+        Rgb{r: self.r.normalize(),
+            g: self.g.normalize(),
+            b: self.b.normalize()}
+    }
+
+    fn is_normalized(&self) -> bool {
+        false
+    }
+}
+
+impl<T: ColorChannel> Default for Rgb<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T: ColorChannel + Float + approx::ApproxEq> approx::ApproxEq for Rgb<T> 
         where T::Epsilon: Clone {
     type Epsilon = T::Epsilon;
@@ -117,27 +207,17 @@ impl<T: ColorChannel + Float + approx::ApproxEq> approx::ApproxEq for Rgb<T>
 
     fn relative_eq(&self, other: &Self, epsilon: Self::Epsilon, 
            max_relative: Self::Epsilon) -> bool {
-        self.red().relative_eq(other.red(), epsilon.clone(), max_relative.clone())
-        && self.green().relative_eq(other.green(), epsilon.clone(), max_relative.clone())
-        && self.blue().relative_eq(other.blue(), epsilon, max_relative)
+        self.red().relative_eq(&other.red(), epsilon.clone(), max_relative.clone())
+        && self.green().relative_eq(&other.green(), epsilon.clone(), max_relative.clone())
+        && self.blue().relative_eq(&other.blue(), epsilon, max_relative)
     }
 
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        self.red().ulps_eq(other.red(), epsilon.clone(), max_ulps)
-        && self.green().ulps_eq(other.green(), epsilon.clone(), max_ulps)
-        && self.blue().ulps_eq(other.blue(), epsilon.clone(), max_ulps)
+        self.red().ulps_eq(&other.red(), epsilon.clone(), max_ulps)
+        && self.green().ulps_eq(&other.green(), epsilon.clone(), max_ulps)
+        && self.blue().ulps_eq(&other.blue(), epsilon.clone(), max_ulps)
     }
 
-}
-
-impl<T: ColorChannel> color::Color3<T> for Rgb<T> {
-    fn as_tuple(&self) -> (T, T, T) {
-        (self.r.0, self.g.0, self.b.0)
-    }
-
-    fn as_array(&self) -> [T; 3] {
-        [self.r.0, self.g.0, self.b.0]
-    }
 }
 
 impl<T: ColorChannel + fmt::Display> fmt::Display for Rgb<T> {
@@ -148,25 +228,26 @@ impl<T: ColorChannel + fmt::Display> fmt::Display for Rgb<T> {
 
 #[cfg(test)]
 mod test {
-    use ::rgb::Rgb;
-    use ::channel::ColorChannel;
+    use ::rgb::*;
+    use ::color;
+    use ::color::{Color, Invert};
 
     #[test]
     fn test_construct() {
         {
             let color = Rgb::from_channels(0u8, 0, 0);
-            assert_eq!(*color.red(), 0u8);
-            assert_eq!(*color.green(), 0u8);
-            assert_eq!(*color.blue(), 0u8);
+            assert_eq!(color.red(), 0u8);
+            assert_eq!(color.green(), 0u8);
+            assert_eq!(color.blue(), 0u8);
 
             let c2 = color.clone();
             assert_eq!(color, c2);
         }
         {
             let color: Rgb<u8> = Rgb::new();
-            assert_eq!(*color.red(), 0u8);
-            assert_eq!(*color.green(), 0u8);
-            assert_eq!(*color.blue(), 0u8);
+            assert_eq!(color.red(), 0u8);
+            assert_eq!(color.green(), 0u8);
+            assert_eq!(color.blue(), 0u8);
         }
         {
             let color = Rgb::broadcast(0.5_f32);
@@ -201,5 +282,34 @@ mod test {
 
         assert_eq!(c.invert(), Rgb::from_channels(55u8, 255, 0));
         assert_ulps_eq!(c2.invert(), Rgb::from_channels(0.2_f32, 1.0, 0.75));
+    }
+
+    #[test]
+    fn as_slice() {
+        let c = Rgb::from_channels(100u8, 0, 125);
+        let c2 = Rgb::from_channels(1.0, 0.25, 0.125);
+
+        assert_eq!(c.as_slice()[0], 100u8);
+        assert_eq!(c.as_slice()[1], 0u8);
+        assert_eq!(c.as_slice()[2], 125u8);
+
+        assert_ulps_eq!(Rgb::from_slice(c2.as_slice()), c2);
+    }
+
+    #[test]
+    fn color_cast() {
+        let c = Rgb::from_channels(127, 0, 255);
+        let c2 = color::color_cast::<Rgb<f32>, _>(&c);
+        let c3 = color::color_cast::<Rgb<u8>, _>(&c2);
+
+        assert_ulps_eq!(c2.red(), 127.0 / 255.0);
+        assert_ulps_eq!(c2.green(), 0.0);
+        assert_ulps_eq!(c2.blue(), 1.0);
+
+        assert_eq!(c3.red(), 127);
+        assert_eq!(c3.green(), 0);
+        assert_eq!(c3.blue(), 255);
+
+        println!("{}", c2);
     }
 }

@@ -2,17 +2,25 @@ use std::fmt;
 
 use num::{Float, Integer, NumCast, Num};
 
-pub trait ColorChannel: Copy + PartialOrd + PartialEq + NumCast + Num {
+pub trait ColorChannel: Copy + PartialOrd + PartialEq + NumCast + Num + Default {
     fn min() -> Self;
     fn max() -> Self;
+    fn is_normalized(self) -> bool { 
+        true
+    }
+    fn normalize(self) -> Self {
+        self.clone()
+    }
 
     fn invert(self) -> Self {
         Self::max() - self
     }
 
-    fn clamp(self, val: Self) -> Self {
-        if self > val {
-            val
+    fn clamp(self, min: Self, max: Self) -> Self {
+        if self > max {
+            max
+        } else if self < min {
+            min
         } else {
             self
         }
@@ -41,8 +49,16 @@ impl<T: ColorChannel> BoundedChannel<T> {
         Self::new(T::min())
     }
 
-    pub fn clamp(self, val: T) -> Self {
-        Self::new(self.0.clamp(val))
+    pub fn clamp(self, min: T, max: T) -> Self {
+        Self::new(self.0.clamp(min, max))
+    }
+
+    pub fn normalize(self) -> Self {
+        Self::new(self.0.normalize())
+    }
+
+    pub fn is_normalized(self) -> bool {
+        self.0.is_normalized()
     }
 
     #[inline]
@@ -107,9 +123,14 @@ impl ColorChannel for f32 {
     fn min() -> Self {
         0.0
     }
-
     fn max() -> Self {
         1.0
+    }
+    fn is_normalized(self) -> bool {
+        self >= 0.0 && self <= 1.0
+    }
+    fn normalize(self) -> Self {
+        self.clamp(<Self as ColorChannel>::min(), <Self as ColorChannel>::max())
     }
 
     #[inline]
