@@ -93,6 +93,10 @@ impl<T: ColorChannel> Rgb<T> {
             b: self.b.lerp(right.b, pos)
         }
     }
+
+    pub fn channel_labels(&self) -> &'static str {
+        "rgb"
+    }
 }
 
 impl<T: ColorChannel + Float + approx::ApproxEq> approx::ApproxEq for Rgb<T> 
