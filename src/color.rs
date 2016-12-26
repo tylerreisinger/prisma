@@ -1,18 +1,27 @@
 use channel::{ColorChannel, cast};
 
-pub trait Color {
+pub trait Color: Clone {
     type Component: ColorChannel;
     type Tag;
 
     fn num_channels() -> u32;
     fn from_slice(values: &[Self::Component]) -> Self;
     fn as_slice(&self) -> &[Self::Component];
+    fn broadcast(value: Self::Component) -> Self;
 }
 
 pub trait Color3: Color {
     fn as_tuple(&self) -> (Self::Component, Self::Component, Self::Component);
     fn as_array(&self) -> [Self::Component; 3];
     fn from_tuple(values: &(Self::Component, Self::Component, Self::Component)) -> Self;
+}
+
+pub trait Color4: Color {
+    fn as_tuple(&self) -> (Self::Component, Self::Component, 
+                           Self::Component, Self::Component);
+    fn as_array(&self) -> [Self::Component; 4];
+    fn from_tuple(values: &(Self::Component, Self::Component, Self::Component,
+                            Self::Component)) -> Self;
 }
 
 pub trait ComponentMap: Color {

@@ -3,8 +3,9 @@ extern crate num;
 extern crate approx;
 
 pub mod channel;
-pub mod rgb;
 pub mod color;
+pub mod rgb;
+pub mod alpha;
 
 #[cfg(test)]
 mod tests {

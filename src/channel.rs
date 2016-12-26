@@ -33,7 +33,7 @@ pub trait ColorChannel: Copy + PartialOrd + PartialEq + NumCast + Num + Default 
 pub trait FloatColorChannel: ColorChannel + Float {
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct BoundedChannel<T>(pub T);
 
 impl<T: ColorChannel> BoundedChannel<T> {

@@ -38,10 +38,6 @@ impl<T: ColorChannel> Rgb<T> {
             b: BoundedChannel::new(values[2])}
     }
 
-    pub fn broadcast(value: T) -> Self {
-        Rgb::from_channels(value.clone(), value.clone(), value.clone())
-    }
-
     #[inline]
     pub fn red(&self) -> T {
         self.r.0.clone()
@@ -116,6 +112,9 @@ impl<T: ColorChannel> color::Color for Rgb<T> {
         }
     }
 
+    fn broadcast(value: T) -> Self {
+        Rgb::from_channels(value.clone(), value.clone(), value.clone())
+    }
 }
 
 impl<T: ColorChannel> color::Color3 for Rgb<T> {
@@ -179,7 +178,7 @@ impl<T: ColorChannel> color::Bounded for Rgb<T> {
     }
 
     fn is_normalized(&self) -> bool {
-        false
+        self.r.is_normalized() && self.g.is_normalized() && self.b.is_normalized()
     }
 }
 
