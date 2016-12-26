@@ -5,7 +5,7 @@ use approx;
 
 use color;
 
-#[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Rgb<T> { 
     r: BoundedChannel<T>,
     g: BoundedChannel<T>,
