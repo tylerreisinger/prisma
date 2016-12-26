@@ -1,10 +1,14 @@
 use std::fmt;
 
-use num::{Float, Integer, NumCast};
+use num::{Float, Integer, NumCast, Num};
 
-pub trait ColorChannel: Copy + PartialOrd + PartialEq + NumCast{
+pub trait ColorChannel: Copy + PartialOrd + PartialEq + NumCast + Num {
     fn min() -> Self;
     fn max() -> Self;
+
+    fn invert(self) -> Self {
+        Self::max() - self
+    }
 
     fn clamp(self, val: Self) -> Self {
         if self > val {
@@ -45,6 +49,10 @@ impl<T: ColorChannel> BoundedChannel<T> {
     pub fn lerp<P>(self, right: BoundedChannel<T>, pos: P) -> Self 
             where P: Float + NumCast {
         Self::new(self.0.lerp(right.0, pos))
+    }
+
+    pub fn invert(self) -> Self {
+        Self::new(self.0.invert())
     }
 
 }

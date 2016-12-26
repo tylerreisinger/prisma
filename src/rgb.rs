@@ -1,10 +1,11 @@
 use std::fmt;
 use num::{Float, NumCast};
 use channel::{ColorChannel, BoundedChannel, cast};
+use approx;
 
 use color;
 
-#[derive(Clone, Debug, Copy, PartialEq, PartialOrd, Eq, Ord)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub struct Rgb<T> { 
     r: BoundedChannel<T>,
     g: BoundedChannel<T>,
@@ -30,11 +31,19 @@ impl<T: ColorChannel> Rgb<T> {
         Rgb::from_channels(value.clone(), value.clone(), value.clone())
     }
 
-    pub fn clamp(self, val: T) -> Self {
+    pub fn clamp(&self, val: T) -> Self {
         Rgb{
-            r: self.r.clamp(val.clone()),
-            g: self.g.clamp(val.clone()),
-            b: self.b.clamp(val.clone())}
+            r: self.r.clone().clamp(val.clone()),
+            g: self.g.clone().clamp(val.clone()),
+            b: self.b.clone().clamp(val.clone())}
+    }
+
+    pub fn invert(&self) -> Self {
+        Rgb{
+            r: self.r.clone().invert(),
+            g: self.g.clone().invert(),
+            b: self.b.clone().invert(),
+        }
     }
 
     #[inline]
@@ -86,6 +95,37 @@ impl<T: ColorChannel> Rgb<T> {
     }
 }
 
+impl<T: ColorChannel + Float + approx::ApproxEq> approx::ApproxEq for Rgb<T> 
+        where T::Epsilon: Clone {
+    type Epsilon = T::Epsilon;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::default_epsilon()
+    }
+
+    fn default_max_relative() -> Self::Epsilon {
+        T::default_max_relative()
+    }
+
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
+
+    fn relative_eq(&self, other: &Self, epsilon: Self::Epsilon, 
+           max_relative: Self::Epsilon) -> bool {
+        self.red().relative_eq(other.red(), epsilon.clone(), max_relative.clone())
+        && self.green().relative_eq(other.green(), epsilon.clone(), max_relative.clone())
+        && self.blue().relative_eq(other.blue(), epsilon, max_relative)
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        self.red().ulps_eq(other.red(), epsilon.clone(), max_ulps)
+        && self.green().ulps_eq(other.green(), epsilon.clone(), max_ulps)
+        && self.blue().ulps_eq(other.blue(), epsilon.clone(), max_ulps)
+    }
+
+}
+
 impl<T: ColorChannel> color::Color3<T> for Rgb<T> {
     fn as_tuple(&self) -> (T, T, T) {
         (self.r.0, self.g.0, self.b.0)
@@ -115,7 +155,7 @@ mod test {
             assert_eq!(*color.green(), 0u8);
             assert_eq!(*color.blue(), 0u8);
 
-            let c2 = color;
+            let c2 = color.clone();
             assert_eq!(color, c2);
         }
         {
@@ -126,7 +166,7 @@ mod test {
         }
         {
             let color = Rgb::broadcast(0.5_f32);
-            assert_eq!(color, Rgb::from_channels(0.5_f32, 0.5, 0.5));
+            assert_ulps_eq!(color, Rgb::from_channels(0.5_f32, 0.5, 0.5));
         }
     }
 
@@ -145,8 +185,17 @@ mod test {
         let c1 = Rgb::from_channels(0.2_f32, 0.5, 1.0);
         let c2 = Rgb::from_channels(0.8_f32, 0.5, 0.1);
         
-        assert_eq!(c1.lerp(&c2, 0.5_f32), Rgb::from_channels(0.5_f32, 0.5, 0.55));
-        assert_eq!(c1.lerp(&c2, 0.0_f64), Rgb::from_channels(0.2_f32, 0.5, 1.0));
-        assert_eq!(c1.lerp(&c2, 1.0_f32), Rgb::from_channels(0.8_f32, 0.5, 0.1));
+        assert_ulps_eq!(c1.lerp(&c2, 0.5_f32), Rgb::from_channels(0.5_f32, 0.5, 0.55));
+        assert_ulps_eq!(c1.lerp(&c2, 0.0_f64), Rgb::from_channels(0.2_f32, 0.5, 1.0));
+        assert_ulps_eq!(c1.lerp(&c2, 1.0_f32), Rgb::from_channels(0.8_f32, 0.5, 0.1));
+    }
+
+    #[test]
+    fn test_invert() {
+        let c = Rgb::from_channels(200u8, 0, 255);
+        let c2 = Rgb::from_channels(0.8_f32, 0.0, 0.25);
+
+        assert_eq!(c.invert(), Rgb::from_channels(55u8, 255, 0));
+        assert_ulps_eq!(c2.invert(), Rgb::from_channels(0.2_f32, 1.0, 0.75));
     }
 }
