@@ -208,3 +208,75 @@ impl<T, InnerColor> fmt::Display for Alpha<T, InnerColor>
         write!(f, "Alpha({}, {})", self.color, self.alpha)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use ::alpha::*;
+    use ::rgb;
+    use ::color;
+    use ::color::{Color, Invert, Bounded};
+
+    #[test]
+    fn test_construct() {
+        {
+            let c = Alpha::from_color_and_alpha(
+                rgb::Rgb::from_channels(200u8, 75u8, 0u8), 100u8);
+
+            assert_eq!(c.alpha(), 100u8);
+            assert_eq!(c.color().red(), 200u8);
+            assert_eq!(c.color().green(), 75u8);
+            assert_eq!(c.color().blue(), 0u8);
+        }
+        {
+            let c = Alpha::<_, rgb::Rgb<_>>::broadcast(0.25f32);
+            assert_ulps_eq!(c, 
+                Alpha::from_color_and_alpha(rgb::Rgb::from_channels(0.25f32, 0.25, 0.25),
+                    0.25));
+        }
+        {
+            let c = Alpha::from_channels(0.5f32, 0.4f32, 0.3f32, 0.2f32);
+            assert_ulps_eq!(c, 
+                Alpha::from_color_and_alpha(rgb::Rgb::from_channels(0.5f32, 0.4, 0.3),
+                    0.2));
+        }
+    }
+
+    #[test]
+    fn test_as_slice() {
+        let c = Alpha::<_, rgb::Rgb<_>>::from_channels(100u8, 75, 50, 25);
+
+        assert_eq!(c.as_slice(), &[100u8, 75, 50, 25]);
+
+        let c2 = Alpha::<_, rgb::Rgb<_>>::from_slice(&[50u8, 100, 150, 200]);
+
+        assert_eq!(*c2.color(), rgb::Rgb::from_channels(50, 100, 150));
+        assert_eq!(c2.alpha(), 200);
+    }
+
+    #[test]
+    fn test_invert() {
+        let c = Alpha::<_, rgb::Rgb<_>>::from_channels(100u8, 0, 255, 200);
+        let c2 = c.invert();
+        assert_eq!(c2, Alpha::from_channels(155u8, 255, 0, 55));
+    }
+
+    #[test]
+    fn test_clamp() {
+        let c = Alpha::from_color_and_alpha(rgb::Rgb::from_channels(200u8, 50, 255), 125);
+        let c2 = Alpha::from_color_and_alpha(rgb::Rgb::from_channels(255u8, 250, 255), 254);
+        let c3 = Alpha::from_color_and_alpha(rgb::Rgb::from_channels(0.5f32, 0.1, 0.99), 0.80);
+
+        assert_eq!(c.clamp(75, 225), Alpha::from_channels(200, 75, 225, 125));
+        assert_eq!(c2.clamp(75, 225), Alpha::from_channels(225, 225, 225, 225));
+        assert_ulps_eq!(c3.clamp(0.25, 0.75), Alpha::from_channels(0.5, 0.25, 0.75, 0.75));
+    }
+
+    #[test]
+    fn test_normalize() {
+        let c = Alpha::<_, rgb::Rgb<_>>::from_channels(1.2, 0.88, 1.1, -2.0);
+
+        assert_eq!(c.normalize(), Alpha::from_channels(1.0, 0.88, 1.0, 0.0));
+        assert_eq!(c.is_normalized(), false);
+        assert_eq!(c.normalize().is_normalized(), true);
+    }
+}
