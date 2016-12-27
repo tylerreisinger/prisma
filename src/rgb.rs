@@ -4,6 +4,7 @@ use std::mem;
 use num::{Float, NumCast};
 use channel::{ColorChannel, BoundedChannel, cast};
 use approx;
+use alpha::Alpha;
 
 use color;
 
@@ -15,6 +16,8 @@ pub struct Rgb<T> {
     g: BoundedChannel<T>,
     b: BoundedChannel<T>,
 }
+
+pub type Rgba<T> = Alpha<T, Rgb<T>>;
 
 impl<T: ColorChannel> Rgb<T> {
     #[inline]
