@@ -1,12 +1,12 @@
 use std::fmt;
 use std::slice;
 use std::mem;
-use num::{Float, NumCast};
+use num::Float;
 use channel::{ColorChannel, BoundedChannel, cast};
 use approx;
 use alpha::Alpha;
-
 use color;
+use color::Lerp;
 
 pub struct RgbTag;
 
@@ -29,16 +29,16 @@ impl<T: ColorChannel> Rgb<T> {
 
     #[inline]
     pub fn from_channels(red: T, green: T, blue: T) -> Self {
-        Rgb{r: BoundedChannel::new(red), 
-            g: BoundedChannel::new(green), 
-            b: BoundedChannel::new(blue)}
+        Rgb{r: BoundedChannel(red), 
+            g: BoundedChannel(green), 
+            b: BoundedChannel(blue)}
     }
 
     #[inline]
     pub fn from_array(values: &[T; 3]) -> Self {
-        Rgb{r: BoundedChannel::new(values[0]),
-            g: BoundedChannel::new(values[1]),
-            b: BoundedChannel::new(values[2])}
+        Rgb{r: BoundedChannel(values[0]),
+            g: BoundedChannel(values[1]),
+            b: BoundedChannel(values[2])}
     }
 
     #[inline]
@@ -78,19 +78,21 @@ impl<T: ColorChannel> Rgb<T> {
         &self.b
     }
 
-    #[inline]
-    pub fn lerp<P>(&self, right: &Self, pos: P) -> Self
-            where P: Float + NumCast {
-        assert!(pos <= cast(1.0).unwrap() && pos >= cast(0.0).unwrap());
-        Rgb{
-            r: self.r.lerp(right.r, pos),
-            g: self.g.lerp(right.g, pos),
-            b: self.b.lerp(right.b, pos)
-        }
-    }
-
     pub fn channel_labels(&self) -> &'static str {
         "rgb"
+    }
+}
+
+impl<T: ColorChannel> Lerp for Rgb<T> {
+    type Position = <T as Lerp>::Position;
+    #[inline]
+    fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
+        assert!(pos <= cast(1.0).unwrap() && pos >= cast(0.0).unwrap());
+        Rgb{
+            r: self.r.lerp(&right.r, pos),
+            g: self.g.lerp(&right.g, pos),
+            b: self.b.lerp(&right.b, pos),
+        }
     }
 }
 
@@ -103,9 +105,9 @@ impl<T: ColorChannel> color::Color for Rgb<T> {
     }
 
     fn from_slice(values: &[Self::Component]) -> Self {
-        Rgb{r: BoundedChannel::new(values[0]),
-            g: BoundedChannel::new(values[1]),
-            b: BoundedChannel::new(values[2])}
+        Rgb{r: BoundedChannel(values[0]),
+            g: BoundedChannel(values[1]),
+            b: BoundedChannel(values[2])}
     }
 
     fn as_slice(&self) -> &[Self::Component] {
@@ -131,9 +133,9 @@ impl<T: ColorChannel> color::Color3 for Rgb<T> {
 
     #[inline]
     fn from_tuple(values: &(Self::Component, Self::Component, Self::Component)) -> Self {
-        Rgb{r: BoundedChannel::new(values.0),
-            g: BoundedChannel::new(values.1),
-            b: BoundedChannel::new(values.2)}
+        Rgb{r: BoundedChannel(values.0),
+            g: BoundedChannel(values.1),
+            b: BoundedChannel(values.2)}
     }
 
 }
@@ -141,19 +143,16 @@ impl<T: ColorChannel> color::Color3 for Rgb<T> {
 impl<T: ColorChannel> color::ComponentMap for Rgb<T> {
     fn component_map<F> (&self, mut f: F) -> Self 
             where F: FnMut(Self::Component) -> Self::Component {
-        Rgb{r: BoundedChannel::new(f(self.red().clone())),
-            g: BoundedChannel::new(f(self.green().clone())),
-            b: BoundedChannel::new(f(self.blue().clone()))}
+        Rgb{r: BoundedChannel(f(self.red().clone())),
+            g: BoundedChannel(f(self.green().clone())),
+            b: BoundedChannel(f(self.blue().clone()))}
     }
 
     fn component_map_binary<F>(&self, other: &Self, mut f: F) -> Self 
             where F: FnMut(Self::Component, Self::Component) -> Self::Component {
-        Rgb{r: BoundedChannel::new(
-                f(self.red(), other.red())),
-            g: BoundedChannel::new(
-                f(self.green(), other.green())),
-            b: BoundedChannel::new(
-                f(self.blue(), other.blue()))}
+        Rgb{r: BoundedChannel(f(self.red(), other.red())),
+            g: BoundedChannel(f(self.green(), other.green())),
+            b: BoundedChannel(f(self.blue(), other.blue()))}
     }
 }
 
@@ -230,9 +229,9 @@ impl<T: ColorChannel + fmt::Display> fmt::Display for Rgb<T> {
 
 #[cfg(test)]
 mod test {
-    use ::rgb::*;
+    use super::*;
     use ::color;
-    use ::color::{Color, Invert};
+    use ::color::{Color, Invert, Lerp};
 
     #[test]
     fn test_construct() {
@@ -273,7 +272,7 @@ mod test {
         let c2 = Rgb::from_channels(0.8_f32, 0.5, 0.1);
         
         assert_ulps_eq!(c1.lerp(&c2, 0.5_f32), Rgb::from_channels(0.5_f32, 0.5, 0.55));
-        assert_ulps_eq!(c1.lerp(&c2, 0.0_f64), Rgb::from_channels(0.2_f32, 0.5, 1.0));
+        assert_ulps_eq!(c1.lerp(&c2, 0.0_f32), Rgb::from_channels(0.2_f32, 0.5, 1.0));
         assert_ulps_eq!(c1.lerp(&c2, 1.0_f32), Rgb::from_channels(0.8_f32, 0.5, 0.1));
     }
 

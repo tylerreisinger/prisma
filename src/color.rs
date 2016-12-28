@@ -1,3 +1,4 @@
+use num;
 use channel::{ColorChannel, cast};
 
 pub trait Color: Clone {
@@ -34,6 +35,12 @@ pub trait Invert {
     fn invert(&self) -> Self;
 }
 
+pub trait Lerp {
+    type Position: num::Float;
+    fn lerp(&self, right: &Self, pos: Self::Position) -> Self;
+}
+
+
 pub trait Bounded: Color + Sized {
     fn clamp(&self, min: Self::Component, max: Self::Component) -> Self;
     fn normalize(&self) -> Self;
@@ -49,7 +56,10 @@ pub trait Bounded: Color + Sized {
 
 pub fn color_cast<To, From>(from: &From) -> To 
         where From: Color + Color3,
-              To: Color<Tag=From::Tag> + Color3 {
+              To: Color<Tag=From::Tag> + Color3,
+              To::Component: num::NumCast,
+              From::Component: num::NumCast,
+{
 
     let to_scale = To::Component::max() - To::Component::min();
     let from_scale = From::Component::max() - From::Component::min();
