@@ -3,12 +3,15 @@ extern crate num;
 extern crate approx;
 extern crate angular_units as angle;
 
-pub mod hue_angle;
+#[macro_use]
+mod impl_macros;
+
+//pub mod hue_angle;
 pub mod channel;
 pub mod color;
+//pub mod alpha;
 pub mod rgb;
-pub mod hsv;
-pub mod alpha;
+//pub mod hsv;
 
 #[cfg(test)]
 mod tests {

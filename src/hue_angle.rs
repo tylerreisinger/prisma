@@ -1,12 +1,12 @@
 pub use angle::*;
 use num::Float;
+use num::cast;
 use color;
-use channel;
-use channel::cast;
+use channel::ColorChannel;
 
 macro_rules! impl_traits_for_angle {
     ($Struct: ident) => {
-        impl<T> channel::ColorChannel for $Struct<T>
+        impl<T> ColorChannel for $Struct<T>
             where T: Float,
         {
             fn min() -> Self {

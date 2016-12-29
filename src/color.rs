@@ -1,38 +1,28 @@
 use num;
-use channel::{ColorChannel, cast};
 
-pub trait Color: Clone {
-    type Component: ColorChannel;
+pub trait Color: Clone + PartialEq {
+    type ChannelFormat;
     type Tag;
 
     fn num_channels() -> u32;
-    fn from_slice(values: &[Self::Component]) -> Self;
-    fn as_slice(&self) -> &[Self::Component];
-    fn broadcast(value: Self::Component) -> Self;
+    fn from_slice(values: &[Self::ChannelFormat]) -> Self;
+    fn as_slice(&self) -> &[Self::ChannelFormat];
+    fn broadcast(value: Self::ChannelFormat) -> Self;
+    fn clamp(self, min: &Self::ChannelFormat, max: &Self::ChannelFormat) -> Self;
 }
 
 pub trait Color3: Color {
-    fn as_tuple(&self) -> (Self::Component, Self::Component, Self::Component);
-    fn as_array(&self) -> [Self::Component; 3];
-    fn from_tuple(values: &(Self::Component, Self::Component, Self::Component)) -> Self;
+    fn to_tuple(self) -> (Self::ChannelFormat, Self::ChannelFormat, Self::ChannelFormat);
+    fn to_array(self) -> [Self::ChannelFormat; 3];
+    fn from_tuple(values: (Self::ChannelFormat, Self::ChannelFormat, Self::ChannelFormat)) -> Self;
 }
 
 pub trait Color4: Color {
-    fn as_tuple(&self) -> (Self::Component, Self::Component, 
-                           Self::Component, Self::Component);
-    fn as_array(&self) -> [Self::Component; 4];
-    fn from_tuple(values: &(Self::Component, Self::Component, Self::Component,
-                            Self::Component)) -> Self;
-}
-
-pub trait ComponentMap: Color {
-    fn component_map<F: FnMut(Self::Component) -> Self::Component>(&self, f: F) -> Self;
-    fn component_map_binary<F>(&self, other: &Self, f: F) -> Self
-        where F: FnMut(Self::Component, Self::Component) -> Self::Component;
-}
-
-pub trait Invert {
-    fn invert(&self) -> Self;
+    fn to_tuple(self) -> (Self::ChannelFormat, Self::ChannelFormat, 
+                           Self::ChannelFormat, Self::ChannelFormat);
+    fn to_array(self) -> [Self::ChannelFormat; 4];
+    fn from_tuple(values: (Self::ChannelFormat, Self::ChannelFormat, Self::ChannelFormat,
+                            Self::ChannelFormat)) -> Self;
 }
 
 pub trait Lerp {
@@ -40,21 +30,21 @@ pub trait Lerp {
     fn lerp(&self, right: &Self, pos: Self::Position) -> Self;
 }
 
-
-pub trait Bounded: Color + Sized {
-    fn clamp(&self, min: Self::Component, max: Self::Component) -> Self;
-    fn normalize(&self) -> Self;
-    fn is_normalized(&self) -> bool;
-
-    fn clamp_upper(&self, max: Self::Component) -> Self {
-        self.clamp(Self::Component::min(), max)
-    }
-    fn clamp_lower(&self, min: Self::Component) -> Self {
-        self.clamp(min, Self::Component::max())
-    }
+pub trait Invert {
+    fn invert(self) -> Self;
 }
 
-pub fn color_cast<To, From>(from: &From) -> To 
+pub trait Bounded {
+    fn normalize(self) -> Self;
+    fn is_normalized(&self) -> bool;
+}
+
+pub trait MapChannels: Color {
+    fn map_channels<F>(&self, f: F) -> Self
+        where F: FnMut(&Self::ChannelFormat) -> Self::ChannelFormat;
+}
+
+/*pub fn color_cast<To, From>(from: &From) -> To 
         where From: Color + Color3,
               To: Color<Tag=From::Tag> + Color3,
               To::Component: num::NumCast,
@@ -78,4 +68,4 @@ pub fn color_cast<To, From>(from: &From) -> To
     }
 
     To::from_slice(&out)
-}
+}*/

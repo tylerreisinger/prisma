@@ -3,7 +3,7 @@ use std::slice;
 use std::fmt;
 use approx;
 use num;
-use channel::{ColorChannel, BoundedChannel};
+use channel::{ColorChannel, BoundedChannel, BoundedChannelScalarTraits};
 use color;
 use color::{Color3, Color};
 
@@ -11,35 +11,35 @@ pub struct AlphaTag;
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Alpha<T, InnerColor> 
-        where InnerColor: Color<Component=T>,
-              T: ColorChannel {
+        where InnerColor: Color<ChannelFormat=T>
+{
     color: InnerColor,
     alpha: BoundedChannel<T>,
 }
 
 impl<T, InnerColor> Alpha<T, InnerColor>
-        where T: ColorChannel,
-              InnerColor: Color<Component=T> + Color3 {
+        where T: BoundedChannelScalarTraits,
+              InnerColor: Color<ChannelFormat=T> + Color3 {
 
     pub fn from_channels(c1: T, c2: T, c3: T, alpha: T) -> Self {
         Alpha{
-            color: InnerColor::from_tuple(&(c1, c2, c3)),
-            alpha: BoundedChannel::new(alpha),
+            color: InnerColor::from_tuple((c1, c2, c3)),
+            alpha: BoundedChannel(alpha),
         }
     }
 }
 impl<T, InnerColor> Alpha<T, InnerColor>
-        where T: ColorChannel,
-              InnerColor: Color<Component=T> {
+        where T: BoundedChannelScalarTraits,
+              InnerColor: Color<ChannelFormat=T> {
     pub fn from_color_and_alpha(color: InnerColor, alpha: T) -> Self {
         Alpha{
             color: color,
-            alpha: BoundedChannel::new(alpha),
+            alpha: BoundedChannel(alpha),
         }
     }
 
     pub fn alpha(&self) -> T {
-        self.alpha.0
+        self.alpha.0.clone()
     }
     pub fn color(&self) -> &InnerColor {
         &self.color
@@ -53,62 +53,67 @@ impl<T, InnerColor> Alpha<T, InnerColor>
 }
 
 impl<T, InnerColor> Color for Alpha<T, InnerColor> 
-        where T: ColorChannel,
-              InnerColor: Color<Component=T> {
-    type Component = T;
+        where T: BoundedChannelScalarTraits,
+              InnerColor: Color<ChannelFormat=T> {
+    type ChannelFormat = T;
     type Tag = AlphaTag;
 
     fn num_channels() -> u32 {
         InnerColor::num_channels() + 1
     }
 
-    fn from_slice(values: &[Self::Component]) -> Self {
+    fn from_slice(values: &[Self::ChannelFormat]) -> Self {
         Alpha{
             color: InnerColor::from_slice(values),
-            alpha: BoundedChannel::new(values[Self::num_channels() as usize - 1]),
+            alpha: BoundedChannel(values[Self::num_channels() as usize - 1].clone()),
         }
     }
 
-    fn as_slice(&self) -> &[Self::Component] {
+    fn as_slice(&self) -> &[Self::ChannelFormat] {
         unsafe {
-            let ptr: *const Self::Component = mem::transmute(self);
+            let ptr: *const Self::ChannelFormat = mem::transmute(self);
             slice::from_raw_parts(ptr, Self::num_channels() as usize)
         }
     }
 
     fn broadcast(value: T) -> Self {
         Alpha{
-            color: InnerColor::broadcast(value),
-            alpha: BoundedChannel::new(value),
+            color: InnerColor::broadcast(value.clone()),
+            alpha: BoundedChannel(value.clone()),
         }
     }
+    fn clamp(self, min: T, max: T) -> Self {
+        Alpha{
+            color: self.color.clamp(min.clone(), max.clone()),
+            alpha: self.alpha.clamp(min, max),
+        }
+    }
+
 }
 
 impl<T, InnerColor> color::Color4 for Alpha<T, InnerColor> 
-        where T: ColorChannel,
-              InnerColor: Color<Component=T> + color::Color3 {
+        where T: BoundedChannelScalarTraits,
+              InnerColor: Color<ChannelFormat=T> + color::Color3 {
 
-    fn as_tuple(&self) -> (Self::Component, Self::Component,
-                           Self::Component, Self::Component) {
-        let (c1, c2, c3) = self.color.as_tuple();
-        (c1, c2, c3, self.alpha())
+    fn to_tuple(self) -> (T, T, T, T) {
+        let (c1, c2, c3) = self.color.to_tuple();
+        (c1, c2, c3, self.alpha.0)
     }
 
-    fn as_array(&self) -> [Self::Component; 4] {
-        let (c1, c2, c3) = self.color.as_tuple();
-        [c1, c2, c3, self.alpha()]
+    fn to_array(self) -> [T; 4] {
+        let (c1, c2, c3) = self.color.to_tuple();
+        [c1, c2, c3, self.alpha.0]
     }
 
-    fn from_tuple(values: &(Self::Component, Self::Component,
-                           Self::Component, Self::Component)) -> Self {
+    fn from_tuple(values: (T, T, T, T)) -> Self {
         Self::from_channels(values.0, values.1, values.2, values.3)
     }
 }
 
 impl<T, InnerColor> color::Invert for Alpha<T, InnerColor>
-        where T: ColorChannel,
-              InnerColor: Color<Component=T> + color::Invert {
-    fn invert(&self) -> Self {
+        where T: BoundedChannelScalarTraits,
+              InnerColor: Color<ChannelFormat=T> + color::Invert {
+    fn invert(self) -> Self {
         Alpha{
             color: self.color.clone().invert(),
             alpha: self.alpha.clone().invert(),
@@ -116,38 +121,10 @@ impl<T, InnerColor> color::Invert for Alpha<T, InnerColor>
     }
 }
 
-impl<T, InnerColor> color::ComponentMap for Alpha<T, InnerColor> 
-        where T: ColorChannel,
-              InnerColor: Color<Component=T> + color::ComponentMap {
-    fn component_map<F>(&self, mut f: F) -> Self
-            where F: FnMut(Self::Component) -> Self::Component {
-        Alpha{
-            alpha: BoundedChannel::new(f(self.alpha())),
-            color: self.color.component_map(f),
-        }
-    }
-
-    fn component_map_binary<F>(&self, other: &Self, mut f: F) -> Self
-            where F: FnMut(Self::Component, Self::Component) -> Self::Component {
-        Alpha{
-            alpha: BoundedChannel::new(f(self.alpha(), other.alpha())),
-            color: self.color.component_map_binary(&other.color, f),
-        }
-    }
-
-}
-
 impl<T, InnerColor> color::Bounded for Alpha<T, InnerColor> 
-        where T: ColorChannel,
-              InnerColor: Color<Component=T> + color::Bounded {
-    fn clamp(&self, min: Self::Component, max: Self::Component) -> Self {
-        Alpha{
-            color: self.color.clamp(min, max),
-            alpha: self.alpha.clamp(min, max),
-        }
-    }
-
-    fn normalize(&self) -> Self {
+        where T: BoundedChannelScalarTraits,
+              InnerColor: Color<ChannelFormat=T> + color::Bounded {
+    fn normalize(self) -> Self {
         Alpha{
             color: self.color.normalize(),
             alpha: self.alpha.normalize(),
@@ -160,8 +137,8 @@ impl<T, InnerColor> color::Bounded for Alpha<T, InnerColor>
 }
 
 impl<T, InnerColor> approx::ApproxEq for Alpha<T, InnerColor> 
-        where T: ColorChannel + num::Float + approx::ApproxEq,
-              InnerColor: Color<Component=T> + approx::ApproxEq<Epsilon=T::Epsilon>,
+        where T: BoundedChannelScalarTraits + num::Float + approx::ApproxEq,
+              InnerColor: Color<ChannelFormat=T> + approx::ApproxEq<Epsilon=T::Epsilon>,
               T::Epsilon: Clone {
     type Epsilon = T::Epsilon;
 
@@ -191,19 +168,19 @@ impl<T, InnerColor> approx::ApproxEq for Alpha<T, InnerColor>
 }
 
 impl<T, InnerColor> Default for Alpha<T, InnerColor> 
-        where T: ColorChannel,
-              InnerColor: Color<Component=T> + Default {
+        where T: BoundedChannelScalarTraits,
+              InnerColor: Color<ChannelFormat=T> + Default {
     fn default() -> Self {
         Alpha{
             color: InnerColor::default(),
-            alpha: BoundedChannel::min(),
+            alpha: BoundedChannel(BoundedChannel::min_bound()),
         }
     }
 }
 
 impl<T, InnerColor> fmt::Display for Alpha<T, InnerColor> 
-        where T: ColorChannel + fmt::Display,
-              InnerColor: Color<Component=T> + fmt::Display {
+        where T: BoundedChannelScalarTraits + fmt::Display,
+              InnerColor: Color<ChannelFormat=T> + fmt::Display {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Alpha({}, {})", self.color, self.alpha)
     }
