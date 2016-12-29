@@ -1,29 +1,30 @@
 use num;
 
 pub trait Color: Clone + PartialEq {
-    type ChannelFormat;
     type Tag;
+    type ChannelsTuple;
 
     fn num_channels() -> u32;
+    fn from_tuple(values: Self::ChannelsTuple) -> Self;
+    fn to_tuple(self) -> Self::ChannelsTuple;
+}
+
+pub trait PolarColor: Color {
+    type Angular;
+    type Cartesian;
+}
+
+pub trait HomogeneousColor: Color {
+    type ChannelFormat;
+
     fn from_slice(values: &[Self::ChannelFormat]) -> Self;
     fn as_slice(&self) -> &[Self::ChannelFormat];
     fn broadcast(value: Self::ChannelFormat) -> Self;
-    fn clamp(self, min: &Self::ChannelFormat, max: &Self::ChannelFormat) -> Self;
+    fn clamp(self, min: Self::ChannelFormat, max: Self::ChannelFormat) -> Self;
 }
 
-pub trait Color3: Color {
-    fn to_tuple(self) -> (Self::ChannelFormat, Self::ChannelFormat, Self::ChannelFormat);
-    fn to_array(self) -> [Self::ChannelFormat; 3];
-    fn from_tuple(values: (Self::ChannelFormat, Self::ChannelFormat, Self::ChannelFormat)) -> Self;
-}
-
-pub trait Color4: Color {
-    fn to_tuple(self) -> (Self::ChannelFormat, Self::ChannelFormat, 
-                           Self::ChannelFormat, Self::ChannelFormat);
-    fn to_array(self) -> [Self::ChannelFormat; 4];
-    fn from_tuple(values: (Self::ChannelFormat, Self::ChannelFormat, Self::ChannelFormat,
-                            Self::ChannelFormat)) -> Self;
-}
+pub trait Color3: Color {}
+pub trait Color4: Color {}
 
 pub trait Lerp {
     type Position: num::Float;
@@ -37,11 +38,6 @@ pub trait Invert {
 pub trait Bounded {
     fn normalize(self) -> Self;
     fn is_normalized(&self) -> bool;
-}
-
-pub trait MapChannels: Color {
-    fn map_channels<F>(&self, f: F) -> Self
-        where F: FnMut(&Self::ChannelFormat) -> Self::ChannelFormat;
 }
 
 /*pub fn color_cast<To, From>(from: &From) -> To 

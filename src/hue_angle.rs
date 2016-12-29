@@ -1,25 +1,24 @@
 pub use angle::*;
-use num::Float;
-use num::cast;
+use num::{Float, cast};
 use color;
-use channel::ColorChannel;
+use channel;
 
 macro_rules! impl_traits_for_angle {
     ($Struct: ident) => {
-        impl<T> ColorChannel for $Struct<T>
-            where T: Float,
+        impl<T> channel::AngularChannelTraits for $Struct<T> 
+            where T: Float
         {
-            fn min() -> Self {
+            fn min_bound() -> Self {
                 $Struct(cast(0.0).unwrap())
             }
-            fn max() -> Self {
-                $Struct(cast(1.0).unwrap())
+            fn max_bound() -> Self {
+                $Struct($Struct::period())
             }
             fn is_normalized(&self) -> bool {
-                Angle::is_normalized(self)
+                <Self as Angle>::is_normalized(self)
             }
             fn normalize(self) -> Self {
-                Angle::normalize(&self)
+                <Self as Angle>::normalize(&self)
             }
         }
 

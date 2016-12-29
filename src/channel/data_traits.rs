@@ -1,9 +1,21 @@
 use std::ops;
-use num::{Integer, Float, NumCast, cast};
+use num::{Integer, Float, NumCast, cast, Zero};
+use angle;
 use ::color;
 
 pub trait BoundedChannelScalarTraits: Clone + PartialEq + PartialOrd + Default
         + ops::Add<Self, Output=Self> + ops::Sub<Self, Output=Self> 
+{
+    fn min_bound() -> Self;
+    fn max_bound() -> Self;
+    fn is_normalized(&self) -> bool;
+    fn normalize(self) -> Self;
+}
+
+pub trait AngularChannelTraits: Clone + PartialEq + PartialOrd + Default
+        + Zero + ops::Add<Self, Output=Self> + ops::Sub<Self, Output=Self> 
+        + angle::Angle
+    where Self::Scalar: Float
 {
     fn min_bound() -> Self;
     fn max_bound() -> Self;

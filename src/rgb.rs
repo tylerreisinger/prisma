@@ -4,14 +4,15 @@ use std::slice;
 use approx;
 use channel::{BoundedChannel, ColorChannel, BoundedChannelScalarTraits};
 use color;
+use color::{Color, HomogeneousColor};
 
 pub struct RgbTag;
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Rgb<T> {
-    red: BoundedChannel<T>,
-    green: BoundedChannel<T>,
-    blue: BoundedChannel<T>,
+    pub red: BoundedChannel<T>,
+    pub green: BoundedChannel<T>,
+    pub blue: BoundedChannel<T>,
 }
 
 impl<T> Rgb<T> 
@@ -52,17 +53,33 @@ impl<T> Rgb<T>
         self.blue.0 = val;
     }
 }
-
-impl<T> color::Color for Rgb<T> 
+impl<T> Color for Rgb<T> 
     where T: BoundedChannelScalarTraits
 {
-    type ChannelFormat = T;
     type Tag = RgbTag;
+    type ChannelsTuple = (T, T, T);
 
     #[inline]
     fn num_channels() -> u32 {
         3
     }
+
+    fn from_tuple(values: Self::ChannelsTuple) -> Self {
+        Rgb {
+            red: BoundedChannel(values.0),
+            green: BoundedChannel(values.1),
+            blue: BoundedChannel(values.2),
+        }
+    }
+    fn to_tuple(self) -> Self::ChannelsTuple {
+        (self.red.0, self.green.0, self.blue.0)
+    }
+}
+
+impl<T> HomogeneousColor for Rgb<T> 
+    where T: BoundedChannelScalarTraits
+{
+    type ChannelFormat = T;
     fn from_slice(values: &[T]) -> Self {
         Rgb {
             red: BoundedChannel(values[0].clone()),
@@ -90,10 +107,14 @@ impl<T> color::Color for Rgb<T>
             blue: self.blue.clamp(min, max)
         }
     }
-
 }
 
 impl<T> color::Color3 for Rgb<T> 
+    where T: BoundedChannelScalarTraits
+{
+}
+
+/*impl<T> color::Color3 for Rgb<T> 
     where T: BoundedChannelScalarTraits
 {
     fn to_tuple(self) -> (T, T, T) {
@@ -109,7 +130,7 @@ impl<T> color::Color3 for Rgb<T>
             blue: BoundedChannel(values.2)
         }
     }
-}
+}*/
 
 impl<T> color::Invert for Rgb<T>
     where T: BoundedChannelScalarTraits,
@@ -149,20 +170,6 @@ impl<T> color::Lerp for Rgb<T>
             red: self.red.lerp(&right.red, pos.clone()),
             green: self.green.lerp(&right.green, pos.clone()),
             blue: self.blue.lerp(&right.blue, pos.clone()),
-        }
-    }
-}
-
-impl<T> color::MapChannels for Rgb<T>
-    where T: BoundedChannelScalarTraits + color::Lerp
-{
-    fn map_channels<F>(&self, mut f: F) -> Self
-        where F: FnMut(&Self::ChannelFormat) -> Self::ChannelFormat
-    {
-        Rgb {
-            red: BoundedChannel(f(&self.red.0)),
-            green: BoundedChannel(f(&self.green.0)),
-            blue: BoundedChannel(f(&self.blue.0)),
         }
     }
 }
