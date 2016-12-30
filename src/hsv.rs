@@ -2,8 +2,7 @@ use std::fmt;
 use std::ops;
 use approx;
 use num;
-use channel::{BoundedChannel, AngularChannel, 
-    BoundedChannelScalarTraits, AngularChannelTraits};
+use channel::{BoundedChannel, AngularChannel, BoundedChannelScalarTraits, AngularChannelTraits};
 use hue_angle;
 use color::{Color, PolarColor, Invert, Lerp, Bounded};
 use color;
@@ -137,9 +136,9 @@ impl<T, A> Bounded for Hsv<T, A>
 }
 
 impl<T, A> approx::ApproxEq for Hsv<T, A>
-    where T: BoundedChannelScalarTraits + approx::ApproxEq<Epsilon=A::Epsilon>,
+    where T: BoundedChannelScalarTraits + approx::ApproxEq<Epsilon = A::Epsilon>,
           A: AngularChannelTraits + approx::ApproxEq,
-          A::Epsilon: Clone,
+          A::Epsilon: Clone
 {
     impl_approx_eq!({hue, saturation, value});
 }
@@ -157,7 +156,7 @@ impl<T, A> Default for Hsv<T, A>
     }
 }
 
-impl<T, A> fmt::Display for Hsv<T, A> 
+impl<T, A> fmt::Display for Hsv<T, A>
     where T: BoundedChannelScalarTraits + fmt::Display,
           A: AngularChannelTraits + fmt::Display
 {
@@ -166,22 +165,21 @@ impl<T, A> fmt::Display for Hsv<T, A>
     }
 }
 
-impl<T, A> convert::GetChroma for Hsv<T, A> 
-    where T: BoundedChannelScalarTraits + ops::Mul<T, Output=T>
+impl<T, A> convert::GetChroma for Hsv<T, A>
+    where T: BoundedChannelScalarTraits + ops::Mul<T, Output = T>
 {
-    type ChromaType=T;
+    type ChromaType = T;
     fn get_chroma(&self) -> T {
-        return self.saturation.0.clone() * self.value.0.clone()
+        return self.saturation.0.clone() * self.value.0.clone();
     }
 }
-impl<T, A> convert::GetHue for Hsv<T, A> 
+impl<T, A> convert::GetHue for Hsv<T, A>
     where T: BoundedChannelScalarTraits,
           A: AngularChannelTraits
 {
-    type InternalAngle=A;
+    type InternalAngle = A;
     fn get_hue<U>(&self) -> U
-        where U: angle::Angle<Scalar=A::Scalar> 
-            + angle::FromAngle<A> 
+        where U: angle::Angle<Scalar = A::Scalar> + angle::FromAngle<A>
     {
         <A as angle::IntoAngle<U>>::into_angle(self.hue.0.clone())
     }
@@ -237,7 +235,7 @@ mod test {
         assert_ulps_eq!(c3.lerp(&c4, 0.5).normalize(), 
             Hsv::from_channels(Deg(30.0), 0.5, 0.5));
     }
-    
+
     #[test]
     fn test_normalize() {
         let c1 = Hsv::from_channels(Deg(-120.0), 0.25, 0.75);
@@ -246,7 +244,7 @@ mod test {
 
         let c2 = Hsv::from_channels(Turns(11.25), -1.11, 1.11);
         assert_ulps_eq!(c2.normalize(), Hsv::from_channels(Turns(0.25), 0.0, 1.0));
-        
+
     }
 
     #[test]

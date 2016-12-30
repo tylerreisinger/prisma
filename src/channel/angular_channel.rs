@@ -43,7 +43,7 @@ impl<T> color::Bounded for AngularChannel<T>
     }
 }
 
-impl<T> Default for AngularChannel<T> 
+impl<T> Default for AngularChannel<T>
     where T: angle::Angle + num::Zero
 {
     fn default() -> Self {
@@ -51,7 +51,7 @@ impl<T> Default for AngularChannel<T>
     }
 }
 
-impl<T> fmt::Display for AngularChannel<T> 
+impl<T> fmt::Display for AngularChannel<T>
     where T: angle::Angle + fmt::Display
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

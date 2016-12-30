@@ -15,6 +15,4 @@ pub mod rgb;
 pub mod hsv;
 
 #[cfg(test)]
-mod tests {
-
-}
+mod tests {}
