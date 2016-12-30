@@ -251,9 +251,10 @@ impl<T> convert::GetChroma for Rgb<T>
 impl<T> convert::GetHue for Rgb<T> 
     where T: BoundedChannelScalarTraits + num::Float,
 {
-    type HueScalar = T;
+    type InternalAngle = angle::Turns<T>;
     fn get_hue<U>(&self) -> U 
-        where U: angle::Angle<Scalar=T> + angle::FromAngle<angle::Turns<T>>
+        where U: angle::Angle<Scalar=<Self::InternalAngle as angle::Angle>::Scalar> 
+              + angle::FromAngle<angle::Turns<T>>
     {
         let epsilon = cast(1e-10).unwrap();
         let (scale_factor, c1, c2, c3, min_chan) = 

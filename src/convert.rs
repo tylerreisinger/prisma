@@ -1,4 +1,3 @@
-use num;
 use angle;
 use color::Color;
 
@@ -12,8 +11,8 @@ pub trait GetChroma {
 }
 
 pub trait GetHue: Color {
-    type HueScalar: num::Float;
+    type InternalAngle: angle::Angle;
     fn get_hue<U>(&self) -> U
-        where U: angle::Angle<Scalar=Self::HueScalar> 
-            + angle::FromAngle<angle::Turns<Self::HueScalar>>;
+        where U: angle::Angle<Scalar=<Self::InternalAngle as angle::Angle>::Scalar> 
+            + angle::FromAngle<Self::InternalAngle>;
 }
