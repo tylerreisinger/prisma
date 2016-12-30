@@ -1,3 +1,5 @@
+use std::fmt;
+use num;
 use color;
 use color::Lerp;
 use angle;
@@ -38,5 +40,21 @@ impl<T> color::Bounded for AngularChannel<T>
     }
     fn is_normalized(&self) -> bool {
         <T as angle::Angle>::is_normalized(&self.0)
+    }
+}
+
+impl<T> Default for AngularChannel<T> 
+    where T: angle::Angle + num::Zero
+{
+    fn default() -> Self {
+        AngularChannel(T::zero())
+    }
+}
+
+impl<T> fmt::Display for AngularChannel<T> 
+    where T: angle::Angle + fmt::Display
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }

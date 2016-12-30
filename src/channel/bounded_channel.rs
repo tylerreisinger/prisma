@@ -1,4 +1,5 @@
 use std::fmt;
+use num;
 use super::traits::ColorChannel;
 use super::data_traits::BoundedChannelScalarTraits;
 use ::color;
@@ -62,10 +63,10 @@ impl<T> color::Lerp for BoundedChannel<T>
 }
 
 impl<T> Default for BoundedChannel<T>
-    where T: BoundedChannelScalarTraits
+    where T: BoundedChannelScalarTraits + num::Zero
 {
     fn default() -> Self {
-        BoundedChannel(T::default())
+        BoundedChannel(T::zero())
     }
 }
 

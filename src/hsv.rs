@@ -1,3 +1,4 @@
+use std::fmt;
 use approx;
 use num;
 use channel::{BoundedChannel, AngularChannel, BoundedChannelScalarTraits, AngularChannelTraits};
@@ -137,6 +138,28 @@ impl<T, A> approx::ApproxEq for Hsv<T, A>
           A::Epsilon: Clone,
 {
     impl_approx_eq!({hue, saturation, value});
+}
+
+impl<T, A> Default for Hsv<T, A>
+    where T: BoundedChannelScalarTraits + num::Zero,
+          A: AngularChannelTraits + num::Zero
+{
+    fn default() -> Self {
+        Hsv {
+            hue: AngularChannel::default(),
+            saturation: BoundedChannel::default(),
+            value: BoundedChannel::default(),
+        }
+    }
+}
+
+impl<T, A> fmt::Display for Hsv<T, A> 
+    where T: BoundedChannelScalarTraits + fmt::Display,
+          A: AngularChannelTraits + fmt::Display
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Hsv({}, {}, {})", self.hue, self.saturation, self.value)
+    }
 }
 
 #[cfg(test)]

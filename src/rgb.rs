@@ -1,4 +1,5 @@
 use std::fmt;
+use num;
 use approx;
 use channel::{BoundedChannel, ColorChannel, BoundedChannelScalarTraits};
 use color;
@@ -203,7 +204,7 @@ impl<T> approx::ApproxEq for Rgb<T>
 }
 
 impl<T> Default for Rgb<T>
-    where T: BoundedChannelScalarTraits
+    where T: BoundedChannelScalarTraits + num::Zero
 {
     fn default() -> Self {
         Rgb {
