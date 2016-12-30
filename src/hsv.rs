@@ -1,3 +1,4 @@
+use approx;
 use num;
 use channel::{BoundedChannel, AngularChannel, BoundedChannelScalarTraits, AngularChannelTraits};
 use hue_angle;
@@ -6,7 +7,7 @@ use color;
 
 pub struct HsvTag;
 
-#[derive(Clone, Debug, PartialEq, PartialOrd, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct Hsv<T, A = hue_angle::Deg<T>> {
     pub hue: AngularChannel<A>,
     pub saturation: BoundedChannel<T>,
@@ -85,8 +86,8 @@ impl<T, A> Color for Hsv<T, A>
 }
 
 impl<T, A> Invert for Hsv<T, A>
-    where T: BoundedChannelScalarTraits + color::Invert,
-          A: AngularChannelTraits + color::Invert
+    where T: BoundedChannelScalarTraits,
+          A: AngularChannelTraits
 {
     fn invert(self) -> Self {
         Hsv {
@@ -114,8 +115,8 @@ impl<T, A> Lerp for Hsv<T, A>
 }
 
 impl<T, A> Bounded for Hsv<T, A>
-    where T: BoundedChannelScalarTraits + color::Bounded,
-          A: AngularChannelTraits + color::Bounded
+    where T: BoundedChannelScalarTraits,
+          A: AngularChannelTraits
 {
     fn normalize(self) -> Self {
         Hsv {
@@ -127,5 +128,74 @@ impl<T, A> Bounded for Hsv<T, A>
 
     fn is_normalized(&self) -> bool {
         self.hue.is_normalized() && self.saturation.is_normalized() && self.value.is_normalized()
+    }
+}
+
+impl<T, A> approx::ApproxEq for Hsv<T, A>
+    where T: BoundedChannelScalarTraits + approx::ApproxEq<Epsilon=A::Epsilon>,
+          A: AngularChannelTraits + approx::ApproxEq,
+          A::Epsilon: Clone,
+{
+    impl_approx_eq!({hue, saturation, value});
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use hue_angle::*;
+    use color::*;
+
+    #[test]
+    fn test_construct() {
+        let c1 = Hsv::from_channels(Deg(50.0), 0.5, 0.3);
+
+        assert_ulps_eq!(c1.hue(), Deg(50.0));
+        assert_ulps_eq!(c1.saturation(), 0.5);
+        assert_ulps_eq!(c1.value(), 0.3);
+
+        let mut c2 = Hsv::from_channels(Turns(0.9), 0.5, 0.75);
+        assert_ulps_eq!(c2.hue(), Turns(0.9));
+        c2.set_saturation(0.33);
+        assert_ulps_eq!(c2, Hsv::from_channels(Turns(0.9), 0.33, 0.75));
+
+        let c3 = Hsv::from_tuple((Deg(50.0), 0.33, 0.66));
+        assert_eq!(c3.to_tuple(), (Deg(50.0), 0.33, 0.66));
+    }
+
+    #[test]
+    fn test_invert() {
+        let c1 = Hsv::from_channels(Deg(30.0), 0.3, 0.6);
+        assert_ulps_eq!(c1.invert(), Hsv::from_channels(Deg(210.0), 0.7, 0.4));
+
+        let c2 = Hsv::from_channels(Deg(320.0), 0.5, 0.0);
+        assert_ulps_eq!(c2.invert(), Hsv::from_channels(Deg(140.0), 0.5, 1.0));
+    }
+
+    #[test]
+    fn test_lerp() {
+        let c1 = Hsv::from_channels(Rad(0.5), 0.0, 0.25);
+        let c2 = Hsv::from_channels(Rad(1.5), 0.5, 0.25);
+        assert_ulps_eq!(c1.lerp(&c2, 0.0), c1);
+        assert_ulps_eq!(c1.lerp(&c2, 1.0), c2);
+        assert_ulps_eq!(c1.lerp(&c2, 0.25), Hsv::from_channels(Rad(0.75), 0.125, 0.25));
+        assert_ulps_eq!(c1.lerp(&c2, 0.75), Hsv::from_channels(Rad(1.25), 0.375, 0.25));
+
+        let c3 = Hsv::from_channels(Deg(320.0), 0.0, 1.0);
+        let c4 = Hsv::from_channels(Deg(100.0), 1.0, 0.0);
+        assert_ulps_eq!(c3.lerp(&c4, 0.0), c3);
+        assert_ulps_eq!(c3.lerp(&c4, 1.0).normalize(), c4);
+        assert_ulps_eq!(c3.lerp(&c4, 0.5).normalize(), 
+            Hsv::from_channels(Deg(30.0), 0.5, 0.5));
+    }
+    
+    #[test]
+    fn test_normalize() {
+        let c1 = Hsv::from_channels(Deg(-120.0), 0.25, 0.75);
+        assert!(!c1.is_normalized());
+        assert_ulps_eq!(c1.normalize(), Hsv::from_channels(Deg(240.0), 0.25, 0.75));
+
+        let c2 = Hsv::from_channels(Turns(11.25), -1.11, 1.11);
+        assert_ulps_eq!(c2.normalize(), Hsv::from_channels(Turns(0.25), 0.0, 1.0));
+        
     }
 }

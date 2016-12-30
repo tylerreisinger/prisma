@@ -1,26 +1,28 @@
-use channel::{ColorChannel, BoundedChannel, BoundedChannelScalarTraits};
-use color;
-use color::{Color3, Color, Invert, Lerp, Bounded, PolarColor};
+use channel::{BoundedChannel, BoundedChannelScalarTraits};
+use color::{Color, Invert, Lerp, Bounded, PolarColor};
 use std::marker::PhantomData;
 
 pub struct AlphaTag<T>(pub PhantomData<T>);
 
-
 #[derive(Clone, Debug, PartialEq, PartialOrd, Hash)]
-pub struct Alpha<T, InnerColor> {
+pub struct Alpha<T, InnerColor> 
+{
     color: InnerColor,
     alpha: BoundedChannel<T>,
 }
 
-impl<T, InnerColor> Alpha<T, InnerColor>
+impl<T, InnerColor> Alpha<T, InnerColor> 
     where T: BoundedChannelScalarTraits,
-          InnerColor: Color
+          InnerColor: Color,
 {
     pub fn from_color_and_alpha(color: InnerColor, alpha: T) -> Self {
         Alpha {
             color: color,
             alpha: BoundedChannel(alpha),
         }
+    }
+    pub fn decompose(self) -> (InnerColor, T) {
+        (self.color, self.alpha.0)
     }
 
     pub fn color(&self) -> &InnerColor {
@@ -43,12 +45,12 @@ impl<T, InnerColor> Alpha<T, InnerColor>
     }
 }
 
-impl<T, InnerColor> Color for Alpha<T, InnerColor>
+impl<T, InnerColor> Color for Alpha<T, InnerColor> 
     where T: BoundedChannelScalarTraits,
-          InnerColor: Color
+          InnerColor: Color,
 {
-    type Tag = AlphaTag<InnerColor::Tag>;
-    type ChannelsTuple = (InnerColor::ChannelsTuple, T);
+    type Tag=AlphaTag<InnerColor::Tag>;
+    type ChannelsTuple=(InnerColor::ChannelsTuple, T);
 
     fn num_channels() -> u32 {
         InnerColor::num_channels() + 1
@@ -72,13 +74,13 @@ impl<T, InnerColor> Invert for Alpha<T, InnerColor>
     fn invert(self) -> Self {
         Alpha {
             color: self.color.invert(),
-            alpha: self.alpha.invert(),
+            alpha: self.alpha.invert()
         }
     }
 }
 
 impl<T, InnerColor> Lerp for Alpha<T, InnerColor>
-    where T: BoundedChannelScalarTraits + Lerp<Position = InnerColor::Position>,
+    where T: BoundedChannelScalarTraits + Lerp<Position=InnerColor::Position>,
           InnerColor: Color + Lerp
 {
     type Position = InnerColor::Position;
@@ -86,7 +88,7 @@ impl<T, InnerColor> Lerp for Alpha<T, InnerColor>
     fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
         Alpha {
             color: self.color.lerp(&right.color, pos.clone()),
-            alpha: self.alpha.lerp(&right.alpha, pos),
+            alpha: self.alpha.lerp(&right.alpha, pos)
         }
     }
 }
@@ -98,18 +100,20 @@ impl<T, InnerColor> Bounded for Alpha<T, InnerColor>
     fn normalize(self) -> Self {
         Alpha {
             color: self.color.normalize(),
-            alpha: self.alpha.normalize(),
+            alpha: self.alpha.normalize()
         }
     }
     fn is_normalized(&self) -> bool {
-        self.color.is_normalized() && self.alpha.is_normalized()
+        self.color.is_normalized()
+        && self.alpha.is_normalized()
     }
 }
 
 impl<T, InnerColor> PolarColor for Alpha<T, InnerColor>
     where T: BoundedChannelScalarTraits + Bounded,
-          InnerColor: Color + PolarColor<Cartesian = T>
+          InnerColor: Color + PolarColor<Cartesian=T>
 {
     type Angular = InnerColor::Angular;
     type Cartesian = InnerColor::Cartesian;
 }
+

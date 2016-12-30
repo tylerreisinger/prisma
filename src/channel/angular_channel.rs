@@ -17,7 +17,7 @@ impl<T> color::Invert for AngularChannel<T>
     where T: angle::Angle
 {
     fn invert(self) -> Self {
-        AngularChannel(self.0.invert())
+        AngularChannel(self.0.invert().normalize())
     }
 }
 

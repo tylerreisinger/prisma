@@ -100,4 +100,7 @@ macro_rules! impl_bounded_channel_traits_float {
 }
 
 impl_bounded_channel_traits_int!(u8);
+impl_bounded_channel_traits_int!(u16);
+impl_bounded_channel_traits_int!(u32);
 impl_bounded_channel_traits_float!(f32);
+impl_bounded_channel_traits_float!(f64);
