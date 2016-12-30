@@ -1,9 +1,13 @@
 use std::fmt;
+use std::mem;
 use num;
+use num::cast;
 use approx;
 use channel::{BoundedChannel, ColorChannel, BoundedChannelScalarTraits};
 use color;
 use color::{Color, HomogeneousColor};
+use convert;
+use angle;
 
 pub struct RgbTag;
 
@@ -110,24 +114,6 @@ impl<T> HomogeneousColor for Rgb<T>
 
 impl<T> color::Color3 for Rgb<T> where T: BoundedChannelScalarTraits {}
 
-// impl<T> color::Color3 for Rgb<T>
-// where T: BoundedChannelScalarTraits
-// {
-// fn to_tuple(self) -> (T, T, T) {
-// (self.red(), self.green(), self.blue())
-// }
-// fn to_array(self) -> [T; 3] {
-// [self.red(), self.green(), self.blue()]
-// }
-// fn from_tuple(values: (T, T, T)) -> Self {
-// Rgb {
-// red: BoundedChannel(values.0),
-// green: BoundedChannel(values.1),
-// blue: BoundedChannel(values.2)
-// }
-// }
-// }
-
 impl<T> color::Invert for Rgb<T>
     where T: BoundedChannelScalarTraits
 {
@@ -223,11 +209,69 @@ impl<T> fmt::Display for Rgb<T>
     }
 }
 
+fn get_hue_factor_and_ordered_chans<T>(color: &Rgb<T>) -> (T, T, T, T, T) 
+    where T: BoundedChannelScalarTraits + num::Float
+{
+    let mut scaling_factor = T::zero();
+    let (mut c1, mut c2, mut c3) = color.clone().to_tuple();
+    
+    if c2 < c3 {
+        mem::swap(&mut c2, &mut c3);
+        scaling_factor = cast(-1.0).unwrap();
+    }
+    let mut min_chan: T = c3;
+    if c1 < c2 {
+        mem::swap(&mut c1, &mut c2);
+        scaling_factor = cast::<_, T>(-1.0/3.0).unwrap() - scaling_factor;
+        min_chan = c2.min(c3);
+    }
+
+    return (scaling_factor, c1, c2, c3, min_chan)
+}
+
+impl<T> convert::GetChroma for Rgb<T> 
+    where T: BoundedChannelScalarTraits
+{
+    type ChromaType = T;
+    fn get_chroma(&self) -> T {
+        let (mut c1, mut c2, mut c3) = self.clone().to_tuple();
+        if c2 < c3 {
+            mem::swap(&mut c2, &mut c3);
+        }
+        if c1 < c2 {
+            mem::swap(&mut c1, &mut c3);
+        }
+        if c2 < c3 {
+            mem::swap(&mut c2, &mut c3);
+        }
+        return c1 - c3;
+    }
+}
+
+impl<T> convert::GetHue for Rgb<T> 
+    where T: BoundedChannelScalarTraits + num::Float,
+{
+    type HueScalar = T;
+    fn get_hue<U>(&self) -> U 
+        where U: angle::Angle<Scalar=T> + angle::FromAngle<angle::Turns<T>>
+    {
+        let epsilon = cast(1e-10).unwrap();
+        let (scale_factor, c1, c2, c3, min_chan) = 
+            get_hue_factor_and_ordered_chans(self);
+        let hue_scalar = scale_factor + (c2 - c3) / 
+            (cast::<_, T>(6.0).unwrap() * (c1 - min_chan) + epsilon);
+
+        U::from_angle(angle::Turns(hue_scalar.abs()))
+    }
+}
+
 
 #[cfg(test)]
 mod test {
     use super::*;
     use ::color::*;
+    use ::convert::*;
+    use ::angle::*;
 
     #[test]
     fn test_construct() {
@@ -282,17 +326,29 @@ mod test {
         assert_ulps_eq!(c2.invert(), Rgb::from_channels(0.2_f32, 1.0, 0.75));
     }
 
-    /*#[test]
-    fn as_slice() {
-        let c = Rgb::from_channels(100u8, 0, 125);
-        let c2 = Rgb::from_channels(1.0, 0.25, 0.125);
+    #[test]
+    fn test_chroma() {
+        let c = Rgb::from_channels(200u8, 150, 100);
+        assert_eq!(c.get_chroma(), 100u8);
 
-        assert_eq!(c.as_slice()[0], 100u8);
-        assert_eq!(c.as_slice()[1], 0u8);
-        assert_eq!(c.as_slice()[2], 125u8);
+        let c2 = Rgb::from_channels(1.0_f32, 0.0, 0.25);
+        assert_ulps_eq!(c2.get_chroma(), 1.0_f32);
 
-        assert_ulps_eq!(Rgb::from_slice(c2.as_slice()), c2);
-    }*/
+        let c3 = Rgb::from_channels(0.5_f32, 0.5, 0.5);
+        assert_ulps_eq!(c3.get_chroma(), 0.0_f32);
+    }
+
+    #[test]
+    fn test_hue() {
+        let c1 = Rgb::from_channels(1.0_f32, 0.0, 0.0);
+        assert_ulps_eq!(c1.get_hue(), Deg(0.0));
+        assert_ulps_eq!(Rgb::from_channels(0.0, 1.0_f32, 0.0).get_hue(), Deg(120.0));
+        assert_ulps_eq!(Rgb::from_channels(0.0, 0.0_f32, 1.0).get_hue(), Deg(240.0));
+        assert_relative_eq!(Rgb::from_channels(0.5, 0.5, 0.0).get_hue(), Deg(60.0),
+            epsilon=1e-6);
+        assert_relative_eq!(Rgb::from_channels(0.5, 0.0, 0.5).get_hue(), Deg(300.0),
+            epsilon=1e-6);
+    }
 
     // #[test]
     // fn color_cast() {

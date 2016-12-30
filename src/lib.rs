@@ -8,7 +8,7 @@ mod impl_macros;
 
 pub mod hue_angle;
 pub mod channel;
-pub mod conversion;
+pub mod convert;
 pub mod color;
 pub mod alpha;
 pub mod rgb;

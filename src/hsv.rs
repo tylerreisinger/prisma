@@ -1,10 +1,13 @@
 use std::fmt;
 use approx;
 use num;
-use channel::{BoundedChannel, AngularChannel, BoundedChannelScalarTraits, AngularChannelTraits};
+use channel::{BoundedChannel, AngularChannel, 
+    BoundedChannelScalarTraits, AngularChannelTraits};
 use hue_angle;
 use color::{Color, PolarColor, Invert, Lerp, Bounded};
 use color;
+use rgb;
+use convert;
 
 pub struct HsvTag;
 
