@@ -4,7 +4,7 @@ use angle;
 use ::color;
 
 pub trait BoundedChannelScalarTraits: Clone + PartialEq + PartialOrd + Default
-        + ops::Add<Self, Output=Self> + ops::Sub<Self, Output=Self> 
+        + ops::Add<Self, Output=Self> + ops::Sub<Self, Output=Self>
 {
     fn min_bound() -> Self;
     fn max_bound() -> Self;
@@ -13,7 +13,7 @@ pub trait BoundedChannelScalarTraits: Clone + PartialEq + PartialOrd + Default
 }
 
 pub trait AngularChannelTraits: Clone + PartialEq + PartialOrd + Default
-        + Zero + ops::Add<Self, Output=Self> + ops::Sub<Self, Output=Self> 
+        + Zero + ops::Add<Self, Output=Self> + ops::Sub<Self, Output=Self>
         + angle::Angle
     where Self::Scalar: Float
 {
@@ -24,18 +24,18 @@ pub trait AngularChannelTraits: Clone + PartialEq + PartialOrd + Default
 }
 
 fn lerp_flat_int<T, P>(left: &T, right: &T, pos: P) -> T
-        where T: Integer + Clone + NumCast ,
-              P: Float + NumCast 
+    where T: Integer + Clone + NumCast,
+          P: Float + NumCast
 {
     let inv_pos = P::one() - pos;
-    let val_p: P = cast::<_, P>(left.clone()).unwrap() * inv_pos 
-        + cast::<_, P>(right.clone()).unwrap() * pos;
+    let val_p: P = cast::<_, P>(left.clone()).unwrap() * inv_pos +
+                   cast::<_, P>(right.clone()).unwrap() * pos;
     cast(val_p).unwrap()
 }
 
 fn lerp_flat<T>(left: &T, right: &T, pos: T) -> T
-        where T: Float
-{   
+    where T: Float
+{
     let inv_pos = T::one() - pos;
 
     *left * inv_pos + *right * pos

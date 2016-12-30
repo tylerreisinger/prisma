@@ -15,8 +15,8 @@ pub struct Rgb<T> {
     pub blue: BoundedChannel<T>,
 }
 
-impl<T> Rgb<T> 
-    where T: BoundedChannelScalarTraits 
+impl<T> Rgb<T>
+    where T: BoundedChannelScalarTraits
 {
     pub fn from_channels(red: T, green: T, blue: T) -> Self {
         Rgb {
@@ -53,7 +53,7 @@ impl<T> Rgb<T>
         self.blue.0 = val;
     }
 }
-impl<T> Color for Rgb<T> 
+impl<T> Color for Rgb<T>
     where T: BoundedChannelScalarTraits
 {
     type Tag = RgbTag;
@@ -76,23 +76,23 @@ impl<T> Color for Rgb<T>
     }
 }
 
-impl<T> HomogeneousColor for Rgb<T> 
+impl<T> HomogeneousColor for Rgb<T>
     where T: BoundedChannelScalarTraits
 {
     type ChannelFormat = T;
-    fn from_slice(values: &[T]) -> Self {
-        Rgb {
-            red: BoundedChannel(values[0].clone()),
-            green: BoundedChannel(values[1].clone()),
-            blue: BoundedChannel(values[2].clone())
-        }
-    }
-    fn as_slice(&self) -> &[T] {
-        unsafe {
-            let ptr: *const T = mem::transmute(self);
-            slice::from_raw_parts(ptr, Self::num_channels() as usize)
-        }
-    }
+    // fn from_slice(values: &[T]) -> Self {
+    // Rgb {
+    // red: BoundedChannel(values[0].clone()),
+    // green: BoundedChannel(values[1].clone()),
+    // blue: BoundedChannel(values[2].clone())
+    // }
+    // }
+    // fn as_slice(&self) -> &[T] {
+    // unsafe {
+    // let ptr: *const T = mem::transmute(self);
+    // slice::from_raw_parts(ptr, Self::num_channels() as usize)
+    // }
+    // }
     fn broadcast(value: T) -> Self {
         Rgb {
             red: BoundedChannel(value.clone()),
@@ -104,36 +104,33 @@ impl<T> HomogeneousColor for Rgb<T>
         Rgb {
             red: self.red.clamp(min.clone(), max.clone()),
             green: self.green.clamp(min.clone(), max.clone()),
-            blue: self.blue.clamp(min, max)
+            blue: self.blue.clamp(min, max),
         }
     }
 }
 
-impl<T> color::Color3 for Rgb<T> 
-    where T: BoundedChannelScalarTraits
-{
-}
+impl<T> color::Color3 for Rgb<T> where T: BoundedChannelScalarTraits {}
 
-/*impl<T> color::Color3 for Rgb<T> 
-    where T: BoundedChannelScalarTraits
-{
-    fn to_tuple(self) -> (T, T, T) {
-        (self.red(), self.green(), self.blue())
-    }
-    fn to_array(self) -> [T; 3] {
-        [self.red(), self.green(), self.blue()]
-    }
-    fn from_tuple(values: (T, T, T)) -> Self {
-        Rgb {
-            red: BoundedChannel(values.0),
-            green: BoundedChannel(values.1),
-            blue: BoundedChannel(values.2)
-        }
-    }
-}*/
+// impl<T> color::Color3 for Rgb<T>
+// where T: BoundedChannelScalarTraits
+// {
+// fn to_tuple(self) -> (T, T, T) {
+// (self.red(), self.green(), self.blue())
+// }
+// fn to_array(self) -> [T; 3] {
+// [self.red(), self.green(), self.blue()]
+// }
+// fn from_tuple(values: (T, T, T)) -> Self {
+// Rgb {
+// red: BoundedChannel(values.0),
+// green: BoundedChannel(values.1),
+// blue: BoundedChannel(values.2)
+// }
+// }
+// }
 
 impl<T> color::Invert for Rgb<T>
-    where T: BoundedChannelScalarTraits,
+    where T: BoundedChannelScalarTraits
 {
     fn invert(self) -> Self {
         Rgb {
@@ -155,9 +152,7 @@ impl<T> color::Bounded for Rgb<T>
         }
     }
     fn is_normalized(&self) -> bool {
-        self.red.is_normalized()
-        && self.green.is_normalized()
-        && self.blue.is_normalized()
+        self.red.is_normalized() && self.green.is_normalized() && self.blue.is_normalized()
     }
 }
 
@@ -174,9 +169,9 @@ impl<T> color::Lerp for Rgb<T>
     }
 }
 
-impl<T> approx::ApproxEq for Rgb<T> 
+impl<T> approx::ApproxEq for Rgb<T>
     where T: BoundedChannelScalarTraits + approx::ApproxEq,
-          T::Epsilon: Clone 
+          T::Epsilon: Clone
 {
     type Epsilon = T::Epsilon;
 
@@ -192,23 +187,25 @@ impl<T> approx::ApproxEq for Rgb<T>
         T::default_max_ulps()
     }
 
-    fn relative_eq(&self, other: &Self, epsilon: Self::Epsilon, 
-           max_relative: Self::Epsilon) -> bool {
-        self.red().relative_eq(&other.red(), epsilon.clone(), max_relative.clone())
-        && self.green().relative_eq(&other.green(), epsilon.clone(), max_relative.clone())
-        && self.blue().relative_eq(&other.blue(), epsilon, max_relative)
+    fn relative_eq(&self,
+                   other: &Self,
+                   epsilon: Self::Epsilon,
+                   max_relative: Self::Epsilon)
+                   -> bool {
+        self.red().relative_eq(&other.red(), epsilon.clone(), max_relative.clone()) &&
+        self.green().relative_eq(&other.green(), epsilon.clone(), max_relative.clone()) &&
+        self.blue().relative_eq(&other.blue(), epsilon, max_relative)
     }
 
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        self.red().ulps_eq(&other.red(), epsilon.clone(), max_ulps)
-        && self.green().ulps_eq(&other.green(), epsilon.clone(), max_ulps)
-        && self.blue().ulps_eq(&other.blue(), epsilon.clone(), max_ulps)
+        self.red().ulps_eq(&other.red(), epsilon.clone(), max_ulps) &&
+        self.green().ulps_eq(&other.green(), epsilon.clone(), max_ulps) &&
+        self.blue().ulps_eq(&other.blue(), epsilon.clone(), max_ulps)
     }
-
 }
 
-impl<T> Default for Rgb<T> 
-    where T: BoundedChannelScalarTraits 
+impl<T> Default for Rgb<T>
+    where T: BoundedChannelScalarTraits
 {
     fn default() -> Self {
         Rgb {
@@ -219,7 +216,7 @@ impl<T> Default for Rgb<T>
     }
 }
 
-impl<T> fmt::Display for Rgb<T> 
+impl<T> fmt::Display for Rgb<T>
     where T: BoundedChannelScalarTraits + fmt::Display
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -270,8 +267,9 @@ mod test {
     fn test_lerp_float() {
         let c1 = Rgb::from_channels(0.2_f32, 0.5, 1.0);
         let c2 = Rgb::from_channels(0.8_f32, 0.5, 0.1);
-        
-        assert_ulps_eq!(c1.lerp(&c2, 0.5_f32), Rgb::from_channels(0.5_f32, 0.5, 0.55));
+
+        assert_ulps_eq!(c1.lerp(&c2, 0.5_f32),
+                        Rgb::from_channels(0.5_f32, 0.5, 0.55));
         assert_ulps_eq!(c1.lerp(&c2, 0.0_f32), Rgb::from_channels(0.2_f32, 0.5, 1.0));
         assert_ulps_eq!(c1.lerp(&c2, 1.0_f32), Rgb::from_channels(0.8_f32, 0.5, 0.1));
     }
@@ -297,20 +295,20 @@ mod test {
         assert_ulps_eq!(Rgb::from_slice(c2.as_slice()), c2);
     }
 
-    /*#[test]
-    fn color_cast() {
-        let c = Rgb::from_channels(127, 0, 255);
-        let c2 = color::color_cast::<Rgb<f32>, _>(&c);
-        let c3 = color::color_cast::<Rgb<u8>, _>(&c2);
-
-        assert_ulps_eq!(c2.red(), 127.0 / 255.0);
-        assert_ulps_eq!(c2.green(), 0.0);
-        assert_ulps_eq!(c2.blue(), 1.0);
-
-        assert_eq!(c3.red(), 127);
-        assert_eq!(c3.green(), 0);
-        assert_eq!(c3.blue(), 255);
-
-        println!("{}", c2);
-    }*/
+    // #[test]
+    // fn color_cast() {
+    // let c = Rgb::from_channels(127, 0, 255);
+    // let c2 = color::color_cast::<Rgb<f32>, _>(&c);
+    // let c3 = color::color_cast::<Rgb<u8>, _>(&c2);
+    //
+    // assert_ulps_eq!(c2.red(), 127.0 / 255.0);
+    // assert_ulps_eq!(c2.green(), 0.0);
+    // assert_ulps_eq!(c2.blue(), 1.0);
+    //
+    // assert_eq!(c3.red(), 127);
+    // assert_eq!(c3.green(), 0);
+    // assert_eq!(c3.blue(), 255);
+    //
+    // println!("{}", c2);
+    // }
 }

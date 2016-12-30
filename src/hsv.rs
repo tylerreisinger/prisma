@@ -1,6 +1,5 @@
 use num;
-use channel::{BoundedChannel, AngularChannel, BoundedChannelScalarTraits,
-    AngularChannelTraits};
+use channel::{BoundedChannel, AngularChannel, BoundedChannelScalarTraits, AngularChannelTraits};
 use hue_angle;
 use color::{Color, PolarColor, Invert, Lerp, Bounded};
 use color;
@@ -8,7 +7,7 @@ use color;
 pub struct HsvTag;
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, Hash)]
-pub struct Hsv<T, A=hue_angle::Deg<T>> {
+pub struct Hsv<T, A = hue_angle::Deg<T>> {
     pub hue: AngularChannel<A>,
     pub saturation: BoundedChannel<T>,
     pub value: BoundedChannel<T>,
@@ -22,7 +21,7 @@ impl<T, A> Hsv<T, A>
         Hsv {
             hue: AngularChannel(hue),
             saturation: BoundedChannel(saturation),
-            value: BoundedChannel(value)
+            value: BoundedChannel(value),
         }
     }
 
@@ -55,19 +54,19 @@ impl<T, A> Hsv<T, A>
     }
 }
 
-impl<T, A> PolarColor for Hsv<T, A> 
+impl<T, A> PolarColor for Hsv<T, A>
     where T: BoundedChannelScalarTraits,
           A: AngularChannelTraits
 {
-    type Angular=T;
-    type Cartesian=A;
+    type Angular = T;
+    type Cartesian = A;
 }
 
-impl<T, A> Color for Hsv<T, A> 
+impl<T, A> Color for Hsv<T, A>
     where T: BoundedChannelScalarTraits,
           A: AngularChannelTraits
 {
-    type Tag=HsvTag;
+    type Tag = HsvTag;
     type ChannelsTuple = (A, T, T);
 
     fn num_channels() -> u32 {
@@ -85,7 +84,7 @@ impl<T, A> Color for Hsv<T, A>
     }
 }
 
-impl<T, A> Invert for Hsv<T, A> 
+impl<T, A> Invert for Hsv<T, A>
     where T: BoundedChannelScalarTraits + color::Invert,
           A: AngularChannelTraits + color::Invert
 {
@@ -122,14 +121,11 @@ impl<T, A> Bounded for Hsv<T, A>
         Hsv {
             hue: self.hue.normalize(),
             saturation: self.saturation.normalize(),
-            value: self.value.normalize()
+            value: self.value.normalize(),
         }
     }
 
     fn is_normalized(&self) -> bool {
-        self.hue.is_normalized() 
-        && self.saturation.is_normalized()
-        && self.value.is_normalized()
+        self.hue.is_normalized() && self.saturation.is_normalized() && self.value.is_normalized()
     }
 }
-    

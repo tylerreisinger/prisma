@@ -9,11 +9,9 @@ mod impl_macros;
 pub mod hue_angle;
 pub mod channel;
 pub mod color;
-//pub mod alpha;
+pub mod alpha;
 pub mod rgb;
 pub mod hsv;
 
 #[cfg(test)]
-mod tests {
-
-}
+mod tests {}

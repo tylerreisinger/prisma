@@ -7,15 +7,15 @@ use ::color;
 pub struct BoundedChannel<T>(pub T);
 
 impl<T> BoundedChannel<T>
-    where T: BoundedChannelScalarTraits 
+    where T: BoundedChannelScalarTraits
 {
     pub fn new(val: T) -> Self {
         BoundedChannel(val)
     }
 }
 
-impl<T> ColorChannel for BoundedChannel<T> 
-    where T: BoundedChannelScalarTraits 
+impl<T> ColorChannel for BoundedChannel<T>
+    where T: BoundedChannelScalarTraits
 {
     type Format = T;
 
@@ -33,7 +33,7 @@ impl<T> ColorChannel for BoundedChannel<T>
     impl_channel_clamp!(BoundedChannel, T);
 }
 
-impl<T> color::Invert for BoundedChannel<T> 
+impl<T> color::Invert for BoundedChannel<T>
     where T: BoundedChannelScalarTraits
 {
     fn invert(self) -> Self {
@@ -52,7 +52,7 @@ impl<T> color::Bounded for BoundedChannel<T>
     }
 }
 
-impl<T> color::Lerp for BoundedChannel<T> 
+impl<T> color::Lerp for BoundedChannel<T>
     where T: BoundedChannelScalarTraits + color::Lerp
 {
     type Position = <T as color::Lerp>::Position;
@@ -61,7 +61,7 @@ impl<T> color::Lerp for BoundedChannel<T>
     }
 }
 
-impl<T> Default for BoundedChannel<T> 
+impl<T> Default for BoundedChannel<T>
     where T: BoundedChannelScalarTraits
 {
     fn default() -> Self {
@@ -69,7 +69,7 @@ impl<T> Default for BoundedChannel<T>
     }
 }
 
-impl<T> fmt::Display for BoundedChannel<T> 
+impl<T> fmt::Display for BoundedChannel<T>
     where T: BoundedChannelScalarTraits + fmt::Display
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
