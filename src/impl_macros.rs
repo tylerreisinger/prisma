@@ -28,12 +28,12 @@ macro_rules! impl_approx_eq {
         }
         fn relative_eq(&self, other: &Self, epsilon: Self::Epsilon,
                        max_relative: Self::Epsilon) -> bool {
-            true $(&& self.$name().relative_eq(&other.$name(), epsilon.clone(),
+            true $(&& self.$name.relative_eq(&other.$name, epsilon.clone(),
                 max_relative.clone()))*
         }
         fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon,
                    max_ulps: u32) -> bool {
-            true $(&& self.$name().ulps_eq(&other.$name(), epsilon.clone(), max_ulps))*
+            true $(&& self.$name.ulps_eq(&other.$name, epsilon.clone(), max_ulps))*
         }
     }
 }

@@ -2,7 +2,7 @@ use angle;
 use color::Color;
 
 pub trait FromColor<From> {
-    fn from_color(from: From) -> Self;
+    fn from_color(from: &From) -> Self;
 }
 
 pub trait GetChroma {

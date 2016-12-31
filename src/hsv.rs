@@ -2,12 +2,15 @@ use std::fmt;
 use std::ops;
 use approx;
 use num;
+use num::{cast, Float};
 use channel::{BoundedChannel, AngularChannel, BoundedChannelScalarTraits, AngularChannelTraits};
 use hue_angle;
 use color::{Color, PolarColor, Invert, Lerp, Bounded};
 use color;
+use rgb;
 use convert;
 use angle;
+use angle::{Angle, FromAngle};
 
 pub struct HsvTag;
 
@@ -138,7 +141,7 @@ impl<T, A> Bounded for Hsv<T, A>
 impl<T, A> approx::ApproxEq for Hsv<T, A>
     where T: BoundedChannelScalarTraits + approx::ApproxEq<Epsilon = A::Epsilon>,
           A: AngularChannelTraits + approx::ApproxEq,
-          A::Epsilon: Clone
+          A::Epsilon: Clone + num::Float
 {
     impl_approx_eq!({hue, saturation, value});
 }
@@ -185,6 +188,62 @@ impl<T, A> convert::GetHue for Hsv<T, A>
     }
 }
 
+pub fn decompose_hue_segment<T, A>(color: &Hsv<T, A>) -> (i32, A::Scalar) 
+    where T: BoundedChannelScalarTraits + num::Float,
+          A: AngularChannelTraits + angle::Angle,
+          angle::Turns<A::Scalar>: angle::FromAngle<A>
+{
+    let scaled_hue = (angle::Turns::from_angle(color.hue()) * cast(6.0).unwrap()).scalar();
+    let hue_seg = scaled_hue.floor();
+
+    (cast(hue_seg).unwrap(), scaled_hue - hue_seg)
+}
+
+impl<T, A> convert::FromColor<Hsv<T, A>> for rgb::Rgb<T>
+    where T: BoundedChannelScalarTraits + num::Float,
+          A: AngularChannelTraits
+{
+
+    fn from_color(from: &Hsv<T, A>) -> Self {
+        let (hue_seg, hue_frac) = decompose_hue_segment(from);
+        let one: T = cast(1.0).unwrap();
+        let hue_frac_t: T = cast(hue_frac).unwrap();
+
+        let channel_min = from.value() * (one - from.saturation());
+        let channel_max = from.value();
+
+        match hue_seg {
+            0 => {
+               let g = from.value() * (one - from.saturation() * (one - hue_frac_t));
+               rgb::Rgb::from_channels(channel_max, g, channel_min)
+            }
+            1 => {
+                let r = from.value() * (one - from.saturation() * hue_frac_t);
+                rgb::Rgb::from_channels(r, channel_max, channel_min)
+            }
+            2 => {
+                let b = from.value() * (one - from.saturation() * (one - hue_frac_t));
+                rgb::Rgb::from_channels(channel_min, channel_max, b)
+            }
+            3 => {
+                let g = from.value() * (one - from.saturation() * hue_frac_t);
+                rgb::Rgb::from_channels(channel_min, g, channel_max)
+            }
+            4 => {
+                let r = from.value() * (one - from.saturation() * (one - hue_frac_t));
+                rgb::Rgb::from_channels(r, channel_min, channel_max)
+            }
+            5 => {
+                let b = from.value() * (one - from.saturation() * hue_frac_t);
+                rgb::Rgb::from_channels(channel_max, channel_min, b)
+
+            }
+            _ => unreachable!()
+        }
+    }
+}
+
+
 #[cfg(test)]
 mod test {
     use std::f32::consts;
@@ -192,6 +251,9 @@ mod test {
     use hue_angle::*;
     use color::*;
     use convert::*;
+    use rgb;
+
+    use test_data;
 
     #[test]
     fn test_construct() {
@@ -249,6 +311,12 @@ mod test {
 
     #[test]
     fn test_chroma() {
+        let test_data = test_data::make_test_array();
+
+        for item in test_data.iter() {
+            assert_relative_eq!(item.hsv.get_chroma(), item.chroma, epsilon=1e-3);
+        }
+
         let c1 = Hsv::from_channels(Deg(100.0), 0.5, 0.5);
         assert_ulps_eq!(c1.get_chroma(), 0.25);
         assert_relative_eq!(
@@ -267,4 +335,17 @@ mod test {
         assert_ulps_eq!(Hsv::from_channels(Turns(0.0), 0.00, 0.00).get_hue(), 
                         Rad(0.0));
     }
+
+    #[test]
+    fn test_rgb_from_hsv() {
+        let test_data = test_data::make_test_array();
+
+        for item in test_data.iter() {
+            let rgb = rgb::Rgb::from_color(&item.hsv);
+            assert_relative_eq!(rgb, item.rgb, epsilon=1e-3);
+        }
+
+
+    }
+
 }
