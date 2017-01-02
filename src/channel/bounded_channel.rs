@@ -8,18 +8,11 @@ use approx;
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BoundedChannel<T>(pub T);
 
-impl<T> BoundedChannel<T>
-    where T: BoundedChannelScalarTraits
-{
-    pub fn new(val: T) -> Self {
-        BoundedChannel(val)
-    }
-}
-
 impl<T> ColorChannel for BoundedChannel<T>
     where T: BoundedChannelScalarTraits
 {
     type Format = T;
+    type Scalar = T;
 
     fn min_bound() -> T {
         T::min_bound()
@@ -33,6 +26,16 @@ impl<T> ColorChannel for BoundedChannel<T>
     }
 
     impl_channel_clamp!(BoundedChannel, T);
+
+    fn scalar(&self) -> T {
+        self.0.clone()
+    }
+    fn from_scalar(value: T) -> Self {
+        BoundedChannel(value)
+    }
+    fn new(value: T) -> Self {
+        BoundedChannel(value)
+    }
 }
 
 impl<T> color::Invert for BoundedChannel<T>

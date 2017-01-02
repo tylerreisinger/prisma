@@ -11,6 +11,7 @@ use rgb;
 use convert;
 use angle;
 use angle::{Angle, FromAngle};
+use channel::cast::ChannelFormatCast;
 
 pub struct HsvTag;
 
@@ -30,6 +31,17 @@ impl<T, A> Hsv<T, A>
             hue: AngularChannel(hue),
             saturation: BoundedChannel(saturation),
             value: BoundedChannel(value),
+        }
+    }
+
+    pub fn color_cast<TOut, AOut>(&self) -> Hsv<TOut, AOut>
+        where T: ChannelFormatCast<TOut>,
+              A: ChannelFormatCast<AOut>
+    {
+        Hsv {
+            hue: AngularChannel(self.hue.0.clone().cast()),
+            saturation: BoundedChannel(self.saturation.0.clone().cast()),
+            value: BoundedChannel(self.value.0.clone().cast()),
         }
     }
 
@@ -138,6 +150,18 @@ impl<T, A> Bounded for Hsv<T, A>
     }
 }
 
+// impl<T, A> color::ColorCast for Hsv<T, A>
+// where T: BoundedChannelScalarTraits,
+// A: AngularChannelTraits
+// {
+// fn color_cast<To>(&self) -> To
+// where To: Color<Tag=Self::Tag>
+// {
+// `
+// unimplemented!()
+// }
+// }
+
 impl<T, A> approx::ApproxEq for Hsv<T, A>
     where T: BoundedChannelScalarTraits + approx::ApproxEq<Epsilon = A::Epsilon>,
           A: AngularChannelTraits + approx::ApproxEq,
@@ -188,7 +212,7 @@ impl<T, A> convert::GetHue for Hsv<T, A>
     }
 }
 
-pub fn decompose_hue_segment<T, A>(color: &Hsv<T, A>) -> (i32, A::Scalar) 
+pub fn decompose_hue_segment<T, A>(color: &Hsv<T, A>) -> (i32, A::Scalar)
     where T: BoundedChannelScalarTraits + num::Float,
           A: AngularChannelTraits + angle::Angle,
           angle::Turns<A::Scalar>: angle::FromAngle<A>
@@ -203,7 +227,6 @@ impl<T, A> convert::FromColor<Hsv<T, A>> for rgb::Rgb<T>
     where T: BoundedChannelScalarTraits + num::Float,
           A: AngularChannelTraits
 {
-
     fn from_color(from: &Hsv<T, A>) -> Self {
         let (hue_seg, hue_frac) = decompose_hue_segment(from);
         let one: T = cast(1.0).unwrap();
@@ -214,8 +237,8 @@ impl<T, A> convert::FromColor<Hsv<T, A>> for rgb::Rgb<T>
 
         match hue_seg {
             0 => {
-               let g = from.value() * (one - from.saturation() * (one - hue_frac_t));
-               rgb::Rgb::from_channels(channel_max, g, channel_min)
+                let g = from.value() * (one - from.saturation() * (one - hue_frac_t));
+                rgb::Rgb::from_channels(channel_max, g, channel_min)
             }
             1 => {
                 let r = from.value() * (one - from.saturation() * hue_frac_t);
@@ -238,7 +261,7 @@ impl<T, A> convert::FromColor<Hsv<T, A>> for rgb::Rgb<T>
                 rgb::Rgb::from_channels(channel_max, channel_min, b)
 
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 }
@@ -348,4 +371,17 @@ mod test {
 
     }
 
+    #[test]
+    fn test_cast() {
+        let c1 = Hsv::from_channels(Deg(180.0_f32), 0.5_f32, 0.3);
+        assert_relative_eq!(c1.color_cast(), 
+            Hsv::from_channels(Rad(consts::PI), 0.5_f32, 0.3), epsilon=1e-6);
+
+        let c2 = Hsv::from_channels(Deg(55.0), 0.3, 0.2);
+        assert_relative_eq!(c2.color_cast(),
+            Hsv::from_channels(Deg(55.0_f32), 0.3_f32, 0.2_f32));
+
+        let c3 = Hsv::from_channels(Rad(2.0), 0.88, 0.66);
+        assert_relative_eq!(c3.color_cast(), c3);
+    }
 }

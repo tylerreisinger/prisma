@@ -18,7 +18,7 @@ macro_rules! impl_traits_for_angle {
                 <Self as Angle>::is_normalized(self)
             }
             fn normalize(self) -> Self {
-                <Self as Angle>::normalize(&self)
+                <Self as Angle>::normalize(self)
             }
         }
 
