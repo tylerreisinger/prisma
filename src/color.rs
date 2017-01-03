@@ -44,6 +44,3 @@ pub trait Bounded {
     fn is_normalized(&self) -> bool;
 }
 
-pub trait ColorCast: Color {
-    fn color_cast<To>(&self) -> To where To: Color<Tag = Self::Tag>;
-}
