@@ -48,3 +48,67 @@ macro_rules! impl_color_as_slice {
         }
     }
 }
+
+macro_rules! impl_color_from_slice_angular {
+    ($name: ident<$T:ident, $A:ident> {
+        $ang_field:ident:$ai:expr, $($fields:ident:$i:expr),*
+    }) => {
+        fn from_slice(vals: &[T]) -> Self {
+            $name {
+                $ang_field: AngularChannel($A::from_angle(angle::Turns(vals[$ai].clone()))),
+                $($fields: BoundedChannel(vals[$i].clone())),*
+            }
+        }
+    }
+}
+
+macro_rules! impl_color_transform_body_channel_forward {
+    ($name: ident {$($fields: ident),*} $f: ident, $s: ident) => {
+        $name {
+            $($fields: $s.$fields.$f()),*
+        }
+    }
+}
+
+macro_rules! impl_color_invert {
+    ($name: ident {$($fields: ident),*}) => {
+        fn invert(self) -> Self {
+            impl_color_transform_body_channel_forward!($name {$($fields),*} invert, self)
+        }
+    }
+}
+
+macro_rules! impl_color_bounded {
+    ($name: ident {$($fields: ident),*}) => {
+        fn normalize(self) -> Self {
+            impl_color_transform_body_channel_forward!($name {$($fields),*} normalize, self)
+        }
+
+        fn is_normalized(&self) -> bool {
+            true $(&& self.$fields.is_normalized())*
+        }
+    }
+}
+
+macro_rules! impl_color_lerp_angular {
+    ($name: ident<$T: ident> {$ang_field: ident, $($fields: ident),*}) => {
+        
+        fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
+            let tpos: $T::Position = num::cast(pos).unwrap();
+            $name {
+                $ang_field: self.$ang_field.lerp(&right.$ang_field, pos),
+                $($fields: self.$fields.lerp(&right.$fields, tpos.clone())),*
+            }
+        }
+    }
+}
+
+macro_rules! impl_color_default {
+    ($name:ident {$($fields:ident:$ChanType:ident),*}) => {
+        fn default() -> Self {
+            $name {
+                $($fields: $ChanType::default()),*
+            }
+        }
+    }
+}
