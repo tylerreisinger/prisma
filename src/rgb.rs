@@ -164,12 +164,8 @@ impl<T> color::Flatten for Rgb<T>
     where T: BoundedChannelScalarTraits
 {
     type ScalarFormat = T;
-    fn as_slice(&self) -> &[Self::ScalarFormat] {
-        unsafe {
-            let ptr: *const T = mem::transmute(self);
-            slice::from_raw_parts(ptr, Self::num_channels() as usize)
-        }
-    }
+
+    impl_color_as_slice!(T);
     fn from_slice(values: &[Self::ScalarFormat]) -> Self {
         Rgb {
             red: BoundedChannel(values[0].clone()),
