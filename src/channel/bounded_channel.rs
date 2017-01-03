@@ -75,7 +75,7 @@ impl<T> ChannelCast for BoundedChannel<T>
         where Self::Format: ChannelFormatCast<To::Format>,
               To: ColorChannel
     {
-        To::new(self.0.cast())        
+        To::new(self.0.cast())
     }
 }
 

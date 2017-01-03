@@ -56,7 +56,7 @@ impl<T> ColorChannel for AngularChannel<T>
 }
 
 impl<T> ChannelCast for AngularChannel<T>
-    where T: Angle + Default + ops::Sub<T, Output = T> + ops::Add<T, Output = T>,
+    where T: Angle + Default + ops::Sub<T, Output = T> + ops::Add<T, Output = T>
 {
     fn channel_cast<To>(self) -> To
         where Self::Format: ChannelFormatCast<To::Format>,

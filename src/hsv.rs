@@ -3,8 +3,8 @@ use std::ops;
 use approx;
 use num;
 use num::{cast, Float};
-use channel::{BoundedChannel, AngularChannel, ChannelCast,
-    BoundedChannelScalarTraits, AngularChannelTraits};
+use channel::{BoundedChannel, AngularChannel, ChannelCast, BoundedChannelScalarTraits,
+              AngularChannelTraits};
 use hue_angle;
 use color::{Color, PolarColor, Invert, Lerp, Bounded};
 use color;
@@ -39,8 +39,7 @@ impl<T, A> Hsv<T, A>
         where T: ChannelFormatCast<TOut>,
               A: ChannelFormatCast<AOut>,
               AOut: AngularChannelTraits,
-              TOut: BoundedChannelScalarTraits,
-              
+              TOut: BoundedChannelScalarTraits
     {
         Hsv {
             hue: self.hue.clone().channel_cast(),

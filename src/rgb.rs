@@ -3,8 +3,8 @@ use std::mem;
 use num;
 use num::cast;
 use approx;
-use channel::{BoundedChannel, ColorChannel, BoundedChannelScalarTraits, 
-    AngularChannelTraits, ChannelFormatCast, ChannelCast};
+use channel::{BoundedChannel, ColorChannel, BoundedChannelScalarTraits, AngularChannelTraits,
+              ChannelFormatCast, ChannelCast};
 use color;
 use color::{Color, HomogeneousColor};
 use convert;
@@ -32,7 +32,7 @@ impl<T> Rgb<T>
     }
     pub fn color_cast<TOut>(&self) -> Rgb<TOut>
         where T: ChannelFormatCast<TOut>,
-              TOut: BoundedChannelScalarTraits,
+              TOut: BoundedChannelScalarTraits
     {
         Rgb {
             red: self.red.clone().channel_cast(),
