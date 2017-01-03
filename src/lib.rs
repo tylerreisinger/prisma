@@ -13,8 +13,7 @@ pub mod color;
 pub mod alpha;
 pub mod rgb;
 pub mod hsv;
-
-
+pub mod hsl;
 
 #[cfg(test)]
 pub mod test_data;

@@ -4,7 +4,7 @@ use std::mem;
 use std::slice;
 use approx;
 use num;
-use num::{cast, Float};
+use num::cast;
 use channel::{BoundedChannel, AngularChannel, ChannelCast, BoundedChannelScalarTraits,
               AngularChannelTraits};
 use hue_angle;
@@ -87,8 +87,8 @@ impl<T, A> PolarColor for Hsv<T, A>
     where T: BoundedChannelScalarTraits,
           A: AngularChannelTraits
 {
-    type Angular = T;
-    type Cartesian = A;
+    type Angular = A;
+    type Cartesian = T;
 }
 
 impl<T, A> Color for Hsv<T, A>
@@ -117,13 +117,7 @@ impl<T, A> Invert for Hsv<T, A>
     where T: BoundedChannelScalarTraits,
           A: AngularChannelTraits
 {
-    fn invert(self) -> Self {
-        Hsv {
-            hue: self.hue.invert(),
-            saturation: self.saturation.invert(),
-            value: self.value.invert(),
-        }
-    }
+    impl_color_invert!(Hsv {hue, saturation, value});
 }
 
 impl<T, A> Lerp for Hsv<T, A>
@@ -132,31 +126,14 @@ impl<T, A> Lerp for Hsv<T, A>
 {
     type Position = A::Position;
 
-    fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
-        let tpos: T::Position = num::cast(pos).unwrap();
-        Hsv {
-            hue: self.hue.lerp(&right.hue, pos),
-            saturation: self.saturation.lerp(&right.saturation, tpos.clone()),
-            value: self.value.lerp(&right.value, tpos.clone()),
-        }
-    }
+    impl_color_lerp_angular!(Hsv<T> {hue, saturation, value});
 }
 
 impl<T, A> Bounded for Hsv<T, A>
     where T: BoundedChannelScalarTraits,
           A: AngularChannelTraits
 {
-    fn normalize(self) -> Self {
-        Hsv {
-            hue: self.hue.normalize(),
-            saturation: self.saturation.normalize(),
-            value: self.value.normalize(),
-        }
-    }
-
-    fn is_normalized(&self) -> bool {
-        self.hue.is_normalized() && self.saturation.is_normalized() && self.value.is_normalized()
-    }
+    impl_color_bounded!(Hsv {hue, saturation, value});
 }
 
 impl<T, A> color::Flatten for Hsv<T, A>
@@ -166,14 +143,7 @@ impl<T, A> color::Flatten for Hsv<T, A>
     type ScalarFormat = T;
 
     impl_color_as_slice!(T);
-
-    fn from_slice(vals: &[T]) -> Self {
-        Hsv {
-            hue: AngularChannel(A::from_angle(angle::Turns(vals[0].clone()))),
-            saturation: BoundedChannel(vals[1].clone()),
-            value: BoundedChannel(vals[2].clone()),
-        }
-    }
+    impl_color_from_slice_angular!(Hsv<T, A> {hue:0, saturation:1, value:2});
 }
 
 impl<T, A> approx::ApproxEq for Hsv<T, A>
@@ -188,13 +158,8 @@ impl<T, A> Default for Hsv<T, A>
     where T: BoundedChannelScalarTraits + num::Zero,
           A: AngularChannelTraits + num::Zero
 {
-    fn default() -> Self {
-        Hsv {
-            hue: AngularChannel::default(),
-            saturation: BoundedChannel::default(),
-            value: BoundedChannel::default(),
-        }
-    }
+    impl_color_default!(Hsv {hue: AngularChannel, 
+        saturation: BoundedChannel, value: BoundedChannel});
 }
 
 impl<T, A> fmt::Display for Hsv<T, A>
@@ -207,7 +172,8 @@ impl<T, A> fmt::Display for Hsv<T, A>
 }
 
 impl<T, A> convert::GetChroma for Hsv<T, A>
-    where T: BoundedChannelScalarTraits + ops::Mul<T, Output = T>
+    where T: BoundedChannelScalarTraits + ops::Mul<T, Output = T>,
+          A: AngularChannelTraits
 {
     type ChromaType = T;
     fn get_chroma(&self) -> T {
@@ -226,23 +192,12 @@ impl<T, A> convert::GetHue for Hsv<T, A>
     }
 }
 
-pub fn decompose_hue_segment<T, A>(color: &Hsv<T, A>) -> (i32, A::Scalar)
-    where T: BoundedChannelScalarTraits + num::Float,
-          A: AngularChannelTraits + angle::Angle,
-          angle::Turns<A::Scalar>: angle::FromAngle<A>
-{
-    let scaled_hue = (angle::Turns::from_angle(color.hue()) * cast(6.0).unwrap()).scalar();
-    let hue_seg = scaled_hue.floor();
-
-    (cast(hue_seg).unwrap(), scaled_hue - hue_seg)
-}
-
 impl<T, A> convert::FromColor<Hsv<T, A>> for rgb::Rgb<T>
     where T: BoundedChannelScalarTraits + num::Float,
           A: AngularChannelTraits
 {
     fn from_color(from: &Hsv<T, A>) -> Self {
-        let (hue_seg, hue_frac) = decompose_hue_segment(from);
+        let (hue_seg, hue_frac) = convert::decompose_hue_segment(from);
         let one: T = cast(1.0).unwrap();
         let hue_frac_t: T = cast(hue_frac).unwrap();
 

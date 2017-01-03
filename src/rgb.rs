@@ -11,6 +11,7 @@ use color::{Color, HomogeneousColor};
 use convert;
 use angle;
 use hsv;
+use hsl;
 use alpha::Alpha;
 
 pub struct RgbTag;
@@ -123,13 +124,7 @@ impl<T> color::Color3 for Rgb<T> where T: BoundedChannelScalarTraits {}
 impl<T> color::Invert for Rgb<T>
     where T: BoundedChannelScalarTraits
 {
-    fn invert(self) -> Self {
-        Rgb {
-            red: self.red.invert(),
-            green: self.green.invert(),
-            blue: self.blue.invert(),
-        }
-    }
+    impl_color_invert!(Rgb {red, green, blue});
 }
 
 impl<T> color::Bounded for Rgb<T>
@@ -179,47 +174,14 @@ impl<T> approx::ApproxEq for Rgb<T>
     where T: BoundedChannelScalarTraits + approx::ApproxEq,
           T::Epsilon: Clone
 {
-    type Epsilon = T::Epsilon;
-
-    fn default_epsilon() -> Self::Epsilon {
-        T::default_epsilon()
-    }
-
-    fn default_max_relative() -> Self::Epsilon {
-        T::default_max_relative()
-    }
-
-    fn default_max_ulps() -> u32 {
-        T::default_max_ulps()
-    }
-
-    fn relative_eq(&self,
-                   other: &Self,
-                   epsilon: Self::Epsilon,
-                   max_relative: Self::Epsilon)
-                   -> bool {
-        self.red().relative_eq(&other.red(), epsilon.clone(), max_relative.clone()) &&
-        self.green().relative_eq(&other.green(), epsilon.clone(), max_relative.clone()) &&
-        self.blue().relative_eq(&other.blue(), epsilon, max_relative)
-    }
-
-    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        self.red().ulps_eq(&other.red(), epsilon.clone(), max_ulps) &&
-        self.green().ulps_eq(&other.green(), epsilon.clone(), max_ulps) &&
-        self.blue().ulps_eq(&other.blue(), epsilon.clone(), max_ulps)
-    }
+    impl_approx_eq!({red, green, blue});
 }
 
 impl<T> Default for Rgb<T>
     where T: BoundedChannelScalarTraits + num::Zero
 {
-    fn default() -> Self {
-        Rgb {
-            red: BoundedChannel::default(),
-            green: BoundedChannel::default(),
-            blue: BoundedChannel::default(),
-        }
-    }
+    impl_color_default!(Rgb {red:BoundedChannel, green:BoundedChannel, 
+        blue:BoundedChannel});
 }
 
 impl<T> fmt::Display for Rgb<T>
@@ -317,6 +279,27 @@ impl<T, A> convert::FromColor<Rgb<T>> for hsv::Hsv<T, A>
     }
 }
 
+impl<T, A> convert::FromColor<Rgb<T>> for hsl::Hsl<T, A>
+    where T: BoundedChannelScalarTraits + num::Float,
+          A: AngularChannelTraits + angle::FromAngle<angle::Turns<T>>
+{
+    fn from_color(from: &Rgb<T>) -> Self {
+        let epsilon = cast(1e-10).unwrap();
+        let (scaling_factor, c1, c2, c3, min_channel) = get_hue_factor_and_ordered_chans(from);
+        let max_channel = c1;
+        let chroma = max_channel - min_channel;
+        let hue =
+            make_hue_from_factor_and_ordered_chans(&c1, &c2, &c3, &min_channel, &scaling_factor);
+        let lightness = cast::<_, T>(0.5).unwrap() * (max_channel + min_channel);
+        let one: T = cast(1.0).unwrap();
+        let sat_denom = one - (cast::<_, T>(2.0).unwrap() * lightness - one).abs() + epsilon;
+
+        let saturation = chroma / sat_denom;
+
+        hsl::Hsl::from_channels(A::from_angle(angle::Turns(hue)), saturation, lightness)
+    }
+}
+
 
 #[cfg(test)]
 mod test {
@@ -325,6 +308,7 @@ mod test {
     use ::convert::*;
     use ::angle::*;
     use hsv::Hsv;
+    use hsl::Hsl;
     use test_data;
 
     #[test]
@@ -432,6 +416,16 @@ mod test {
 
         let c1 = Rgb::from_channels(0.2, 0.2, 0.2);
         assert_relative_eq!(Hsv::from_color(&c1), Hsv::from_channels(Deg(0.0), 0.0, 0.2));
+    }
+
+    #[test]
+    fn hsl_from_rgb() {
+        let test_data = test_data::make_test_array();
+
+        for item in test_data.iter() {
+            let hsl: Hsl<_, Deg<_>> = Hsl::from_color(&item.rgb);
+            assert_relative_eq!(hsl, item.hsl, epsilon = 1e-3);
+        }
     }
 
     #[test]
