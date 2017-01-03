@@ -3,7 +3,8 @@ use std::mem;
 use num;
 use num::cast;
 use approx;
-use channel::{BoundedChannel, ColorChannel, BoundedChannelScalarTraits, AngularChannelTraits};
+use channel::{BoundedChannel, ColorChannel, BoundedChannelScalarTraits, 
+    AngularChannelTraits, ChannelFormatCast, ChannelCast};
 use color;
 use color::{Color, HomogeneousColor};
 use convert;
@@ -29,6 +30,17 @@ impl<T> Rgb<T>
             blue: BoundedChannel(blue),
         }
     }
+    pub fn color_cast<TOut>(&self) -> Rgb<TOut>
+        where T: ChannelFormatCast<TOut>,
+              TOut: BoundedChannelScalarTraits,
+    {
+        Rgb {
+            red: self.red.clone().channel_cast(),
+            green: self.green.clone().channel_cast(),
+            blue: self.blue.clone().channel_cast(),
+        }
+    }
+
     pub fn red(&self) -> T {
         self.red.0.clone()
     }
@@ -397,5 +409,45 @@ mod test {
 
         let c1 = Rgb::from_channels(0.2, 0.2, 0.2);
         assert_relative_eq!(Hsv::from_color(&c1), Hsv::from_channels(Deg(0.0), 0.0, 0.2));
+    }
+
+    #[test]
+    fn color_cast() {
+        let c1 = Rgb::from_channels(0u8, 0, 0);
+        assert_eq!(c1.color_cast(), c1);
+        assert_eq!(c1.color_cast(), Rgb::from_channels(0u16, 0, 0));
+        assert_eq!(c1.color_cast(), Rgb::from_channels(0u32, 0, 0));
+        assert_relative_eq!(c1.color_cast(), Rgb::from_channels(0.0f32, 0.0, 0.0));
+        assert_relative_eq!(c1.color_cast(), Rgb::from_channels(0.0f64, 0.0, 0.0));
+
+        let c2 = Rgb::from_channels(255u8, 127, 255);
+        assert_eq!(c2.color_cast(), c2);
+        assert_relative_eq!(c2.color_cast(), 
+            Rgb::from_channels(1.0f32, 0.4980392, 1.0), epsilon=1e-6);
+
+        let c3 = Rgb::from_channels(65535u16, 0, 20000);
+        assert_eq!(c3.color_cast(), c3);
+        assert_relative_eq!(c3.color_cast(),
+            Rgb::from_channels(1.0f64, 0.0, 0.3051804), epsilon=1e-6);
+        assert_eq!(c3.color_cast::<f32>().color_cast(), c3);
+
+        let c4 = Rgb::from_channels(1.0f32, 0.25, 0.0);
+        assert_eq!(c4.color_cast(), c4);
+        assert_eq!(c4.color_cast(), Rgb::from_channels(255u8, 63, 0));
+        assert_eq!(c4.color_cast(), Rgb::from_channels(0xffffu16, 0x3fff, 0));
+
+        let c5 = Rgb::from_channels(0.33f64, 0.50, 0.80);
+        assert_eq!(c5.color_cast(), c5);
+        assert_relative_eq!(c5.color_cast(), 
+            Rgb::from_channels(0.33f32, 0.50, 0.80), epsilon=1e-6);
+        assert_relative_eq!(c5.color_cast::<f64>().color_cast(), c5,
+            epsilon=1e-6);
+
+        let c6 = Rgb::from_channels(0.60f32, 0.01, 0.99);
+        assert_eq!(c6.color_cast(), c6);
+        assert_eq!(c6.color_cast(), Rgb::from_channels(153u8, 2, 253));
+        assert_relative_eq!(c6.color_cast::<u16>().color_cast::<u32>()
+                   .color_cast::<f32>().color_cast::<f64>(),
+            Rgb::from_channels(0.60f64, 0.01, 0.99), epsilon=1e-4);
     }
 }
