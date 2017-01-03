@@ -1,12 +1,15 @@
 use std::fmt;
 use std::marker::PhantomData;
+use std::slice;
+use std::mem;
 use approx;
 use num;
-use channel::{BoundedChannel, BoundedChannelScalarTraits};
-use color::{Color, Invert, Lerp, Bounded, PolarColor};
+use channel::{BoundedChannel, BoundedChannelScalarTraits, ColorChannel};
+use color::{Color, Invert, Lerp, Bounded, PolarColor, HomogeneousColor, Flatten};
 
 pub struct AlphaTag<T>(pub PhantomData<T>);
 
+#[repr(C)]
 #[derive(Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct Alpha<T, InnerColor> {
     color: InnerColor,
@@ -96,7 +99,7 @@ impl<T, InnerColor> Lerp for Alpha<T, InnerColor>
 }
 
 impl<T, InnerColor> Bounded for Alpha<T, InnerColor>
-    where T: BoundedChannelScalarTraits + Bounded,
+    where T: BoundedChannelScalarTraits,
           InnerColor: Color + Bounded
 {
     fn normalize(self) -> Self {
@@ -110,6 +113,41 @@ impl<T, InnerColor> Bounded for Alpha<T, InnerColor>
     }
 }
 
+impl<T, InnerColor> HomogeneousColor for Alpha<T, InnerColor>
+    where T: BoundedChannelScalarTraits,
+          InnerColor: Color + HomogeneousColor<ChannelFormat = T>
+{
+    type ChannelFormat = T;
+    fn broadcast(value: T) -> Self {
+        Alpha {
+            color: InnerColor::broadcast(value.clone()),
+            alpha: BoundedChannel(value),
+        }
+    }
+    fn clamp(self, min: T, max: T) -> Self {
+        Alpha {
+            color: self.color.clamp(min.clone(), max.clone()),
+            alpha: self.alpha.clamp(min, max),
+        }
+    }
+}
+
+impl<T, InnerColor> Flatten for Alpha<T, InnerColor>
+    where T: BoundedChannelScalarTraits,
+          InnerColor: Color + Flatten<ScalarFormat = T>
+{
+    type ScalarFormat = T;
+
+    impl_color_as_slice!(T);
+
+    fn from_slice(values: &[T]) -> Self {
+        Alpha {
+            color: InnerColor::from_slice(values),
+            alpha: BoundedChannel(values[Self::num_channels() as usize - 1].clone()),
+        }
+    }
+}
+
 impl<T, InnerColor> PolarColor for Alpha<T, InnerColor>
     where T: BoundedChannelScalarTraits,
           InnerColor: Color + PolarColor<Cartesian = T>
@@ -117,6 +155,8 @@ impl<T, InnerColor> PolarColor for Alpha<T, InnerColor>
     type Angular = InnerColor::Angular;
     type Cartesian = InnerColor::Cartesian;
 }
+
+
 
 impl<T, InnerColor> approx::ApproxEq for Alpha<T, InnerColor>
     where T: BoundedChannelScalarTraits + approx::ApproxEq<Epsilon = InnerColor::Epsilon>,
@@ -150,7 +190,6 @@ impl<T, InnerColor> fmt::Display for Alpha<T, InnerColor>
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use rgb::*;
     use hsv::*;
     use angle::*;
@@ -163,11 +202,15 @@ mod test {
         assert_eq!(c1.color().red(), 30u8);
         assert_eq!(c1.color().green(), 120u8);
         assert_eq!(c1.color().blue(), 255u8);
+        let (ic1, a) = c1.to_tuple();
+        assert_eq!(ic1, (30u8, 120, 255));
+        assert_eq!(a, 222u8);
 
         let mut c2 = Hsva::from_color_and_alpha(Hsv::from_channels(Deg(0.3f32), 0.66, 0.9),
                                                 0.25f32);
         assert_eq!(c2.alpha(), 0.25f32);
         assert_ulps_eq!(*c2.color(), Hsv::from_channels(Deg(0.3f32), 0.66, 0.9));
+        assert_eq!(c2, Hsva::from_tuple(((Deg(0.3f32), 0.66f32, 0.9), 0.25)));
         *c2.alpha_mut() = 0.75;
         *c2.color_mut().saturation_mut() = 0.01;
         assert_ulps_eq!(c2, 
@@ -176,6 +219,13 @@ mod test {
         let (c, a) = c2.clone().decompose();
         assert_eq!(c, *c2.color());
         assert_eq!(a, c2.alpha());
+
+        let c3 = Rgba::broadcast(50u8);
+        assert_eq!(c3, Rgba::from_tuple(((50u8, 50, 50), 50)));
+
+        let c4 = Rgba::from_color_and_alpha(Rgb::from_channels(0.2, 0.6, 0.99), 0.05);
+        assert_relative_eq!(c4.clamp(0.25, 0.75), 
+            Rgba::from_color_and_alpha(Rgb::from_channels(0.25, 0.6, 0.75), 0.25));
     }
 
     #[test]
@@ -209,5 +259,17 @@ mod test {
         assert_relative_eq!(c3.lerp(&c4, 0.25), 
             Hsva::from_color_and_alpha(Hsv::from_channels(
                 Deg(40.0), 0.425, 0.41250), 0.7750));
+    }
+
+    #[test]
+    fn test_flatten() {
+        let c1 = Rgba::from_color_and_alpha(Rgb::from_channels(100u8, 50, 175), 254);
+        assert_eq!(c1.as_slice(), &[100u8, 50, 175, 254]);
+        assert_eq!(Rgba::from_slice(c1.as_slice()), c1);
+
+        let c2 = Hsva::from_color_and_alpha(Hsv::from_channels(Turns(0.5f32), 0.77f32, 0.5),
+                                            0.8765);
+        assert_eq!(c2.as_slice(), &[0.5f32, 0.77, 0.5, 0.8765]);
+        assert_eq!(Hsva::from_slice(c2.as_slice()), c2);
     }
 }
