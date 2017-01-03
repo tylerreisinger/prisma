@@ -7,6 +7,8 @@ use channel::{ChannelFormatCast, ColorChannel, ChannelCast};
 use angle::Angle;
 use approx;
 
+pub struct AngularChannelTag;
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AngularChannel<T>(pub T);
 
@@ -23,6 +25,7 @@ impl<T> ColorChannel for AngularChannel<T>
 {
     type Format = T;
     type Scalar = T::Scalar;
+    type Tag = AngularChannelTag;
 
     fn min_bound() -> T {
         T::zero()
@@ -60,7 +63,7 @@ impl<T> ChannelCast for AngularChannel<T>
 {
     fn channel_cast<To>(self) -> To
         where Self::Format: ChannelFormatCast<To::Format>,
-              To: ColorChannel
+              To: ColorChannel<Tag = Self::Tag>
     {
         To::new(self.0.cast())
     }

@@ -4,6 +4,7 @@ use channel::ChannelFormatCast;
 pub trait ColorChannel {
     type Format: Clone + PartialEq + PartialOrd + Default + ops::Add<Self::Format, Output = Self::Format> + ops::Sub<Self::Format, Output = Self::Format>;
     type Scalar;
+    type Tag;
 
     fn min_bound() -> Self::Format;
     fn max_bound() -> Self::Format;
@@ -18,5 +19,5 @@ pub trait ColorChannel {
 pub trait ChannelCast: ColorChannel {
     fn channel_cast<To>(self) -> To
         where Self::Format: ChannelFormatCast<To::Format>,
-              To: ColorChannel;
+              To: ColorChannel<Tag = Self::Tag>;
 }

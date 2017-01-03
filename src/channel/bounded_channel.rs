@@ -7,6 +7,8 @@ use channel::ChannelCast;
 use channel::cast::ChannelFormatCast;
 use ::color;
 
+pub struct BoundedChannelTag;
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BoundedChannel<T>(pub T);
 
@@ -15,6 +17,7 @@ impl<T> ColorChannel for BoundedChannel<T>
 {
     type Format = T;
     type Scalar = T;
+    type Tag = BoundedChannelTag;
 
     fn min_bound() -> T {
         T::min_bound()
@@ -73,7 +76,7 @@ impl<T> ChannelCast for BoundedChannel<T>
 {
     fn channel_cast<To>(self) -> To
         where Self::Format: ChannelFormatCast<To::Format>,
-              To: ColorChannel
+              To: ColorChannel<Tag = Self::Tag>
     {
         To::new(self.0.cast())
     }
