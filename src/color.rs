@@ -47,29 +47,3 @@ pub trait Bounded {
 pub trait ColorCast: Color {
     fn color_cast<To>(&self) -> To where To: Color<Tag = Self::Tag>;
 }
-
-// pub fn color_cast<To, From>(from: &From) -> To
-// where From: Color + Color3,
-// To: Color<Tag=From::Tag> + Color3,
-// To::Component: num::NumCast,
-// From::Component: num::NumCast,
-// {
-//
-// let to_scale = To::Component::max() - To::Component::min();
-// let from_scale = From::Component::max() - From::Component::min();
-//
-// let shift = cast::<_,f64>(To::Component::min()).unwrap()
-// - cast::<_,f64>(From::Component::min()).unwrap();
-// let factor: f64 = cast::<_,f64>(to_scale).unwrap()
-// / cast::<_,f64>(from_scale).unwrap();
-//
-// let mut out = [To::Component::default(); 3];
-// let vals = from.as_slice();
-//
-// for i in 0..3 {
-// out[i] = cast::<_, To::Component>(
-// cast::<_,f64>(vals[i]).unwrap()*factor + shift).unwrap();
-// }
-//
-// To::from_slice(&out)
-// }

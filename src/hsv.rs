@@ -154,18 +154,6 @@ impl<T, A> Bounded for Hsv<T, A>
     }
 }
 
-// impl<T, A> color::ColorCast for Hsv<T, A>
-// where T: BoundedChannelScalarTraits,
-// A: AngularChannelTraits
-// {
-// fn color_cast<To>(&self) -> To
-// where To: Color<Tag=Self::Tag>
-// {
-// `
-// unimplemented!()
-// }
-// }
-
 impl<T, A> approx::ApproxEq for Hsv<T, A>
     where T: BoundedChannelScalarTraits + approx::ApproxEq<Epsilon = A::Epsilon>,
           A: AngularChannelTraits + approx::ApproxEq,
