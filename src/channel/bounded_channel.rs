@@ -1,9 +1,11 @@
 use std::fmt;
 use num;
+use approx;
 use super::traits::ColorChannel;
 use super::data_traits::BoundedChannelScalarTraits;
+use channel::ChannelCast;
+use channel::cast::ChannelFormatCast;
 use ::color;
-use approx;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BoundedChannel<T>(pub T);
@@ -63,6 +65,17 @@ impl<T> color::Lerp for BoundedChannel<T>
     type Position = <T as color::Lerp>::Position;
     fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
         BoundedChannel(self.0.lerp(&right.0, pos))
+    }
+}
+
+impl<T> ChannelCast for BoundedChannel<T>
+    where T: BoundedChannelScalarTraits
+{
+    fn channel_cast<To>(self) -> To
+        where Self::Format: ChannelFormatCast<To::Format>,
+              To: ColorChannel
+    {
+        To::new(self.0.cast())        
     }
 }
 
