@@ -19,6 +19,7 @@ use alpha::Alpha;
 
 pub struct HsvTag;
 
+#[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct Hsv<T, A = hue_angle::Deg<T>> {
     pub hue: AngularChannel<A>,
