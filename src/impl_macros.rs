@@ -37,3 +37,14 @@ macro_rules! impl_approx_eq {
         }
     }
 }
+
+macro_rules! impl_color_as_slice {
+    ($T: ty) => {
+        fn as_slice(&self) -> &[Self::ScalarFormat] {
+            unsafe {
+                let ptr: *const Self::ScalarFormat = mem::transmute(self);
+                slice::from_raw_parts(ptr, Self::num_channels() as usize)
+            }
+        }
+    }
+}

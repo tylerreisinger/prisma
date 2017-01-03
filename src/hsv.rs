@@ -1,5 +1,7 @@
 use std::fmt;
 use std::ops;
+use std::mem;
+use std::slice;
 use approx;
 use num;
 use num::{cast, Float};
@@ -153,6 +155,23 @@ impl<T, A> Bounded for Hsv<T, A>
 
     fn is_normalized(&self) -> bool {
         self.hue.is_normalized() && self.saturation.is_normalized() && self.value.is_normalized()
+    }
+}
+
+impl<T, A> color::Flatten for Hsv<T, A>
+    where T: BoundedChannelScalarTraits + num::Float,
+          A: AngularChannelTraits + Angle<Scalar = T> + FromAngle<angle::Turns<T>>
+{
+    type ScalarFormat = T;
+
+    impl_color_as_slice!(T);
+
+    fn from_slice(vals: &[T]) -> Self {
+        Hsv {
+            hue: AngularChannel(A::from_angle(angle::Turns(vals[0].clone()))),
+            saturation: BoundedChannel(vals[1].clone()),
+            value: BoundedChannel(vals[2].clone()),
+        }
     }
 }
 
@@ -327,6 +346,14 @@ mod test {
     }
 
     #[test]
+    fn test_flatten() {
+        let c1 = Hsv::from_channels(Turns(0.5), 0.3, 0.2);
+        assert_eq!(c1.as_slice(), &[0.5, 0.3, 0.2]);
+        assert_eq!(c1, Hsv::from_slice(c1.as_slice()));
+        let c2 = Hsv::from_channels(Turns(0.5), 0.3, 0.2);
+    }
+
+    #[test]
     fn test_chroma() {
         let test_data = test_data::make_test_array();
 
@@ -361,8 +388,6 @@ mod test {
             let rgb = rgb::Rgb::from_color(&item.hsv);
             assert_relative_eq!(rgb, item.rgb, epsilon=1e-3);
         }
-
-
     }
 
     #[test]
