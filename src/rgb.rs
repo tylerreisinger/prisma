@@ -1,5 +1,6 @@
 use std::fmt;
 use std::mem;
+use std::slice;
 use num;
 use num::cast;
 use approx;
@@ -14,6 +15,7 @@ use alpha::Alpha;
 
 pub struct RgbTag;
 
+#[repr(C)]
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Rgb<T> {
     pub red: BoundedChannel<T>,
@@ -99,19 +101,7 @@ impl<T> HomogeneousColor for Rgb<T>
     where T: BoundedChannelScalarTraits
 {
     type ChannelFormat = T;
-    // fn from_slice(values: &[T]) -> Self {
-    // Rgb {
-    // red: BoundedChannel(values[0].clone()),
-    // green: BoundedChannel(values[1].clone()),
-    // blue: BoundedChannel(values[2].clone())
-    // }
-    // }
-    // fn as_slice(&self) -> &[T] {
-    // unsafe {
-    // let ptr: *const T = mem::transmute(self);
-    // slice::from_raw_parts(ptr, Self::num_channels() as usize)
-    // }
-    // }
+
     fn broadcast(value: T) -> Self {
         Rgb {
             red: BoundedChannel(value.clone()),
@@ -166,6 +156,25 @@ impl<T> color::Lerp for Rgb<T>
             red: self.red.lerp(&right.red, pos.clone()),
             green: self.green.lerp(&right.green, pos.clone()),
             blue: self.blue.lerp(&right.blue, pos.clone()),
+        }
+    }
+}
+
+impl<T> color::Flatten for Rgb<T>
+    where T: BoundedChannelScalarTraits
+{
+    type ScalarFormat = T;
+    fn as_slice(&self) -> &[Self::ScalarFormat] {
+        unsafe {
+            let ptr: *const T = mem::transmute(self);
+            slice::from_raw_parts(ptr, Self::num_channels() as usize)
+        }
+    }
+    fn from_slice(values: &[Self::ScalarFormat]) -> Self {
+        Rgb {
+            red: BoundedChannel(values[0].clone()),
+            green: BoundedChannel(values[1].clone()),
+            blue: BoundedChannel(values[2].clone()),
         }
     }
 }
@@ -332,6 +341,12 @@ mod test {
 
             let c2 = color.clone();
             assert_eq!(color, c2);
+
+            let c3 = Rgb::from_channels(120u8, 100u8, 255u8);
+            assert_eq!(c3.red(), 120u8);
+            assert_eq!(c3.green(), 100u8);
+            assert_eq!(c3.blue(), 255u8);
+            assert_eq!(c3.as_slice(), &[120u8, 100, 255]);
         }
         {
             let color: Rgb<u8> = Rgb::default();
@@ -342,6 +357,15 @@ mod test {
         {
             let color = Rgb::broadcast(0.5_f32);
             assert_ulps_eq!(color, Rgb::from_channels(0.5_f32, 0.5, 0.5));
+        }
+        {
+            let color = Rgb::from_slice(&[120u8, 240, 10]);
+            assert_eq!(color, Rgb::from_channels(120u8, 240, 10));
+            assert_eq!(color.to_tuple(), (120u8, 240, 10));
+        }
+        {
+            let c1 = Rgb::from_tuple((0.8f32, 0.5, 0.3));
+            assert_ulps_eq!(c1, Rgb::from_channels(0.8f32, 0.5, 0.3));
         }
     }
 
