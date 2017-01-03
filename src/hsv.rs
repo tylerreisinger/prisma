@@ -350,7 +350,6 @@ mod test {
         let c1 = Hsv::from_channels(Turns(0.5), 0.3, 0.2);
         assert_eq!(c1.as_slice(), &[0.5, 0.3, 0.2]);
         assert_eq!(c1, Hsv::from_slice(c1.as_slice()));
-        let c2 = Hsv::from_channels(Turns(0.5), 0.3, 0.2);
     }
 
     #[test]
