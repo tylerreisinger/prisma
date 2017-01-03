@@ -20,15 +20,13 @@ pub trait GetHue: Color {
             + FromAngle<Self::InternalAngle>;
 }
 
-pub fn decompose_hue_segment<Color>(color: &Color) -> (i32, 
-        <<Color as PolarColor>::Angular as Angle>::Scalar)
+pub fn decompose_hue_segment<Color>(color: &Color)
+                                    -> (i32, <<Color as PolarColor>::Angular as Angle>::Scalar)
     where Color: PolarColor + GetHue<InternalAngle = <Color as PolarColor>::Angular>,
-          Color::Angular: Angle,
+          Color::Angular: Angle
 {
-    let scaled_hue = (color.get_hue::<angle::Turns<_>>() 
-        * num::cast(6.0).unwrap()).scalar();
+    let scaled_hue = (color.get_hue::<angle::Turns<_>>() * num::cast(6.0).unwrap()).scalar();
     let hue_seg = scaled_hue.floor();
 
     (num::cast(hue_seg).unwrap(), scaled_hue - hue_seg)
 }
-

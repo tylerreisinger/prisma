@@ -7,8 +7,8 @@ use num;
 use hue_angle;
 use angle::{FromAngle, Angle};
 use angle;
-use channel::{BoundedChannel, AngularChannel, ChannelFormatCast, ChannelCast, 
-    BoundedChannelScalarTraits, AngularChannelTraits};
+use channel::{BoundedChannel, AngularChannel, ChannelFormatCast, ChannelCast,
+              BoundedChannelScalarTraits, AngularChannelTraits};
 use alpha::Alpha;
 use convert;
 use convert::GetChroma;
@@ -121,7 +121,7 @@ impl<T, A> color::Invert for Hsl<T, A>
 
 impl<T, A> color::Lerp for Hsl<T, A>
     where T: BoundedChannelScalarTraits + color::Lerp,
-          A: AngularChannelTraits + color::Lerp,
+          A: AngularChannelTraits + color::Lerp
 {
     type Position = A::Position;
 
@@ -130,7 +130,7 @@ impl<T, A> color::Lerp for Hsl<T, A>
 
 impl<T, A> color::Bounded for Hsl<T, A>
     where T: BoundedChannelScalarTraits,
-          A: AngularChannelTraits,
+          A: AngularChannelTraits
 {
     impl_color_bounded!(Hsl {hue, saturation, lightness});
 }
@@ -155,14 +155,14 @@ impl<T, A> approx::ApproxEq for Hsl<T, A>
 
 impl<T, A> Default for Hsl<T, A>
     where T: BoundedChannelScalarTraits + num::Zero,
-          A: AngularChannelTraits + num::Zero,
+          A: AngularChannelTraits + num::Zero
 {
     impl_color_default!(Hsl {
         hue:AngularChannel, saturation:BoundedChannel, lightness:BoundedChannel});
 }
-impl<T, A> fmt::Display for Hsl<T, A> 
+impl<T, A> fmt::Display for Hsl<T, A>
     where T: BoundedChannelScalarTraits + fmt::Display,
-          A: AngularChannelTraits + fmt::Display,
+          A: AngularChannelTraits + fmt::Display
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Hsl({}, {}, {})", self.hue, self.saturation, self.lightness)
@@ -171,14 +171,12 @@ impl<T, A> fmt::Display for Hsl<T, A>
 
 impl<T, A> convert::GetChroma for Hsl<T, A>
     where T: BoundedChannelScalarTraits + ops::Mul<T, Output = T> + num::Float,
-          A: AngularChannelTraits,
-
+          A: AngularChannelTraits
 {
     type ChromaType = T;
     fn get_chroma(&self) -> T {
         let one: T = num::cast(1.0).unwrap();
-        let scaled_lightness: T = (num::cast::<_, T>(2.0).unwrap() 
-           * self.lightness() - one).abs();
+        let scaled_lightness: T = (num::cast::<_, T>(2.0).unwrap() * self.lightness() - one).abs();
 
         (one - scaled_lightness) * self.saturation()
     }
@@ -204,7 +202,7 @@ impl<T, A> convert::FromColor<Hsl<T, A>> for Rgb<T>
         let one_half: T = num::cast(0.5).unwrap();
 
         let hue_frac_t: T = num::cast(hue_frac).unwrap();
-        
+
         let chroma = from.get_chroma();
         let channel_min = from.lightness() - num::cast::<_, T>(0.5).unwrap() * chroma;
         let channel_max = channel_min + chroma;
@@ -234,13 +232,13 @@ impl<T, A> convert::FromColor<Hsl<T, A>> for Rgb<T>
                 let b = chroma * (one_half - hue_frac_t) + from.lightness();
                 Rgb::from_channels(channel_max, channel_min, b)
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 }
 
 #[cfg(test)]
-mod test  {
+mod test {
     use super::*;
     use std::f32::consts;
     use hue_angle::*;

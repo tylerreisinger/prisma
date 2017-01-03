@@ -172,7 +172,7 @@ impl<T, A> fmt::Display for Hsv<T, A>
 
 impl<T, A> convert::GetChroma for Hsv<T, A>
     where T: BoundedChannelScalarTraits + ops::Mul<T, Output = T>,
-          A: AngularChannelTraits,
+          A: AngularChannelTraits
 {
     type ChromaType = T;
     fn get_chroma(&self) -> T {

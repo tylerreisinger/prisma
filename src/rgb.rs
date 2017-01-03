@@ -285,16 +285,14 @@ impl<T, A> convert::FromColor<Rgb<T>> for hsl::Hsl<T, A>
 {
     fn from_color(from: &Rgb<T>) -> Self {
         let epsilon = cast(1e-10).unwrap();
-        let (scaling_factor, c1, c2, c3, min_channel) = 
-            get_hue_factor_and_ordered_chans(from);
+        let (scaling_factor, c1, c2, c3, min_channel) = get_hue_factor_and_ordered_chans(from);
         let max_channel = c1;
         let chroma = max_channel - min_channel;
-        let hue = make_hue_from_factor_and_ordered_chans(
-            &c1, &c2, &c3, &min_channel, &scaling_factor);
+        let hue =
+            make_hue_from_factor_and_ordered_chans(&c1, &c2, &c3, &min_channel, &scaling_factor);
         let lightness = cast::<_, T>(0.5).unwrap() * (max_channel + min_channel);
         let one: T = cast(1.0).unwrap();
-        let sat_denom = one - (cast::<_, T>(2.0).unwrap() * lightness - one).abs() 
-            + epsilon;
+        let sat_denom = one - (cast::<_, T>(2.0).unwrap() * lightness - one).abs() + epsilon;
 
         let saturation = chroma / sat_denom;
 

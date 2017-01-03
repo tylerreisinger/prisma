@@ -43,4 +43,3 @@ pub trait Bounded {
     fn normalize(self) -> Self;
     fn is_normalized(&self) -> bool;
 }
-
