@@ -82,7 +82,7 @@ impl<T> Lerp for AngularChannel<T>
 {
     type Position = T::Position;
     fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
-        AngularChannel(self.0.lerp(&right.0, pos))
+        AngularChannel(self.0.lerp(&right.0, pos).normalize())
     }
 }
 

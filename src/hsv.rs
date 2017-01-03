@@ -13,6 +13,7 @@ use convert;
 use angle;
 use angle::{Angle, FromAngle};
 use channel::cast::ChannelFormatCast;
+use alpha::Alpha;
 
 pub struct HsvTag;
 
@@ -22,6 +23,8 @@ pub struct Hsv<T, A = hue_angle::Deg<T>> {
     pub saturation: BoundedChannel<T>,
     pub value: BoundedChannel<T>,
 }
+
+pub type Hsva<T, A> = Alpha<T, Hsv<T, A>>;
 
 impl<T, A> Hsv<T, A>
     where T: BoundedChannelScalarTraits,
