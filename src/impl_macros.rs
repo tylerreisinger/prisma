@@ -127,3 +127,14 @@ macro_rules! impl_color_color_cast_angular {
         }
     }
 }
+
+macro_rules! impl_color_get_hue_angular {
+    ($name:ident) => {
+        type InternalAngle = A;
+        fn get_hue<U>(&self) -> U
+            where U: Angle<Scalar = A::Scalar> + FromAngle<A>
+        {
+            <A as IntoAngle<U>>::into_angle(self.hue.0.clone())
+        }
+    }
+}

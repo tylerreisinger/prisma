@@ -14,6 +14,7 @@ pub mod alpha;
 pub mod rgb;
 pub mod hsv;
 pub mod hsl;
+pub mod hwb;
 
 #[cfg(test)]
 pub mod test_data;

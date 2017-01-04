@@ -13,7 +13,7 @@ use color;
 use rgb;
 use convert;
 use angle;
-use angle::{Angle, FromAngle};
+use angle::{Angle, FromAngle, IntoAngle};
 use channel::cast::ChannelFormatCast;
 use alpha::Alpha;
 
@@ -173,12 +173,7 @@ impl<T, A> convert::GetHue for Hsv<T, A>
     where T: BoundedChannelScalarTraits,
           A: AngularChannelTraits
 {
-    type InternalAngle = A;
-    fn get_hue<U>(&self) -> U
-        where U: angle::Angle<Scalar = A::Scalar> + angle::FromAngle<A>
-    {
-        <A as angle::IntoAngle<U>>::into_angle(self.hue.0.clone())
-    }
+    impl_color_get_hue_angular!(Hsv);
 }
 
 impl<T, A> convert::FromColor<Hsv<T, A>> for rgb::Rgb<T>

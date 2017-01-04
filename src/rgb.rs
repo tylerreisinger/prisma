@@ -12,6 +12,7 @@ use convert;
 use angle;
 use hsv;
 use hsl;
+use hwb;
 use alpha::Alpha;
 
 pub struct RgbTag;
@@ -297,6 +298,24 @@ impl<T, A> convert::FromColor<Rgb<T>> for hsl::Hsl<T, A>
         let saturation = chroma / sat_denom;
 
         hsl::Hsl::from_channels(A::from_angle(angle::Turns(hue)), saturation, lightness)
+    }
+}
+
+impl<T, A> convert::FromColor<Rgb<T>> for hwb::Hwb<T, A>
+    where T: BoundedChannelScalarTraits + num::Float,
+          A: AngularChannelTraits + angle::FromAngle<angle::Turns<T>>
+{
+    fn from_color(from: &Rgb<T>) -> Self {
+        let (scaling_factor, c1, c2, c3, min_channel) = get_hue_factor_and_ordered_chans(from);
+        let max_channel = c1;
+        let chroma = max_channel - min_channel;
+        let hue =
+            make_hue_from_factor_and_ordered_chans(&c1, &c2, &c3, &min_channel, &scaling_factor);
+
+        let blackness = cast::<_, T>(1.0).unwrap() - max_channel;
+        let whiteness = cast::<_, T>(1.0).unwrap() - (blackness + chroma);
+
+        hwb::Hwb::from_channels(A::from_angle(angle::Turns(hue)), whiteness, blackness)
     }
 }
 
