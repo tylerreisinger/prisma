@@ -2,7 +2,7 @@ use num;
 use num::Float;
 use angle;
 use angle::{Angle, FromAngle};
-use color::{Color, PolarColor};
+use color::PolarColor;
 
 pub trait FromColor<From> {
     fn from_color(from: &From) -> Self;
@@ -13,7 +13,7 @@ pub trait GetChroma {
     fn get_chroma(&self) -> Self::ChromaType;
 }
 
-pub trait GetHue: Color {
+pub trait GetHue {
     type InternalAngle: angle::Angle;
     fn get_hue<U>(&self) -> U
         where U: Angle<Scalar=<Self::InternalAngle as Angle>::Scalar> 

@@ -14,6 +14,7 @@ use hsv;
 use hsl;
 use hwb;
 use alpha::Alpha;
+use chromaticity::ChromaticityCoordinates;
 
 pub struct RgbTag;
 
@@ -76,6 +77,24 @@ impl<T> Rgb<T>
         self.blue.0 = val;
     }
 }
+
+impl<T> Rgb<T>
+    where T: BoundedChannelScalarTraits + num::Float
+{
+    pub fn get_chromaticity_coordinates(&self) -> ChromaticityCoordinates<T> {
+        let alpha = cast::<_, T>(0.5).unwrap() *
+                    (cast::<_, T>(2.0).unwrap() * self.red() - self.green() - self.blue());
+
+        let beta = cast::<_, T>(3.0).unwrap().sqrt() * cast::<_, T>(0.5).unwrap() *
+                   (self.green() - self.blue());
+
+        ChromaticityCoordinates {
+            alpha: alpha,
+            beta: beta,
+        }
+    }
+}
+
 impl<T> Color for Rgb<T>
     where T: BoundedChannelScalarTraits
 {

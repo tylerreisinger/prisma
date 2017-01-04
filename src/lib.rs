@@ -11,10 +11,13 @@ pub mod channel;
 pub mod convert;
 pub mod color;
 pub mod alpha;
+pub mod chromaticity;
+
 pub mod rgb;
 pub mod hsv;
 pub mod hsl;
 pub mod hwb;
+pub mod hsi;
 
 #[cfg(test)]
 pub mod test;
