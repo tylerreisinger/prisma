@@ -328,7 +328,7 @@ mod test {
     use ::angle::*;
     use hsv::Hsv;
     use hsl::Hsl;
-    use test_data;
+    use test;
 
     #[test]
     fn test_construct() {
@@ -426,7 +426,7 @@ mod test {
 
     #[test]
     fn hsv_from_rgb() {
-        let test_data = test_data::make_test_array();
+        let test_data = test::build_hs_test_data();
 
         for item in test_data.iter() {
             let hsv: Hsv<_, Deg<_>> = Hsv::from_color(&item.rgb);
@@ -439,7 +439,7 @@ mod test {
 
     #[test]
     fn hsl_from_rgb() {
-        let test_data = test_data::make_test_array();
+        let test_data = test::build_hs_test_data();
 
         for item in test_data.iter() {
             let hsl: Hsl<_, Deg<_>> = Hsl::from_color(&item.rgb);

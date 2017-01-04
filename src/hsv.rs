@@ -229,7 +229,7 @@ mod test {
     use convert::*;
     use rgb;
 
-    use test_data;
+    use test;
 
     #[test]
     fn test_construct() {
@@ -294,7 +294,7 @@ mod test {
 
     #[test]
     fn test_chroma() {
-        let test_data = test_data::make_test_array();
+        let test_data = test::build_hs_test_data();
 
         for item in test_data.iter() {
             assert_relative_eq!(item.hsv.get_chroma(), item.chroma, epsilon=1e-3);
@@ -321,7 +321,7 @@ mod test {
 
     #[test]
     fn test_rgb_from_hsv() {
-        let test_data = test_data::make_test_array();
+        let test_data = test::build_hs_test_data();
 
         for item in test_data.iter() {
             let rgb = rgb::Rgb::from_color(&item.hsv);

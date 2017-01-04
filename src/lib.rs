@@ -17,4 +17,4 @@ pub mod hsl;
 pub mod hwb;
 
 #[cfg(test)]
-pub mod test_data;
+pub mod test;

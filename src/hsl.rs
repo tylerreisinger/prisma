@@ -230,7 +230,7 @@ mod test {
     use convert::*;
     use rgb::Rgb;
 
-    use test_data;
+    use test;
 
     #[test]
     fn test_construct() {
@@ -250,7 +250,7 @@ mod test {
 
     #[test]
     fn test_chroma() {
-        let test_data = test_data::make_test_array();
+        let test_data = test::build_hs_test_data();
 
         for item in test_data.iter() {
             let chroma = item.hsl.get_chroma();
@@ -280,7 +280,7 @@ mod test {
 
     #[test]
     fn test_hsl_to_rgb() {
-        let test_data = test_data::make_test_array();
+        let test_data = test::build_hs_test_data();
 
         for item in test_data.iter() {
             let rgb = Rgb::from_color(&item.hsl);
