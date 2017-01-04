@@ -40,18 +40,7 @@ impl<T, A> Hsl<T, A>
         }
     }
 
-    pub fn color_cast<TOut, AOut>(&self) -> Hsl<TOut, AOut>
-        where T: ChannelFormatCast<TOut>,
-              A: ChannelFormatCast<AOut>,
-              AOut: AngularChannelTraits,
-              TOut: BoundedChannelScalarTraits
-    {
-        Hsl {
-            hue: self.hue.clone().channel_cast(),
-            saturation: self.saturation.clone().channel_cast(),
-            lightness: self.lightness.clone().channel_cast(),
-        }
-    }
+    impl_color_color_cast_angular!(Hsl {hue, saturation, lightness});
 
     pub fn hue(&self) -> A {
         self.hue.0.clone()

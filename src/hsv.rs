@@ -41,18 +41,7 @@ impl<T, A> Hsv<T, A>
         }
     }
 
-    pub fn color_cast<TOut, AOut>(&self) -> Hsv<TOut, AOut>
-        where T: ChannelFormatCast<TOut>,
-              A: ChannelFormatCast<AOut>,
-              AOut: AngularChannelTraits,
-              TOut: BoundedChannelScalarTraits
-    {
-        Hsv {
-            hue: self.hue.clone().channel_cast(),
-            saturation: self.saturation.clone().channel_cast(),
-            value: self.value.clone().channel_cast(),
-        }
-    }
+    impl_color_color_cast_angular!(Hsv {hue, saturation, value});
 
     pub fn hue(&self) -> A {
         self.hue.0.clone()
