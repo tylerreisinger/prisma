@@ -285,6 +285,44 @@ mod test {
     use convert::*;
     use angle::*;
     use rgb::Rgb;
+    use color::*;
+
+    #[test]
+    fn test_construct() {
+        let c1 = Hsi::from_channels(Deg(225.0), 0.8, 0.284);
+        assert_eq!(c1.hue(), Deg(225.0));
+        assert_eq!(c1.saturation(), 0.8);
+        assert_eq!(c1.intensity(), 0.284);
+        assert_eq!(c1.to_tuple(), (Deg(225.0), 0.8, 0.284));
+        assert_eq!(Hsi::from_tuple(c1.to_tuple()), c1);
+
+        let c2 = Hsi::from_channels(Turns(0.33), 0.62, 0.98);
+        assert_eq!(c2.hue(), Turns(0.33));
+        assert_eq!(c2.saturation(), 0.62);
+        assert_eq!(c2.intensity(), 0.98);
+        assert_eq!(c2.as_slice(), &[0.33, 0.62, 0.98]);
+    }
+
+    #[test]
+    fn test_invert() {
+        let c1 = Hsi::from_channels(Deg(222.0), 0.65, 0.23);
+        assert_relative_eq!(c1.clone().invert().invert(), c1);
+        assert_relative_eq!(c1.invert(), Hsi::from_channels(Deg(42.0), 0.35, 0.77));
+
+        let c2 = Hsi::from_channels(Turns(0.40), 0.25, 0.8);
+        assert_relative_eq!(c2.clone().invert().invert(), c2);
+        assert_relative_eq!(c2.invert(), Hsi::from_channels(Turns(0.90), 0.75, 0.2));
+    }
+
+    #[test]
+    fn test_lerp() {
+        let c1 = Hsi::from_channels(Deg(80.0), 0.20, 0.60);
+        let c2 = Hsi::from_channels(Deg(120.0), 0.80, 0.90);
+        assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
+        assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
+        assert_relative_eq!(c1.lerp(&c2, 0.5), Hsi::from_channels(Deg(100.0), 0.50, 0.75));
+        assert_relative_eq!(c1.lerp(&c2, 0.25), Hsi::from_channels(Deg(90.0), 0.35, 0.675));
+    }
 
     #[test]
     fn test_from_rgb() {
@@ -336,5 +374,14 @@ mod test {
         assert_relative_eq!(rgb3_2, Rgb::from_channels(0.0, 0.0, 0.9), epsilon=1e-6);
         assert_relative_eq!(rgb3_3, Rgb::from_channels(0.0, 0.0, 0.9), epsilon=1e-6);
         assert_relative_eq!(rgb3_4, Rgb::from_channels(0.0, 0.0, 0.9), epsilon=1e-6);
+    }
+
+    #[test]
+    fn test_color_cast() {
+        let c1 = Hsi::from_channels(Deg(120.0), 0.53, 0.94);
+        assert_relative_eq!(c1.color_cast(), 
+            Hsi::from_channels(Turns(0.33333333333f32), 0.53f32, 0.94), epsilon=1e-6);
+        assert_relative_eq!(c1.color_cast::<f32, Rad<f32>>().color_cast(), c1, epsilon=1e-6);
+        assert_relative_eq!(c1.color_cast(), c1, epsilon=1e-6);
     }
 }
