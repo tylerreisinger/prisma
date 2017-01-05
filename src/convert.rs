@@ -4,8 +4,12 @@ use angle;
 use angle::{Angle, FromAngle};
 use color::PolarColor;
 
-pub trait FromColor<From> {
+pub trait FromColor<From>: TryFromColor<From> {
     fn from_color(from: &From) -> Self;
+}
+
+pub trait TryFromColor<From>: Sized {
+    fn try_from_color(from: &From) -> Option<Self>;
 }
 
 pub trait GetChroma {
@@ -18,6 +22,14 @@ pub trait GetHue {
     fn get_hue<U>(&self) -> U
         where U: Angle<Scalar=<Self::InternalAngle as Angle>::Scalar> 
             + FromAngle<Self::InternalAngle>;
+}
+
+impl<T, From> TryFromColor<From> for T
+    where T: FromColor<From>
+{
+    fn try_from_color(from: &From) -> Option<Self> {
+        Some(T::from_color(from))
+    }
 }
 
 pub fn decompose_hue_segment<Color>(color: &Color)

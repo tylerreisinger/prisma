@@ -8,10 +8,10 @@ use angle;
 use angle::{Angle, FromAngle, IntoAngle, Turns, Rad};
 use hue_angle;
 use channel::{BoundedChannel, AngularChannel, ChannelFormatCast, ChannelCast,
-              BoundedChannelScalarTraits, AngularChannelTraits};
+              BoundedChannelScalarTraits, AngularChannelTraits, ColorChannel};
 use color::{Color, PolarColor, Invert, Lerp, Bounded};
 use color;
-use convert::{GetHue, FromColor};
+use convert::{GetHue, FromColor, TryFromColor};
 use rgb::Rgb;
 
 pub struct HsiTag;
@@ -192,8 +192,24 @@ impl<T, A> FromColor<Rgb<T>> for Hsi<T, A>
     }
 }
 
+impl<T, A> TryFromColor<Hsi<T, A>> for Rgb<T>
+    where T: BoundedChannelScalarTraits + num::Float,
+          A: AngularChannelTraits + Angle<Scalar = T>
+{
+    fn try_from_color(from: &Hsi<T, A>) -> Option<Self> {
+        let c = from.to_rgb(OutOfGamutMode::Preserve);
+        let max = BoundedChannel::<T>::max_bound();
+
+        if c.red() > max || c.green() > max || c.blue() > max {
+            None
+        } else {
+            Some(c)
+        }
+    }
+}
+
 impl<T, A> Hsi<T, A>
-    where T: BoundedChannelScalarTraits + num::Float + fmt::Display,
+    where T: BoundedChannelScalarTraits + num::Float,
           A: AngularChannelTraits + Angle<Scalar = T> + IntoAngle<Rad<T>, OutputScalar = T>
 {
     pub fn to_rgb(&self, mode: OutOfGamutMode) -> Rgb<T> {
@@ -228,7 +244,7 @@ fn to_rgb_out_of_gamut<T, A>(color: &Hsi<T, A>,
                              c1: &mut T,
                              c2: &mut T,
                              c3: &mut T)
-    where T: BoundedChannelScalarTraits + num::Float + fmt::Display,
+    where T: BoundedChannelScalarTraits + num::Float,
           A: AngularChannelTraits + Angle<Scalar = T>
 {
     let one = num::cast(1.0).unwrap();
