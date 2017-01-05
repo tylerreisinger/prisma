@@ -1,16 +1,27 @@
+use std::f64::consts;
+use std::fmt;
 use std::mem;
 use std::slice;
 use approx;
 use num;
 use angle;
-use angle::{Angle, FromAngle, IntoAngle, Turns};
+use angle::{Angle, FromAngle, IntoAngle, Turns, Rad};
 use hue_angle;
 use channel::{BoundedChannel, AngularChannel, ChannelFormatCast, ChannelCast,
               BoundedChannelScalarTraits, AngularChannelTraits};
 use color::{Color, PolarColor, Invert, Lerp, Bounded};
 use color;
+use convert::{GetHue, FromColor};
+use rgb::Rgb;
 
 pub struct HsiTag;
+
+pub enum OutOfGamutMode {
+    Clip,
+    Preserve,
+    SimpleRescale,
+    SaturationRescale,
+}
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
@@ -140,4 +151,190 @@ impl<T, A> Default for Hsi<T, A>
 {
     impl_color_default!(Hsi {hue: AngularChannel, 
         saturation: BoundedChannel, intensity: BoundedChannel});
+}
+
+impl<T, A> fmt::Display for Hsi<T, A>
+    where T: BoundedChannelScalarTraits + fmt::Display,
+          A: AngularChannelTraits + fmt::Display
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Hsi({}, {}, {})", self.hue, self.saturation, self.intensity)
+    }
+}
+
+impl<T, A> GetHue for Hsi<T, A>
+    where T: BoundedChannelScalarTraits,
+          A: AngularChannelTraits
+{
+    impl_color_get_hue_angular!(Hsi);
+}
+
+impl<T, A> FromColor<Rgb<T>> for Hsi<T, A>
+    where T: BoundedChannelScalarTraits + num::Float,
+          A: AngularChannelTraits + Angle<Scalar = T> + FromAngle<Rad<T>> + fmt::Display
+{
+    fn from_color(from: &Rgb<T>) -> Self {
+        let coords = from.get_chromaticity_coordinates();
+
+        let hue_unnormal: A = coords.get_hue::<A>();
+        let hue = Angle::normalize(hue_unnormal);
+
+        let min = from.red().min(from.green().min(from.blue()));
+        let intensity = num::cast::<_, T>(1.0 / 3.0).unwrap() *
+                        (from.red() + from.green() + from.blue());
+        let saturation: T = if intensity != num::cast::<_, T>(0.0).unwrap() {
+            num::cast::<_, T>(1.0).unwrap() - min / intensity
+        } else {
+            num::cast(0.0).unwrap()
+        };
+
+        Hsi::from_channels(hue, saturation, intensity)
+    }
+}
+
+impl<T, A> Hsi<T, A>
+    where T: BoundedChannelScalarTraits + num::Float + fmt::Display,
+          A: AngularChannelTraits + Angle<Scalar = T> + IntoAngle<Rad<T>, OutputScalar = T>
+{
+    pub fn to_rgb(&self, mode: OutOfGamutMode) -> Rgb<T> {
+        let pi_over_3: T = num::cast(consts::PI / 3.0).unwrap();
+        let hue_frac = Rad::from_angle(self.hue()) %
+                       Rad(num::cast::<_, T>(2.0).unwrap() * pi_over_3);
+
+        let one = num::cast::<_, T>(1.0).unwrap();
+
+        let mut c1 = self.intensity() * (one - self.saturation());
+        let mut c2 =
+            self.intensity() *
+            (one + (self.saturation() * hue_frac.cos()) / (Angle::cos(Rad(pi_over_3) - hue_frac)));
+        let mut c3 = num::cast::<_, T>(3.0).unwrap() * self.intensity() - (c1 + c2);
+
+        to_rgb_out_of_gamut(self, &hue_frac, mode, &mut c1, &mut c2, &mut c3);
+
+        let turns_hue = Turns::from_angle(self.hue());
+        if turns_hue < Turns(num::cast(1.0 / 3.0).unwrap()) {
+            Rgb::from_channels(c2, c3, c1)
+        } else if turns_hue < Turns(num::cast(2.0 / 3.0).unwrap()) {
+            Rgb::from_channels(c1, c2, c3)
+        } else {
+            Rgb::from_channels(c3, c1, c2)
+        }
+    }
+}
+
+fn to_rgb_out_of_gamut<T, A>(color: &Hsi<T, A>,
+                             hue_frac: &Rad<T>,
+                             mode: OutOfGamutMode,
+                             c1: &mut T,
+                             c2: &mut T,
+                             c3: &mut T)
+    where T: BoundedChannelScalarTraits + num::Float + fmt::Display,
+          A: AngularChannelTraits + Angle<Scalar = T>
+{
+    let one = num::cast(1.0).unwrap();
+    match mode {
+        // Do nothing.
+        OutOfGamutMode::Preserve => {}
+        OutOfGamutMode::Clip => {
+            *c1 = c1.min(one);
+            *c2 = c2.min(one);
+            *c3 = c3.min(one);
+        }
+        OutOfGamutMode::SimpleRescale => {
+            let max = c1.max(c2.max(*c3));
+            if max > one {
+                *c1 = *c1 / max;
+                *c2 = *c2 / max;
+                *c3 = *c3 / max;
+            }
+        }
+        // Algorithm adapted from:
+        // K. Yoshinari, Y. Hoshi and A. Taguchi, "Color image enhancement in HSI color space
+        // without gamut problem," 2014 6th International Symposium on Communications,
+        // Control and Signal Processing (ISCCSP), Athens, 2014, pp. 578-581.
+        OutOfGamutMode::SaturationRescale => {
+            let pi_over_3 = num::cast(consts::PI / 3.0).unwrap();
+            let cos_pi3_sub_hue = Rad::cos(Rad(pi_over_3) - *hue_frac);
+            let cos_hue = hue_frac.cos();
+            if *hue_frac < Rad(pi_over_3) {
+                if *c2 > one {
+                    let rescaled_sat = ((one - color.intensity()) * cos_pi3_sub_hue) /
+                                       (color.intensity() * cos_hue);
+                    *c1 = color.intensity() * (one - rescaled_sat);
+                    *c2 = one;
+                    *c3 = color.intensity() *
+                          (one + (rescaled_sat * (cos_pi3_sub_hue - cos_hue) / cos_pi3_sub_hue));
+                }
+            } else {
+                if *c3 > one {
+                    let rescaled_sat = ((one - color.intensity()) * cos_pi3_sub_hue) /
+                                       (color.intensity() * (cos_pi3_sub_hue - cos_hue));
+                    *c1 = color.intensity() * (one - rescaled_sat);
+                    *c2 = color.intensity() * (one + (rescaled_sat * cos_hue) / (cos_pi3_sub_hue));
+                    *c3 = one;
+                }
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use test;
+    use convert::*;
+    use angle::*;
+    use rgb::Rgb;
+
+    #[test]
+    fn test_from_rgb() {
+        let test_data = test::build_hs_test_data();
+
+        for item in test_data {
+            let hsi = Hsi::from_color(&item.rgb);
+            assert_relative_eq!(hsi, item.hsi, epsilon=1e-3);
+        }
+    }
+
+    #[test]
+    fn test_to_rgb() {
+        let test_data = test::build_hs_test_data();
+
+        for item in test_data {
+            let rgb = item.hsi.to_rgb(OutOfGamutMode::Preserve);
+            assert_relative_eq!(rgb, item.rgb, epsilon=2e-3);
+            let hsi = Hsi::from_color(&rgb);
+            assert_relative_eq!(hsi, item.hsi, epsilon=2e-3);
+        }
+
+        let c1 = Hsi::from_channels(Deg(150.0), 1.0, 1.0);
+        let rgb1_1 = c1.to_rgb(OutOfGamutMode::Preserve);
+        let rgb1_2 = c1.to_rgb(OutOfGamutMode::Clip);
+        let rgb1_3 = c1.to_rgb(OutOfGamutMode::SimpleRescale);
+        let rgb1_4 = c1.to_rgb(OutOfGamutMode::SaturationRescale);
+        assert_relative_eq!(rgb1_1, Rgb::from_channels(0.0, 2.0, 1.0), epsilon=1e-6);
+        assert_relative_eq!(rgb1_2, Rgb::from_channels(0.0, 1.0, 1.0), epsilon=1e-6);
+        assert_relative_eq!(rgb1_3, Rgb::from_channels(0.0, 1.0, 0.5), epsilon=1e-6);
+        assert_relative_eq!(rgb1_4, Rgb::from_channels(1.0, 1.0, 1.0), epsilon=1e-6);
+
+        let c2 = Hsi::from_channels(Deg(180.0), 1.0, 0.7);
+        let rgb2_1 = c2.to_rgb(OutOfGamutMode::Preserve);
+        let rgb2_2 = c2.to_rgb(OutOfGamutMode::Clip);
+        let rgb2_3 = c2.to_rgb(OutOfGamutMode::SimpleRescale);
+        let rgb2_4 = c2.to_rgb(OutOfGamutMode::SaturationRescale);
+        assert_relative_eq!(rgb2_1, Rgb::from_channels(0.0, 1.05, 1.05), epsilon=1e-6);
+        assert_relative_eq!(rgb2_2, Rgb::from_channels(0.0, 1.00, 1.00), epsilon=1e-6);
+        assert_relative_eq!(rgb2_3, Rgb::from_channels(0.0, 1.00, 1.00), epsilon=1e-6);
+        assert_relative_eq!(rgb2_4, Rgb::from_channels(0.1, 1.00, 1.00), epsilon=1e-6);
+
+        let c3 = Hsi::from_channels(Deg(240.0), 1.0, 0.3);
+        let rgb3_1 = c3.to_rgb(OutOfGamutMode::Preserve);
+        let rgb3_2 = c3.to_rgb(OutOfGamutMode::Clip);
+        let rgb3_3 = c3.to_rgb(OutOfGamutMode::SimpleRescale);
+        let rgb3_4 = c3.to_rgb(OutOfGamutMode::SaturationRescale);
+        assert_relative_eq!(rgb3_1, Rgb::from_channels(0.0, 0.0, 0.9), epsilon=1e-6);
+        assert_relative_eq!(rgb3_2, Rgb::from_channels(0.0, 0.0, 0.9), epsilon=1e-6);
+        assert_relative_eq!(rgb3_3, Rgb::from_channels(0.0, 0.0, 0.9), epsilon=1e-6);
+        assert_relative_eq!(rgb3_4, Rgb::from_channels(0.0, 0.0, 0.9), epsilon=1e-6);
+    }
 }
