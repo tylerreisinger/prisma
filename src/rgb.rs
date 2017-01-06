@@ -19,7 +19,7 @@ use chromaticity::ChromaticityCoordinates;
 pub struct RgbTag;
 
 #[repr(C)]
-#[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Rgb<T> {
     pub red: BoundedChannel<T>,
     pub green: BoundedChannel<T>,
