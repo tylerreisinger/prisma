@@ -123,20 +123,7 @@ impl<T> HomogeneousColor for Rgb<T>
 {
     type ChannelFormat = T;
 
-    fn broadcast(value: T) -> Self {
-        Rgb {
-            red: BoundedChannel(value.clone()),
-            green: BoundedChannel(value.clone()),
-            blue: BoundedChannel(value.clone()),
-        }
-    }
-    fn clamp(self, min: T, max: T) -> Self {
-        Rgb {
-            red: self.red.clamp(min.clone(), max.clone()),
-            green: self.green.clamp(min.clone(), max.clone()),
-            blue: self.blue.clamp(min, max),
-        }
-    }
+    impl_color_homogeneous_color_square!(Rgb<T> {red, green, blue});
 }
 
 impl<T> color::Color3 for Rgb<T> where T: BoundedChannelScalarTraits {}
@@ -150,29 +137,14 @@ impl<T> color::Invert for Rgb<T>
 impl<T> color::Bounded for Rgb<T>
     where T: BoundedChannelScalarTraits
 {
-    fn normalize(self) -> Self {
-        Rgb {
-            red: self.red.normalize(),
-            green: self.green.normalize(),
-            blue: self.blue.normalize(),
-        }
-    }
-    fn is_normalized(&self) -> bool {
-        self.red.is_normalized() && self.green.is_normalized() && self.blue.is_normalized()
-    }
+    impl_color_bounded!(Rgb {red, green, blue});
 }
 
 impl<T> color::Lerp for Rgb<T>
     where T: BoundedChannelScalarTraits + color::Lerp
 {
     type Position = <T as color::Lerp>::Position;
-    fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
-        Rgb {
-            red: self.red.lerp(&right.red, pos.clone()),
-            green: self.green.lerp(&right.green, pos.clone()),
-            blue: self.blue.lerp(&right.blue, pos.clone()),
-        }
-    }
+    impl_color_lerp_square!(Rgb {red, green, blue});
 }
 
 impl<T> color::Flatten for Rgb<T>
@@ -181,13 +153,7 @@ impl<T> color::Flatten for Rgb<T>
     type ScalarFormat = T;
 
     impl_color_as_slice!(T);
-    fn from_slice(values: &[Self::ScalarFormat]) -> Self {
-        Rgb {
-            red: BoundedChannel(values[0].clone()),
-            green: BoundedChannel(values[1].clone()),
-            blue: BoundedChannel(values[2].clone()),
-        }
-    }
+    impl_color_from_slice_square!(Rgb<T> {red:0, green:1, blue:2});
 }
 
 impl<T> approx::ApproxEq for Rgb<T>
@@ -337,7 +303,6 @@ impl<T, A> convert::FromColor<Rgb<T>> for hwb::Hwb<T, A>
         hwb::Hwb::from_channels(A::from_angle(angle::Turns(hue)), whiteness, blackness)
     }
 }
-
 
 #[cfg(test)]
 mod test {

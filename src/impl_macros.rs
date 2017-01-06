@@ -49,11 +49,21 @@ macro_rules! impl_color_as_slice {
     }
 }
 
+macro_rules! impl_color_from_slice_square {
+    ($name: ident<$T:ident> {$($fields:ident:$i:expr),*
+    }) => {
+        fn from_slice(vals: &[$T]) -> Self {
+            $name {
+                $($fields: BoundedChannel(vals[$i].clone())),*
+            }
+        }
+    }
+}
 macro_rules! impl_color_from_slice_angular {
     ($name: ident<$T:ident, $A:ident> {
         $ang_field:ident:$ai:expr, $($fields:ident:$i:expr),*
     }) => {
-        fn from_slice(vals: &[T]) -> Self {
+        fn from_slice(vals: &[$T]) -> Self {
             $name {
                 $ang_field: AngularChannel($A::from_angle(angle::Turns(vals[$ai].clone()))),
                 $($fields: BoundedChannel(vals[$i].clone())),*
@@ -86,6 +96,16 @@ macro_rules! impl_color_bounded {
 
         fn is_normalized(&self) -> bool {
             true $(&& self.$fields.is_normalized())*
+        }
+    }
+}
+
+macro_rules! impl_color_lerp_square {
+    ($name:ident {$($fields:ident),*}) => {
+        fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
+            $name {
+                $($fields: self.$fields.lerp(&right.$fields, pos.clone())),*
+            }
         }
     }
 }
@@ -135,6 +155,21 @@ macro_rules! impl_color_get_hue_angular {
             where U: Angle<Scalar = A::Scalar> + FromAngle<A>
         {
             <A as IntoAngle<U>>::into_angle(self.hue.0.clone())
+        }
+    }
+}
+
+macro_rules! impl_color_homogeneous_color_square {
+    ($name:ident<$T:ident> {$($fields:ident),*}) => {
+        fn broadcast(value: $T) -> Self {
+            $name {
+                $($fields: BoundedChannel(value.clone())),*
+            }
+        }
+        fn clamp(self, min: $T, max: $T) -> Self {
+            $name {
+                $($fields: self.$fields.clamp(min.clone(), max.clone())),*
+            }
         }
     }
 }
