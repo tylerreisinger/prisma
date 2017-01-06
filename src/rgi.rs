@@ -114,14 +114,6 @@ impl<T> Color for Rgi<T>
     }
 }
 
-impl<T> HomogeneousColor for Rgi<T>
-    where T: BoundedChannelScalarTraits + Float
-{
-    type ChannelFormat = T;
-
-    impl_color_homogeneous_color_square!(Rgi<T> {red, green, intensity});
-}
-
 impl<T> Lerp for Rgi<T>
     where T: BoundedChannelScalarTraits + Lerp + Float
 {
