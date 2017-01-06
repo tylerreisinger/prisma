@@ -38,16 +38,8 @@ impl<T> Rgb<T>
             blue: BoundedChannel(blue),
         }
     }
-    pub fn color_cast<TOut>(&self) -> Rgb<TOut>
-        where T: ChannelFormatCast<TOut>,
-              TOut: BoundedChannelScalarTraits
-    {
-        Rgb {
-            red: self.red.clone().channel_cast(),
-            green: self.green.clone().channel_cast(),
-            blue: self.blue.clone().channel_cast(),
-        }
-    }
+
+    impl_color_color_cast_square!(Rgb {red, green, blue});
 
     pub fn red(&self) -> T {
         self.red.0.clone()

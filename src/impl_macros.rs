@@ -133,6 +133,19 @@ macro_rules! impl_color_default {
     }
 }
 
+macro_rules! impl_color_color_cast_square {
+    ($name:ident {$($fields:ident),*}) => {
+        pub fn color_cast<TOut>(&self) -> $name<TOut>
+            where T: ChannelFormatCast<TOut>,
+                  TOut: BoundedChannelScalarTraits
+        {
+            $name {
+                $($fields: self.$fields.clone().channel_cast()),*
+            }
+        }
+    }
+}
+
 macro_rules! impl_color_color_cast_angular {
     ($name:ident {$($fields:ident),*}) => {
         pub fn color_cast<TOut, AOut>(&self) -> $name<TOut, AOut>
