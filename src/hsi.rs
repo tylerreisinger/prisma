@@ -5,7 +5,7 @@ use std::slice;
 use approx;
 use num;
 use angle;
-use angle::{Angle, FromAngle, IntoAngle, Turns, Rad};
+use angle::{Angle, FromAngle, IntoAngle, Turns, Rad, Deg};
 use hue_angle;
 use channel::{BoundedChannel, AngularChannel, ChannelFormatCast, ChannelCast,
               BoundedChannelScalarTraits, AngularChannelTraits, ColorChannel};
@@ -32,8 +32,8 @@ pub struct Hsi<T, A = hue_angle::Deg<T>> {
 }
 
 impl<T, A> Hsi<T, A>
-    where T: BoundedChannelScalarTraits,
-          A: AngularChannelTraits
+    where T: BoundedChannelScalarTraits + num::Float,
+          A: AngularChannelTraits + Angle<Scalar = T>
 {
     pub fn from_channels(hue: A, saturation: T, intensity: T) -> Self {
         Hsi {
@@ -71,6 +71,14 @@ impl<T, A> Hsi<T, A>
     }
     pub fn set_intensity(&mut self, val: T) {
         self.intensity.0 = val;
+    }
+    pub fn is_same_as_ehsi(&self) -> bool {
+        let deg_hue = Deg::from_angle(self.hue().clone()) % Deg(num::cast::<_, T>(120.0).unwrap());
+        let i_limit = num::cast::<_, T>(2.0 / 3.0).unwrap() -
+                      (deg_hue - Deg(num::cast::<_, T>(60.0).unwrap())).scalar().abs() /
+                      Deg(num::cast::<_, T>(180.0).unwrap()).scalar();
+
+        self.intensity() <= i_limit
     }
 }
 
