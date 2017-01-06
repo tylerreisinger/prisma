@@ -14,6 +14,7 @@ pub mod alpha;
 pub mod chromaticity;
 
 pub mod rgb;
+pub mod rgi;
 pub mod hsv;
 pub mod hsl;
 pub mod hwb;
