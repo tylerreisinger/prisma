@@ -12,6 +12,7 @@ pub mod convert;
 pub mod color;
 pub mod alpha;
 pub mod chromaticity;
+pub mod linalg;
 
 pub mod rgb;
 pub mod rgi;

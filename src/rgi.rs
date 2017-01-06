@@ -6,7 +6,7 @@ use num;
 use num::Float;
 use channel::{BoundedChannel, BoundedChannelScalarTraits, ColorChannel, ChannelFormatCast,
               ChannelCast};
-use color::{Color, HomogeneousColor, Lerp, Flatten, Bounded};
+use color::{Color, Lerp, Flatten, Bounded};
 use convert::FromColor;
 use rgb::Rgb;
 
