@@ -50,14 +50,17 @@ macro_rules! impl_color_as_slice {
 }
 
 macro_rules! impl_color_from_slice_square {
-    ($name: ident<$T:ident> {$($fields:ident:$i:expr),*
-    }) => {
+    ($name: ident<$T:ident> {$($fields:ident:$i:expr),*}, phantom={$($phantom:ident),*}) => {
         fn from_slice(vals: &[$T]) -> Self {
             $name {
-                $($fields: BoundedChannel(vals[$i].clone())),*
+                $($fields: BoundedChannel(vals[$i].clone())),*,
+                $($phantom: PhantomData),*
             }
         }
-    }
+    };
+    ($name: ident<$T:ident> {$($fields:ident:$i:expr),*}) => {
+        impl_color_from_slice_square!($name<$T> {$($fields:$i),*}, phantom={});
+    };
 }
 macro_rules! impl_color_from_slice_angular {
     ($name: ident<$T:ident, $A:ident> {
@@ -73,41 +76,59 @@ macro_rules! impl_color_from_slice_angular {
 }
 
 macro_rules! impl_color_transform_body_channel_forward {
-    ($name: ident {$($fields: ident),*} $f: ident, $s: ident) => {
+    ($name: ident {$($fields: ident),*} $f: ident, $s: ident, 
+        phantom={$($phantom:ident),*}) =>
+    {
         $name {
-            $($fields: $s.$fields.$f()),*
+            $($fields: $s.$fields.$f()),*,
+            $($phantom: PhantomData),*
         }
-    }
+    };
+    ($name: ident {$($fields: ident),*} $f: ident, $s: ident) => {
+        impl_color_transform_body_channel_forward!($name {$($fields),*} $f, $s, phantom={})
+    };
 }
 
 macro_rules! impl_color_invert {
-    ($name: ident {$($fields: ident),*}) => {
+    ($name: ident {$($fields: ident),*}, phantom={$($phantom:ident),*}) => {
         fn invert(self) -> Self {
-            impl_color_transform_body_channel_forward!($name {$($fields),*} invert, self)
+            impl_color_transform_body_channel_forward!($name {$($fields),*} invert, self,
+            phantom={$($phantom),*})
         }
-    }
+    };
+    ($name: ident {$($fields: ident),*}) => {
+        impl_color_invert!($name {$($fields),*}, phantom={});
+    };
 }
 
 macro_rules! impl_color_bounded {
-    ($name: ident {$($fields: ident),*}) => {
+    ($name: ident {$($fields: ident),*}, phantom={$($phantom:ident),*}) => {
         fn normalize(self) -> Self {
-            impl_color_transform_body_channel_forward!($name {$($fields),*} normalize, self)
+            impl_color_transform_body_channel_forward!($name {$($fields),*} normalize, 
+                self, phantom={$($phantom),*})
         }
 
         fn is_normalized(&self) -> bool {
             true $(&& self.$fields.is_normalized())*
         }
+    };
+    ($name: ident {$($fields: ident),*}) => {
+        impl_color_bounded!($name {$($fields),*}, phantom={});
     }
 }
 
 macro_rules! impl_color_lerp_square {
-    ($name:ident {$($fields:ident),*}) => {
+    ($name:ident {$($fields:ident),*}, phantom={$($phantom:ident),*}) => {
         fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
             $name {
-                $($fields: self.$fields.lerp(&right.$fields, pos.clone())),*
+                $($fields: self.$fields.lerp(&right.$fields, pos.clone())),*,
+                $($phantom: PhantomData),*
             }
         }
-    }
+    };
+    ($name:ident {$($fields:ident),*}) => {
+        impl_color_lerp_square!($name {$($fields),*}, phantom={});
+    };
 }
 
 macro_rules! impl_color_lerp_angular {
@@ -124,26 +145,37 @@ macro_rules! impl_color_lerp_angular {
 }
 
 macro_rules! impl_color_default {
-    ($name:ident {$($fields:ident:$ChanType:ident),*}) => {
+    ($name:ident {$($fields:ident:$ChanType:ident),*}, phantom={$($phantom:ident),*}) => {
         fn default() -> Self {
             $name {
-                $($fields: $ChanType::default()),*
+                $($fields: $ChanType::default()),*,
+                $($phantom: PhantomData),*
             }
         }
-    }
+    };
+    ($name:ident {$($fields:ident:$ChanType:ident),*}) => {
+        impl_color_default!($name {$($fields:$ChanType),*}, phantom={});
+    };
 }
 
 macro_rules! impl_color_color_cast_square {
-    ($name:ident {$($fields:ident),*}) => {
-        pub fn color_cast<TOut>(&self) -> $name<TOut>
+    ($name:ident {$($fields:ident),*}, phantom={$($phantom:ident),*},
+        types={$($ts:ident),*}) => 
+    {
+        pub fn color_cast<TOut>(&self) -> $name<TOut, $($ts),*>
             where T: ChannelFormatCast<TOut>,
                   TOut: BoundedChannelScalarTraits
         {
             $name {
-                $($fields: self.$fields.clone().channel_cast()),*
+                $($fields: self.$fields.clone().channel_cast()),*,
+                $($phantom: PhantomData),*
             }
         }
-    }
+    };
+
+    ($name:ident {$($fields:ident),*}) => {
+        impl_color_color_cast_square!($name {$($fields),*}, phantom={}, types={});
+    };
 }
 
 macro_rules! impl_color_color_cast_angular {
@@ -173,16 +205,21 @@ macro_rules! impl_color_get_hue_angular {
 }
 
 macro_rules! impl_color_homogeneous_color_square {
-    ($name:ident<$T:ident> {$($fields:ident),*}) => {
+    ($name:ident<$T:ident> {$($fields:ident),*}, phantom={$($phantom:ident),*}) => {
         fn broadcast(value: $T) -> Self {
             $name {
-                $($fields: BoundedChannel(value.clone())),*
+                $($fields: BoundedChannel(value.clone())),*,
+                $($phantom: PhantomData),*
             }
         }
         fn clamp(self, min: $T, max: $T) -> Self {
             $name {
-                $($fields: self.$fields.clamp(min.clone(), max.clone())),*
+                $($fields: self.$fields.clamp(min.clone(), max.clone())),*,
+                $($phantom: PhantomData),*
             }
         }
-    }
+    };
+    ($name:ident<$T:ident> {$($fields:ident),*}) => {
+        impl_color_homogeneous_color_square!($name<$T> {$($fields),*}, phantom={});
+    };
 }

@@ -1,17 +1,31 @@
+use std::mem;
 use std::fmt;
 use std::ops;
 use approx;
 use num;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Debug, PartialEq)]
 pub struct Matrix3<T>
-    where T: Copy
+    where T: Clone
 {
     pub m: [T; 9],
 }
 
+impl<T> Clone for Matrix3<T>
+    where T: Clone
+{
+    fn clone(&self) -> Self {
+        unsafe {
+            let mut new_arr: [T; 9] = mem::uninitialized();
+            new_arr.clone_from_slice(&self.m);
+
+            Matrix3 { m: new_arr }
+        }
+    }
+}
+
 impl<T> Matrix3<T>
-    where T: num::Num + Copy + num::Zero + num::NumCast
+    where T: num::Num + Copy + num::Zero + num::NumCast + fmt::Display
 {
     #[inline]
     pub fn new(values: [T; 9]) -> Self {
@@ -94,6 +108,28 @@ impl<T> Matrix3<T>
         } else {
             None
         }
+    }
+
+    #[inline]
+    pub fn transform_vector<U>(&self, vec: (U, U, U)) -> (U, U, U)
+        where U: num::NumCast
+    {
+        let (v1, v2, v3) = vec;
+        let fv1: T = num::cast(v1).unwrap();
+        let fv2: T = num::cast(v2).unwrap();
+        let fv3: T = num::cast(v3).unwrap();
+
+        let (m1, m2, m3, m4, m5, m6, m7, m8, m9) = self.clone().to_tuple();
+
+        let fo1 = fv1 * m1 + fv2 * m2 + fv3 * m3;
+        let fo2 = fv1 * m4 + fv2 * m5 + fv3 * m6;
+        let fo3 = fv1 * m7 + fv2 * m8 + fv3 * m9;
+
+        let o1: U = num::cast(fo1).unwrap();
+        let o2: U = num::cast(fo2).unwrap();
+        let o3: U = num::cast(fo3).unwrap();
+
+        (o1, o2, o3)
     }
 }
 

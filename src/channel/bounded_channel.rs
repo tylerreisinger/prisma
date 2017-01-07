@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use std::fmt;
 use num;
 use approx;
@@ -9,8 +10,37 @@ use ::color;
 
 pub struct BoundedChannelTag;
 
+pub trait ChannelBoundTag<T> {
+    fn channel_min_bound() -> T;
+    fn channel_max_bound() -> T;
+}
+pub trait ChannelBound<T> {
+    type Bound: ChannelBoundTag<T>;
+}
+
+#[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd)]
+pub struct NormalizedPositiveChannelBound<T>(PhantomData<T>);
+
+
+impl<T> ChannelBoundTag<T> for NormalizedPositiveChannelBound<T>
+    where T: BoundedChannelScalarTraits
+{
+    fn channel_min_bound() -> T {
+        T::min_bound()
+    }
+    fn channel_max_bound() -> T {
+        T::max_bound()
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BoundedChannel<T>(pub T);
+
+impl<T> ChannelBound<T> for BoundedChannel<T>
+    where T: BoundedChannelScalarTraits
+{
+    type Bound = NormalizedPositiveChannelBound<T>;
+}
 
 impl<T> ColorChannel for BoundedChannel<T>
     where T: BoundedChannelScalarTraits
@@ -20,10 +50,10 @@ impl<T> ColorChannel for BoundedChannel<T>
     type Tag = BoundedChannelTag;
 
     fn min_bound() -> T {
-        T::min_bound()
+        <BoundedChannel<T> as ChannelBound>::Bound::channel_min_bound()
     }
     fn max_bound() -> T {
-        T::max_bound()
+        <BoundedChannel<T> as ChannelBound>::Bound::channel_max_bound()
     }
 
     fn value(&self) -> T {
