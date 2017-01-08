@@ -1,10 +1,25 @@
 use std::ops;
 use num::{Integer, Float, NumCast, cast, Zero};
 use angle;
-use ::color;
+use angle::*;
+use color;
+use channel;
 
-pub trait BoundedChannelScalarTraits: Clone + PartialEq + PartialOrd + Default
+pub trait BoundedChannelScalar: Clone + PartialEq + PartialOrd + Default
         + ops::Add<Self, Output=Self> + ops::Sub<Self, Output=Self>
+{
+}
+
+impl BoundedChannelScalar for u8 {}
+impl BoundedChannelScalar for u16 {}
+impl BoundedChannelScalar for u32 {}
+impl BoundedChannelScalar for f32 {}
+impl BoundedChannelScalar for f64 {}
+
+pub trait AngularChannelScalar: Clone + PartialEq + PartialOrd + Default
+        + Zero + ops::Add<Self, Output=Self> + ops::Sub<Self, Output=Self>
+        + angle::Angle
+    where Self::Scalar: Float
 {
     fn min_bound() -> Self;
     fn max_bound() -> Self;
@@ -12,11 +27,44 @@ pub trait BoundedChannelScalarTraits: Clone + PartialEq + PartialOrd + Default
     fn normalize(self) -> Self;
 }
 
-pub trait AngularChannelTraits: Clone + PartialEq + PartialOrd + Default
-        + Zero + ops::Add<Self, Output=Self> + ops::Sub<Self, Output=Self>
-        + angle::Angle
-    where Self::Scalar: Float
-{
+
+macro_rules! impl_traits_for_angle {
+    ($Struct: ident) => {
+        impl<T> AngularChannelScalar for $Struct<T> 
+            where T: Float
+        {
+            fn min_bound() -> Self {
+                $Struct(cast(0.0).unwrap())
+            }
+            fn max_bound() -> Self {
+                $Struct($Struct::period())
+            }
+            fn is_normalized(&self) -> bool {
+                <Self as Angle>::is_normalized(self)
+            }
+            fn normalize(self) -> Self {
+                <Self as Angle>::normalize(self)
+            }
+        }
+
+        impl<T> color::Lerp for $Struct<T>
+            where T: Float,
+        {
+            type Position = T;
+            fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
+                self.interpolate(right, pos)
+            }
+        }
+    }
+}
+
+impl_traits_for_angle!(Deg);
+impl_traits_for_angle!(Rad);
+impl_traits_for_angle!(Turns);
+impl_traits_for_angle!(ArcMinutes);
+impl_traits_for_angle!(ArcSeconds);
+
+pub trait PosNormalChannelScalar: BoundedChannelScalar {
     fn min_bound() -> Self;
     fn max_bound() -> Self;
     fn is_normalized(&self) -> bool;
@@ -43,7 +91,7 @@ fn lerp_flat<T>(left: &T, right: &T, pos: T) -> T
 
 macro_rules! impl_bounded_channel_traits_int {
     ($name: ident) => {
-        impl BoundedChannelScalarTraits for $name {
+        impl PosNormalChannelScalar for $name {
             fn min_bound() -> Self {
                 $name::min_value()
             }
@@ -69,7 +117,7 @@ macro_rules! impl_bounded_channel_traits_int {
 
 macro_rules! impl_bounded_channel_traits_float {
     ($name: ty) => {
-        impl BoundedChannelScalarTraits for $name {
+        impl PosNormalChannelScalar for $name {
             fn min_bound() -> Self {
                 cast(0.0).unwrap()                
             }

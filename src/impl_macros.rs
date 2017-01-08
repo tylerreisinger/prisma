@@ -50,26 +50,26 @@ macro_rules! impl_color_as_slice {
 }
 
 macro_rules! impl_color_from_slice_square {
-    ($name: ident<$T:ident> {$($fields:ident:$i:expr),*}, phantom={$($phantom:ident),*}) => {
+    ($name: ident<$T:ident> {$($fields:ident:$i:expr),*}, chan=$chan:ident,
+     phantom={$($phantom:ident),*}) => {
         fn from_slice(vals: &[$T]) -> Self {
             $name {
-                $($fields: BoundedChannel(vals[$i].clone())),*,
+                $($fields: $chan(vals[$i].clone())),*,
                 $($phantom: PhantomData),*
             }
         }
     };
-    ($name: ident<$T:ident> {$($fields:ident:$i:expr),*}) => {
-        impl_color_from_slice_square!($name<$T> {$($fields:$i),*}, phantom={});
+    ($name: ident<$T:ident> {$($fields:ident:$i:expr),*}, chan=$chan:ident) => {
+        impl_color_from_slice_square!($name<$T> {$($fields:$i),*}, chan=$chan, phantom={});
     };
 }
 macro_rules! impl_color_from_slice_angular {
     ($name: ident<$T:ident, $A:ident> {
-        $ang_field:ident:$ai:expr, $($fields:ident:$i:expr),*
-    }) => {
+        $ang_field:ident:$ai:expr, $($fields:ident:$i:expr),*}, chan=$chan:ident) => {
         fn from_slice(vals: &[$T]) -> Self {
             $name {
                 $ang_field: AngularChannel($A::from_angle(angle::Turns(vals[$ai].clone()))),
-                $($fields: BoundedChannel(vals[$i].clone())),*
+                $($fields: $chan(vals[$i].clone())),*
             }
         }
     }
@@ -179,12 +179,12 @@ macro_rules! impl_color_color_cast_square {
 }
 
 macro_rules! impl_color_color_cast_angular {
-    ($name:ident {$($fields:ident),*}) => {
+    ($name:ident {$($fields:ident),*}, chan_traits=$chan_traits:ident) => {
         pub fn color_cast<TOut, AOut>(&self) -> $name<TOut, AOut>
             where T: ChannelFormatCast<TOut>,
                   A: ChannelFormatCast<AOut>,
-                  AOut: AngularChannelTraits,
-                  TOut: BoundedChannelScalarTraits,
+                  AOut: AngularChannelScalar,
+                  TOut: $chan_traits,
         {
             $name {
                 $($fields: self.$fields.clone().channel_cast()),*
