@@ -262,6 +262,45 @@ mod test {
         let c2 = YCbCrJpeg::from_channels(0.2, -0.2, 1.0);
         assert_relative_eq!(c2.invert().invert(), c2, epsilon=1e-6);
         assert_relative_eq!(c2.invert(), YCbCrJpeg::from_channels(0.8, 0.2, -1.0));
+
+        let c3 = YCbCrJpeg::from_channels(200u8, 170u8, 50u8);
+        assert_eq!(c3.invert().invert(), c3);
+        assert_eq!(c3.invert(), YCbCrJpeg::from_channels(55u8, 85u8, 205u8));
+    }
+
+    #[test]
+    fn test_lerp() {
+        let c1 = YCbCrJpeg::from_channels(0.7, -0.4, 0.7);
+        let c2 = YCbCrJpeg::from_channels(0.3, 0.2, -0.8);
+        assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
+        assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
+        assert_relative_eq!(c1.lerp(&c2, 0.5), YCbCrJpeg::from_channels(0.5, -0.1, -0.05));
+        assert_relative_eq!(c1.lerp(&c2, 0.25), YCbCrJpeg::from_channels(0.6, -0.25, 0.325));
+
+        let c3 = YCbCrJpeg::from_channels(100u8, 210, 25);
+        let c4 = YCbCrJpeg::from_channels(200u8, 70, 150);
+        assert_eq!(c3.lerp(&c4, 0.0), c3);
+        assert_eq!(c3.lerp(&c4, 1.0), c4);
+        assert_eq!(c3.lerp(&c4, 0.5), YCbCrJpeg::from_channels(150u8, 140u8, 87));
+    }
+
+    #[test]
+    fn test_normalize() {
+        let c1 = YCbCrJpeg::from_channels(-0.2, -1.3, 1.2);
+        assert!(!c1.is_normalized());
+        assert_eq!(c1.normalize(), YCbCrJpeg::from_channels(0.0, -1.0, 1.0));
+        assert_eq!(c1.normalize().normalize(), c1.normalize());
+
+        let c2 = YCbCrJpeg::from_channels(0.8, -0.8, 0.3);
+        assert!(c2.is_normalized());
+        assert_eq!(c2.normalize(), c2);
+    }
+
+    #[test]
+    fn test_flatten() {
+        let c1 = YCbCrJpeg::from_channels(0.2, -0.3, 0.45);
+        assert_eq!(c1.as_slice(), &[0.2, -0.3, 0.45]);
+        assert_eq!(YCbCrJpeg::from_slice(c1.as_slice()), c1);
     }
 
     #[test]
