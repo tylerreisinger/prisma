@@ -38,7 +38,7 @@ impl<T> Rgi<T>
     }
 
     impl_color_color_cast_square!(Rgi {red, green, intensity},
-        chan_traits=PosNormalChannelScalar);
+        chan_traits={PosNormalChannelScalar});
 
     pub fn red(&self) -> T {
         self.red.0.clone()
@@ -129,8 +129,8 @@ impl<T> Flatten for Rgi<T>
     type ScalarFormat = T;
 
     impl_color_as_slice!(T);
-    impl_color_from_slice_square!(Rgi<T> {red:0, green:1, intensity:2},
-        chan=PosNormalBoundedChannel);
+    impl_color_from_slice_square!(Rgi<T> {red:PosNormalBoundedChannel - 0, 
+        green:PosNormalBoundedChannel - 1, intensity:PosNormalBoundedChannel - 2});
 }
 
 impl<T> Bounded for Rgi<T>

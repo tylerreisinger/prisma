@@ -193,11 +193,11 @@ macro_rules! impl_normal_bounded_channel_traits_float {
         impl NormalChannelScalar for $name {
             #[inline]
             fn min_bound() -> Self {
-                cast(0.0).unwrap()                
+                cast(-1.0).unwrap()                
             }
             #[inline]
             fn max_bound() -> Self {
-                cast(2.0).unwrap()
+                cast(1.0).unwrap()
             }
             #[inline]
             fn is_normalized(&self) -> bool {
@@ -205,10 +205,10 @@ macro_rules! impl_normal_bounded_channel_traits_float {
             }
             #[inline]
             fn normalize(self) -> Self {
-                if self > 2.0 {
-                    2.0
-                } else if self < 0.0 {
-                    0.0
+                if self > 1.0 {
+                    1.0
+                } else if self < -1.0 {
+                    -1.0
                 } else {
                     self.clone()
                 }

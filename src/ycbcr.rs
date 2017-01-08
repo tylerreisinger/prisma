@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 use approx;
 use num;
 use channel::{NormalBoundedChannel, ColorChannel, NormalChannelScalar, ChannelFormatCast,
-              ChannelCast, PosNormalChannelScalar};
+              ChannelCast, PosNormalChannelScalar, PosNormalBoundedChannel};
 use color::{Color, Lerp, Invert, HomogeneousColor, Flatten, Bounded};
 use convert::FromColor;
 use rgb::Rgb;
@@ -27,7 +27,7 @@ pub trait YCbCrCoeffs<T>: Clone + PartialEq
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct YCbCr<T, Coeffs = JpegCoeffs<T>> {
-    luma: NormalBoundedChannel<T>,
+    luma: PosNormalBoundedChannel<T>,
     cb: NormalBoundedChannel<T>,
     cr: NormalBoundedChannel<T>,
     coeffs: PhantomData<Coeffs>,
@@ -86,19 +86,20 @@ impl_jpeg_coeffs_float!(f64);
 pub type YCbCrJpeg<T> = YCbCr<T, JpegCoeffs<T>>;
 
 impl<T, Coeffs> YCbCr<T, Coeffs>
-    where T: NormalChannelScalar,
+    where T: NormalChannelScalar + PosNormalChannelScalar,
           Coeffs: YCbCrCoeffs<T>
 {
     pub fn from_channels(y: T, cb: T, cr: T) -> Self {
         YCbCr {
-            luma: NormalBoundedChannel::new(y),
+            luma: PosNormalBoundedChannel::new(y),
             cb: NormalBoundedChannel::new(cb),
             cr: NormalBoundedChannel::new(cr),
             coeffs: PhantomData,
         }
     }
 
-    impl_color_color_cast_square!(YCbCr {luma, cb, cr}, chan_traits=NormalChannelScalar,
+    impl_color_color_cast_square!(YCbCr {luma, cb, cr}, 
+        chan_traits={NormalChannelScalar,PosNormalChannelScalar},
         phantom={coeffs}, types={Coeffs});
 
     pub fn luma(&self) -> T {
@@ -132,7 +133,7 @@ impl<T, Coeffs> YCbCr<T, Coeffs>
 
 
 impl<T, Coeffs> Color for YCbCr<T, Coeffs>
-    where T: NormalChannelScalar,
+    where T: NormalChannelScalar + PosNormalChannelScalar,
           Coeffs: YCbCrCoeffs<T>
 {
     type Tag = YCbCrTag;
@@ -145,7 +146,7 @@ impl<T, Coeffs> Color for YCbCr<T, Coeffs>
 
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         YCbCr {
-            luma: NormalBoundedChannel::new(values.0),
+            luma: PosNormalBoundedChannel::new(values.0),
             cb: NormalBoundedChannel::new(values.1),
             cr: NormalBoundedChannel::new(values.2),
             coeffs: PhantomData,
@@ -156,32 +157,22 @@ impl<T, Coeffs> Color for YCbCr<T, Coeffs>
     }
 }
 
-impl<T, Coeffs> HomogeneousColor for YCbCr<T, Coeffs>
-    where T: NormalChannelScalar,
-          Coeffs: YCbCrCoeffs<T>
-{
-    type ChannelFormat = T;
-
-    impl_color_homogeneous_color_square!(YCbCr<T> {luma, cb, cr}, 
-        chan=NormalBoundedChannel, phantom={coeffs});
-}
-
 impl<T, Coeffs> Invert for YCbCr<T, Coeffs>
-    where T: NormalChannelScalar,
+    where T: NormalChannelScalar + PosNormalChannelScalar,
           Coeffs: YCbCrCoeffs<T>
 {
     impl_color_invert!(YCbCr {luma, cb, cr}, phantom={coeffs});
 }
 
 impl<T, Coeffs> Bounded for YCbCr<T, Coeffs>
-    where T: NormalChannelScalar,
+    where T: NormalChannelScalar + PosNormalChannelScalar,
           Coeffs: YCbCrCoeffs<T>
 {
     impl_color_bounded!(YCbCr {luma, cb, cr}, phantom={coeffs});
 }
 
 impl<T, Coeffs> Lerp for YCbCr<T, Coeffs>
-    where T: NormalChannelScalar + Lerp,
+    where T: NormalChannelScalar + Lerp + PosNormalChannelScalar,
           Coeffs: YCbCrCoeffs<T>
 {
     type Position = <T as Lerp>::Position;
@@ -189,17 +180,17 @@ impl<T, Coeffs> Lerp for YCbCr<T, Coeffs>
 }
 
 impl<T, Coeffs> Flatten for YCbCr<T, Coeffs>
-    where T: NormalChannelScalar,
+    where T: NormalChannelScalar + PosNormalChannelScalar,
           Coeffs: YCbCrCoeffs<T>
 {
     type ScalarFormat = T;
 
     impl_color_as_slice!(T);
-    impl_color_from_slice_square!(YCbCr<T> {luma:0, cb:1, cr:2}, chan=NormalBoundedChannel,
-        phantom={coeffs});
+    impl_color_from_slice_square!(YCbCr<T> {luma:PosNormalBoundedChannel - 0, 
+        cb:NormalBoundedChannel - 1, cr:NormalBoundedChannel - 2}, phantom={coeffs});
 }
 impl<T, Coeffs> approx::ApproxEq for YCbCr<T, Coeffs>
-    where T: NormalChannelScalar + approx::ApproxEq,
+    where T: NormalChannelScalar + PosNormalChannelScalar + approx::ApproxEq,
           T::Epsilon: Clone,
           Coeffs: YCbCrCoeffs<T>
 {
@@ -207,15 +198,15 @@ impl<T, Coeffs> approx::ApproxEq for YCbCr<T, Coeffs>
 }
 
 impl<T, Coeffs> Default for YCbCr<T, Coeffs>
-    where T: NormalChannelScalar + num::Zero,
+    where T: NormalChannelScalar + PosNormalChannelScalar + num::Zero,
           Coeffs: YCbCrCoeffs<T>
 {
-    impl_color_default!(YCbCr {luma:NormalBoundedChannel, cb:NormalBoundedChannel,
+    impl_color_default!(YCbCr {luma:PosNormalBoundedChannel, cb:NormalBoundedChannel,
         cr:NormalBoundedChannel}, phantom={coeffs});
 }
 
 impl<T> fmt::Display for YCbCr<T>
-    where T: NormalChannelScalar + fmt::Display
+    where T: NormalChannelScalar + PosNormalChannelScalar + fmt::Display
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "YCbCr({}, {}, {})", self.luma, self.cb, self.cr)
@@ -223,7 +214,7 @@ impl<T> fmt::Display for YCbCr<T>
 }
 
 impl<T, Coeffs> FromColor<Rgb<T>> for YCbCr<T, Coeffs>
-    where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
+    where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast + PosNormalChannelScalar,
           Coeffs: YCbCrCoeffs<T>
 {
     fn from_color(from: &Rgb<T>) -> Self {
@@ -242,6 +233,32 @@ mod test {
     use super::*;
     use rgb::Rgb;
     use convert::*;
+    use color::*;
+
+    #[test]
+    fn test_construct() {
+        let c1 = YCbCrJpeg::from_channels(0.75, 0.44, 0.21);
+        assert_eq!(c1.luma(), 0.75);
+        assert_eq!(c1.cb(), 0.44);
+        assert_eq!(c1.cr(), 0.21);
+        assert_eq!(c1.to_tuple(), (0.75, 0.44, 0.21));
+        assert_eq!(YCbCrJpeg::from_tuple(c1.to_tuple()), c1);
+
+        let c2 = YCbCrJpeg::from_channels(0.20, 0.21, 0.33);
+        assert_eq!(c2.luma(), 0.20);
+        assert_eq!(c2.cb(), 0.21);
+        assert_eq!(c2.cr(), 0.33);
+        assert_eq!(c2.to_tuple(), (0.20, 0.21, 0.33));
+        assert_eq!(YCbCrJpeg::from_tuple(c2.to_tuple()), c2);
+    }
+
+    #[test]
+    fn test_invert() {
+        let c1 = YCbCrJpeg::from_channels(0.33, 0.55, 0.88);
+        assert_relative_eq!(c1.invert().invert(), c1, epsilon=1e-6);
+        assert_relative_eq!(c1.invert(), 
+            YCbCrJpeg::from_channels(0.67, 0.45, 0.12), epsilon=1e-6);
+    }
 
     #[test]
     fn test_from_rgb() {

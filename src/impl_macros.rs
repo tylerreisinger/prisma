@@ -50,8 +50,7 @@ macro_rules! impl_color_as_slice {
 }
 
 macro_rules! impl_color_from_slice_square {
-    ($name: ident<$T:ident> {$($fields:ident:$i:expr),*}, chan=$chan:ident,
-     phantom={$($phantom:ident),*}) => {
+    ($name: ident<$T:ident> {$($fields:ident:$chan:ident - $i:expr),*}, phantom={$($phantom:ident),*}) => {
         fn from_slice(vals: &[$T]) -> Self {
             $name {
                 $($fields: $chan(vals[$i].clone())),*,
@@ -59,16 +58,16 @@ macro_rules! impl_color_from_slice_square {
             }
         }
     };
-    ($name: ident<$T:ident> {$($fields:ident:$i:expr),*}, chan=$chan:ident) => {
-        impl_color_from_slice_square!($name<$T> {$($fields:$i),*}, chan=$chan, phantom={});
+    ($name: ident<$T:ident> {$($fields:ident:$chan:ident - $i:expr),*}) => {
+        impl_color_from_slice_square!($name<$T> {$($fields:$chan - $i),*}, phantom={});
     };
 }
 macro_rules! impl_color_from_slice_angular {
     ($name: ident<$T:ident, $A:ident> {
-        $ang_field:ident:$ai:expr, $($fields:ident:$i:expr),*}, chan=$chan:ident) => {
+        $ang_field:ident:$ang_chan:ident - $ai:expr, $($fields:ident:$chan:ident - $i:expr),*}) => {
         fn from_slice(vals: &[$T]) -> Self {
             $name {
-                $ang_field: AngularChannel($A::from_angle(angle::Turns(vals[$ai].clone()))),
+                $ang_field: $ang_chan($A::from_angle(angle::Turns(vals[$ai].clone()))),
                 $($fields: $chan(vals[$i].clone())),*
             }
         }
@@ -159,13 +158,13 @@ macro_rules! impl_color_default {
 }
 
 macro_rules! impl_color_color_cast_square {
-    ($name:ident {$($fields:ident),*}, chan_traits=$chan_traits:ident,
+    ($name:ident {$($fields:ident),*}, chan_traits={$($chan_traits:ident),*},
      phantom={$($phantom:ident),*},
         types={$($ts:ident),*}) => 
     {
         pub fn color_cast<TOut>(&self) -> $name<TOut, $($ts),*>
             where T: ChannelFormatCast<TOut>,
-                  TOut: $chan_traits
+                  TOut: $($chan_traits +)*
         {
             $name {
                 $($fields: self.$fields.clone().channel_cast()),*,
@@ -174,19 +173,19 @@ macro_rules! impl_color_color_cast_square {
         }
     };
 
-    ($name:ident {$($fields:ident),*}, chan_traits=$chan_traits:ident) => {
-        impl_color_color_cast_square!($name {$($fields),*}, chan_traits=$chan_traits, 
+    ($name:ident {$($fields:ident),*}, chan_traits={$($chan_traits:ident),*}) => {
+        impl_color_color_cast_square!($name {$($fields),*}, chan_traits={$($chan_traits),*}, 
             phantom={}, types={});
     };
 }
 
 macro_rules! impl_color_color_cast_angular {
-    ($name:ident {$($fields:ident),*}, chan_traits=$chan_traits:ident) => {
+    ($name:ident {$($fields:ident),*}, chan_traits={$($chan_traits:ident),*}) => {
         pub fn color_cast<TOut, AOut>(&self) -> $name<TOut, AOut>
             where T: ChannelFormatCast<TOut>,
                   A: ChannelFormatCast<AOut>,
                   AOut: AngularChannelScalar,
-                  TOut: $chan_traits,
+                  TOut: $($chan_traits + )*
         {
             $name {
                 $($fields: self.$fields.clone().channel_cast()),*

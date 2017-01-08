@@ -40,7 +40,7 @@ impl<T, A> Hsl<T, A>
     }
 
     impl_color_color_cast_angular!(Hsl {hue, saturation, lightness},
-        chan_traits=PosNormalChannelScalar);
+        chan_traits={PosNormalChannelScalar});
 
     pub fn hue(&self) -> A {
         self.hue.0.clone()
@@ -131,8 +131,8 @@ impl<T, A> color::Flatten for Hsl<T, A>
     type ScalarFormat = T;
 
     impl_color_as_slice!(T);
-    impl_color_from_slice_angular!(Hsl<T, A> {hue:0, saturation:1, lightness:2},
-        chan=PosNormalBoundedChannel);
+    impl_color_from_slice_angular!(Hsl<T, A> {hue:AngularChannel - 0, 
+        saturation:PosNormalBoundedChannel - 1, lightness:PosNormalBoundedChannel - 2});
 }
 
 impl<T, A> approx::ApproxEq for Hsl<T, A>

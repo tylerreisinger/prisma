@@ -43,7 +43,7 @@ impl<T, A> Hwb<T, A>
     }
 
     impl_color_color_cast_angular!(Hwb {hue, whiteness, blackness}, 
-        chan_traits=PosNormalChannelScalar);
+        chan_traits={PosNormalChannelScalar});
 
     pub fn hue(&self) -> A {
         self.hue.0.clone()
@@ -158,8 +158,8 @@ impl<T, A> color::Flatten for Hwb<T, A>
     type ScalarFormat = T;
 
     impl_color_as_slice!(T);
-    impl_color_from_slice_angular!(Hwb<T, A> {hue:0, whiteness:1, blackness:2}, 
-        chan=PosNormalBoundedChannel);
+    impl_color_from_slice_angular!(Hwb<T, A> {hue:AngularChannel - 0, 
+        whiteness:PosNormalBoundedChannel - 1, blackness:PosNormalBoundedChannel - 2});
 }
 
 impl<T, A> approx::ApproxEq for Hwb<T, A>
