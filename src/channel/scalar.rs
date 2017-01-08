@@ -3,7 +3,6 @@ use num::{Integer, Float, NumCast, cast, Zero};
 use angle;
 use angle::*;
 use color;
-use channel;
 
 pub trait BoundedChannelScalar: Clone + PartialEq + PartialOrd + Default
         + ops::Add<Self, Output=Self> + ops::Sub<Self, Output=Self>

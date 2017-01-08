@@ -6,9 +6,8 @@ use approx;
 use num;
 use angle;
 use angle::{Angle, FromAngle, IntoAngle, Turns, Rad, Deg};
-use hue_angle;
-use channel::{BoundedChannel, AngularChannel, ChannelFormatCast, ChannelCast,
-              BoundedChannelScalarTraits, AngularChannelTraits, ColorChannel};
+use channel::{PosNormalBoundedChannel, AngularChannel, ChannelFormatCast, ChannelCast,
+              PosNormalChannelScalar, AngularChannelScalar, ColorChannel};
 use color::{Color, PolarColor, Invert, Lerp, Bounded};
 use color;
 use convert::{GetHue, FromColor, TryFromColor};
@@ -25,25 +24,26 @@ pub enum OutOfGamutMode {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
-pub struct Hsi<T, A = hue_angle::Deg<T>> {
+pub struct Hsi<T, A = Deg<T>> {
     pub hue: AngularChannel<A>,
-    pub saturation: BoundedChannel<T>,
-    pub intensity: BoundedChannel<T>,
+    pub saturation: PosNormalBoundedChannel<T>,
+    pub intensity: PosNormalBoundedChannel<T>,
 }
 
 impl<T, A> Hsi<T, A>
-    where T: BoundedChannelScalarTraits + num::Float,
-          A: AngularChannelTraits + Angle<Scalar = T>
+    where T: PosNormalChannelScalar + num::Float,
+          A: AngularChannelScalar + Angle<Scalar = T>
 {
     pub fn from_channels(hue: A, saturation: T, intensity: T) -> Self {
         Hsi {
             hue: AngularChannel(hue),
-            saturation: BoundedChannel(saturation),
-            intensity: BoundedChannel(intensity),
+            saturation: PosNormalBoundedChannel::new(saturation),
+            intensity: PosNormalBoundedChannel::new(intensity),
         }
     }
 
-    impl_color_color_cast_angular!(Hsi {hue, saturation, intensity});
+    impl_color_color_cast_angular!(Hsi {hue, saturation, intensity}, 
+        chan_traits=PosNormalChannelScalar);
 
     pub fn hue(&self) -> A {
         self.hue.0.clone()
@@ -83,16 +83,16 @@ impl<T, A> Hsi<T, A>
 }
 
 impl<T, A> PolarColor for Hsi<T, A>
-    where T: BoundedChannelScalarTraits,
-          A: AngularChannelTraits
+    where T: PosNormalChannelScalar,
+          A: AngularChannelScalar
 {
     type Angular = A;
     type Cartesian = T;
 }
 
 impl<T, A> Color for Hsi<T, A>
-    where T: BoundedChannelScalarTraits,
-          A: AngularChannelTraits
+    where T: PosNormalChannelScalar,
+          A: AngularChannelScalar
 {
     type Tag = HsiTag;
     type ChannelsTuple = (A, T, T);
@@ -103,8 +103,8 @@ impl<T, A> Color for Hsi<T, A>
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         Hsi {
             hue: AngularChannel(values.0),
-            saturation: BoundedChannel(values.1),
-            intensity: BoundedChannel(values.2),
+            saturation: PosNormalBoundedChannel::new(values.1),
+            intensity: PosNormalBoundedChannel::new(values.2),
         }
     }
     fn to_tuple(self) -> Self::ChannelsTuple {
@@ -113,15 +113,15 @@ impl<T, A> Color for Hsi<T, A>
 }
 
 impl<T, A> Invert for Hsi<T, A>
-    where T: BoundedChannelScalarTraits,
-          A: AngularChannelTraits
+    where T: PosNormalChannelScalar,
+          A: AngularChannelScalar
 {
     impl_color_invert!(Hsi {hue, saturation, intensity});
 }
 
 impl<T, A> Lerp for Hsi<T, A>
-    where T: BoundedChannelScalarTraits + color::Lerp,
-          A: AngularChannelTraits + color::Lerp
+    where T: PosNormalChannelScalar + color::Lerp,
+          A: AngularChannelScalar + color::Lerp
 {
     type Position = A::Position;
 
@@ -129,41 +129,42 @@ impl<T, A> Lerp for Hsi<T, A>
 }
 
 impl<T, A> Bounded for Hsi<T, A>
-    where T: BoundedChannelScalarTraits,
-          A: AngularChannelTraits
+    where T: PosNormalChannelScalar,
+          A: AngularChannelScalar
 {
     impl_color_bounded!(Hsi {hue, saturation, intensity});
 }
 
 impl<T, A> color::Flatten for Hsi<T, A>
-    where T: BoundedChannelScalarTraits + num::Float,
-          A: AngularChannelTraits + Angle<Scalar = T> + FromAngle<Turns<T>>
+    where T: PosNormalChannelScalar + num::Float,
+          A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Turns<T>>
 {
     type ScalarFormat = T;
 
     impl_color_as_slice!(T);
-    impl_color_from_slice_angular!(Hsi<T, A> {hue:0, saturation:1, intensity:2});
+    impl_color_from_slice_angular!(Hsi<T, A> {hue:0, saturation:1, intensity:2},
+        chan=PosNormalBoundedChannel);
 }
 
 impl<T, A> approx::ApproxEq for Hsi<T, A>
-    where T: BoundedChannelScalarTraits + approx::ApproxEq<Epsilon = A::Epsilon>,
-          A: AngularChannelTraits + approx::ApproxEq,
+    where T: PosNormalChannelScalar + approx::ApproxEq<Epsilon = A::Epsilon>,
+          A: AngularChannelScalar + approx::ApproxEq,
           A::Epsilon: Clone + num::Float
 {
     impl_approx_eq!({hue, saturation, intensity});
 }
 
 impl<T, A> Default for Hsi<T, A>
-    where T: BoundedChannelScalarTraits + num::Zero,
-          A: AngularChannelTraits + num::Zero
+    where T: PosNormalChannelScalar + num::Zero,
+          A: AngularChannelScalar + num::Zero
 {
     impl_color_default!(Hsi {hue: AngularChannel, 
-        saturation: BoundedChannel, intensity: BoundedChannel});
+        saturation: PosNormalBoundedChannel, intensity: PosNormalBoundedChannel});
 }
 
 impl<T, A> fmt::Display for Hsi<T, A>
-    where T: BoundedChannelScalarTraits + fmt::Display,
-          A: AngularChannelTraits + fmt::Display
+    where T: PosNormalChannelScalar + fmt::Display,
+          A: AngularChannelScalar + fmt::Display
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Hsi({}, {}, {})", self.hue, self.saturation, self.intensity)
@@ -171,15 +172,15 @@ impl<T, A> fmt::Display for Hsi<T, A>
 }
 
 impl<T, A> GetHue for Hsi<T, A>
-    where T: BoundedChannelScalarTraits,
-          A: AngularChannelTraits
+    where T: PosNormalChannelScalar,
+          A: AngularChannelScalar
 {
     impl_color_get_hue_angular!(Hsi);
 }
 
 impl<T, A> FromColor<Rgb<T>> for Hsi<T, A>
-    where T: BoundedChannelScalarTraits + num::Float,
-          A: AngularChannelTraits + Angle<Scalar = T> + FromAngle<Rad<T>> + fmt::Display
+    where T: PosNormalChannelScalar + num::Float,
+          A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>> + fmt::Display
 {
     fn from_color(from: &Rgb<T>) -> Self {
         let coords = from.get_chromaticity_coordinates();
@@ -201,12 +202,12 @@ impl<T, A> FromColor<Rgb<T>> for Hsi<T, A>
 }
 
 impl<T, A> TryFromColor<Hsi<T, A>> for Rgb<T>
-    where T: BoundedChannelScalarTraits + num::Float,
-          A: AngularChannelTraits + Angle<Scalar = T>
+    where T: PosNormalChannelScalar + num::Float,
+          A: AngularChannelScalar + Angle<Scalar = T>
 {
     fn try_from_color(from: &Hsi<T, A>) -> Option<Self> {
         let c = from.to_rgb(OutOfGamutMode::Preserve);
-        let max = BoundedChannel::<T>::max_bound();
+        let max = PosNormalBoundedChannel::<T>::max_bound();
 
         if c.red() > max || c.green() > max || c.blue() > max {
             None
@@ -217,8 +218,8 @@ impl<T, A> TryFromColor<Hsi<T, A>> for Rgb<T>
 }
 
 impl<T, A> Hsi<T, A>
-    where T: BoundedChannelScalarTraits + num::Float,
-          A: AngularChannelTraits + Angle<Scalar = T> + IntoAngle<Rad<T>, OutputScalar = T>
+    where T: PosNormalChannelScalar + num::Float,
+          A: AngularChannelScalar + Angle<Scalar = T> + IntoAngle<Rad<T>, OutputScalar = T>
 {
     pub fn to_rgb(&self, mode: OutOfGamutMode) -> Rgb<T> {
         let pi_over_3: T = num::cast(consts::PI / 3.0).unwrap();
@@ -252,8 +253,8 @@ fn to_rgb_out_of_gamut<T, A>(color: &Hsi<T, A>,
                              c1: &mut T,
                              c2: &mut T,
                              c3: &mut T)
-    where T: BoundedChannelScalarTraits + num::Float,
-          A: AngularChannelTraits + Angle<Scalar = T>
+    where T: PosNormalChannelScalar + num::Float,
+          A: AngularChannelScalar + Angle<Scalar = T>
 {
     let one = num::cast(1.0).unwrap();
     match mode {

@@ -3,10 +3,9 @@ use std::mem;
 use std::slice;
 use approx;
 use num;
-use channel::{BoundedChannel, AngularChannel, ChannelFormatCast, ChannelCast,
-              BoundedChannelScalarTraits, AngularChannelTraits};
-use hue_angle;
-use angle::{Angle, FromAngle, IntoAngle};
+use channel::{PosNormalBoundedChannel, PosNormalChannelScalar, AngularChannel, ChannelFormatCast,
+              ChannelCast, AngularChannelScalar};
+use angle::{Angle, FromAngle, IntoAngle, Deg};
 use angle;
 use alpha::Alpha;
 use color::Color;
@@ -19,31 +18,32 @@ pub struct HwbTag;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
-pub struct Hwb<T, A = hue_angle::Deg<T>> {
+pub struct Hwb<T, A = Deg<T>> {
     pub hue: AngularChannel<A>,
-    pub whiteness: BoundedChannel<T>,
-    pub blackness: BoundedChannel<T>,
+    pub whiteness: PosNormalBoundedChannel<T>,
+    pub blackness: PosNormalBoundedChannel<T>,
 }
 
-pub trait HwbBoundedChannelTraits: BoundedChannelScalarTraits + num::Float {}
+pub trait HwbBoundedChannelTraits: PosNormalChannelScalar + num::Float {}
 
-impl<T> HwbBoundedChannelTraits for T where T: BoundedChannelScalarTraits + num::Float {}
+impl<T> HwbBoundedChannelTraits for T where T: PosNormalChannelScalar + num::Float {}
 
 pub type Hwba<T, A> = Alpha<T, Hwb<T, A>>;
 
 impl<T, A> Hwb<T, A>
     where T: HwbBoundedChannelTraits,
-          A: AngularChannelTraits
+          A: AngularChannelScalar
 {
     pub fn from_channels(hue: A, whiteness: T, blackness: T) -> Self {
         Hwb {
             hue: AngularChannel(hue),
-            whiteness: BoundedChannel(whiteness),
-            blackness: BoundedChannel(blackness),
+            whiteness: PosNormalBoundedChannel(whiteness),
+            blackness: PosNormalBoundedChannel(blackness),
         }
     }
 
-    impl_color_color_cast_angular!(Hwb {hue, whiteness, blackness});
+    impl_color_color_cast_angular!(Hwb {hue, whiteness, blackness}, 
+        chan_traits=PosNormalChannelScalar);
 
     pub fn hue(&self) -> A {
         self.hue.0.clone()
@@ -76,7 +76,7 @@ impl<T, A> Hwb<T, A>
 
 impl<T, A> Hwb<T, A>
     where T: HwbBoundedChannelTraits,
-          A: AngularChannelTraits
+          A: AngularChannelScalar
 {
     pub fn wb_needs_rescaled(&self) -> bool {
         (self.whiteness() + self.blackness()) > num::cast::<_, T>(1.0).unwrap()
@@ -89,8 +89,8 @@ impl<T, A> Hwb<T, A>
             let inv_sum = num::cast::<_, T>(1.0).unwrap() / sum;
             Hwb {
                 hue: self.hue,
-                whiteness: BoundedChannel(self.whiteness.0 * inv_sum),
-                blackness: BoundedChannel(self.blackness.0 * inv_sum),
+                whiteness: PosNormalBoundedChannel(self.whiteness.0 * inv_sum),
+                blackness: PosNormalBoundedChannel(self.blackness.0 * inv_sum),
             }
         } else {
             self
@@ -100,7 +100,7 @@ impl<T, A> Hwb<T, A>
 
 impl<T, A> Color for Hwb<T, A>
     where T: HwbBoundedChannelTraits,
-          A: AngularChannelTraits
+          A: AngularChannelScalar
 {
     type Tag = HwbTag;
     type ChannelsTuple = (A, T, T);
@@ -111,8 +111,8 @@ impl<T, A> Color for Hwb<T, A>
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         Hwb {
             hue: AngularChannel(values.0),
-            whiteness: BoundedChannel(values.1),
-            blackness: BoundedChannel(values.2),
+            whiteness: PosNormalBoundedChannel(values.1),
+            blackness: PosNormalBoundedChannel(values.2),
         }
     }
     fn to_tuple(self) -> Self::ChannelsTuple {
@@ -122,7 +122,7 @@ impl<T, A> Color for Hwb<T, A>
 
 impl<T, A> color::PolarColor for Hwb<T, A>
     where T: HwbBoundedChannelTraits,
-          A: AngularChannelTraits
+          A: AngularChannelScalar
 {
     type Angular = A;
     type Cartesian = T;
@@ -130,14 +130,14 @@ impl<T, A> color::PolarColor for Hwb<T, A>
 
 impl<T, A> color::Invert for Hwb<T, A>
     where T: HwbBoundedChannelTraits,
-          A: AngularChannelTraits
+          A: AngularChannelScalar
 {
     impl_color_invert!(Hwb {hue, whiteness, blackness});
 }
 
 impl<T, A> color::Lerp for Hwb<T, A>
     where T: HwbBoundedChannelTraits + color::Lerp,
-          A: AngularChannelTraits + color::Lerp
+          A: AngularChannelScalar + color::Lerp
 {
     type Position = A::Position;
 
@@ -146,24 +146,25 @@ impl<T, A> color::Lerp for Hwb<T, A>
 
 impl<T, A> color::Bounded for Hwb<T, A>
     where T: HwbBoundedChannelTraits,
-          A: AngularChannelTraits
+          A: AngularChannelScalar
 {
     impl_color_bounded!(Hwb {hue, whiteness, blackness});
 }
 
 impl<T, A> color::Flatten for Hwb<T, A>
     where T: HwbBoundedChannelTraits + num::Float,
-          A: AngularChannelTraits + Angle<Scalar = T> + FromAngle<angle::Turns<T>>
+          A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>
 {
     type ScalarFormat = T;
 
     impl_color_as_slice!(T);
-    impl_color_from_slice_angular!(Hwb<T, A> {hue:0, whiteness:1, blackness:2});
+    impl_color_from_slice_angular!(Hwb<T, A> {hue:0, whiteness:1, blackness:2}, 
+        chan=PosNormalBoundedChannel);
 }
 
 impl<T, A> approx::ApproxEq for Hwb<T, A>
     where T: HwbBoundedChannelTraits + approx::ApproxEq<Epsilon = A::Epsilon>,
-          A: AngularChannelTraits + approx::ApproxEq,
+          A: AngularChannelScalar + approx::ApproxEq,
           A::Epsilon: Clone + num::Float
 {
     impl_approx_eq!({hue, whiteness, blackness});
@@ -171,15 +172,16 @@ impl<T, A> approx::ApproxEq for Hwb<T, A>
 
 impl<T, A> Default for Hwb<T, A>
     where T: HwbBoundedChannelTraits + num::Zero,
-          A: AngularChannelTraits + num::Zero
+          A: AngularChannelScalar + num::Zero
 {
     impl_color_default!(Hwb {
-        hue:AngularChannel, whiteness:BoundedChannel, blackness:BoundedChannel});
+        hue:AngularChannel, whiteness:PosNormalBoundedChannel, 
+        blackness:PosNormalBoundedChannel});
 }
 
 impl<T, A> fmt::Display for Hwb<T, A>
     where T: HwbBoundedChannelTraits + fmt::Display,
-          A: AngularChannelTraits + fmt::Display
+          A: AngularChannelScalar + fmt::Display
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Hwb({}, {}, {})", self.hue, self.whiteness, self.blackness)
@@ -188,14 +190,14 @@ impl<T, A> fmt::Display for Hwb<T, A>
 
 impl<T, A> convert::GetHue for Hwb<T, A>
     where T: HwbBoundedChannelTraits,
-          A: AngularChannelTraits
+          A: AngularChannelScalar
 {
     impl_color_get_hue_angular!(Hwb);
 }
 
 impl<T, A> convert::GetChroma for Hwb<T, A>
     where T: HwbBoundedChannelTraits + num::Float,
-          A: AngularChannelTraits
+          A: AngularChannelScalar
 {
     type ChromaType = T;
     fn get_chroma(&self) -> T {
@@ -206,7 +208,7 @@ impl<T, A> convert::GetChroma for Hwb<T, A>
 
 impl<T, A> convert::FromColor<Hwb<T, A>> for rgb::Rgb<T>
     where T: HwbBoundedChannelTraits + num::Float,
-          A: AngularChannelTraits
+          A: AngularChannelScalar
 {
     fn from_color(from: &Hwb<T, A>) -> Self {
         let (hue_seg, hue_frac) = convert::decompose_hue_segment(from);
@@ -251,7 +253,7 @@ impl<T, A> convert::FromColor<Hwb<T, A>> for rgb::Rgb<T>
 
 impl<T, A> convert::FromColor<hsv::Hsv<T, A>> for Hwb<T, A>
     where T: HwbBoundedChannelTraits + num::Float,
-          A: AngularChannelTraits
+          A: AngularChannelScalar
 {
     fn from_color(from: &hsv::Hsv<T, A>) -> Self {
         let one: T = num::cast(1.0).unwrap();
@@ -263,7 +265,7 @@ impl<T, A> convert::FromColor<hsv::Hsv<T, A>> for Hwb<T, A>
 
 impl<T, A> convert::FromColor<Hwb<T, A>> for hsv::Hsv<T, A>
     where T: HwbBoundedChannelTraits + num::Float,
-          A: AngularChannelTraits
+          A: AngularChannelScalar
 {
     fn from_color(from: &Hwb<T, A>) -> Self {
         let epsilon: T = num::cast(1e-10).unwrap();

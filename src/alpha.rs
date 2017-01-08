@@ -4,7 +4,7 @@ use std::slice;
 use std::mem;
 use approx;
 use num;
-use channel::{BoundedChannel, BoundedChannelScalarTraits, ColorChannel};
+use channel::{PosNormalBoundedChannel, PosNormalChannelScalar, ColorChannel};
 use color::{Color, Invert, Lerp, Bounded, PolarColor, HomogeneousColor, Flatten};
 
 pub struct AlphaTag<T>(pub PhantomData<T>);
@@ -13,17 +13,17 @@ pub struct AlphaTag<T>(pub PhantomData<T>);
 #[derive(Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct Alpha<T, InnerColor> {
     color: InnerColor,
-    alpha: BoundedChannel<T>,
+    alpha: PosNormalBoundedChannel<T>,
 }
 
 impl<T, InnerColor> Alpha<T, InnerColor>
-    where T: BoundedChannelScalarTraits,
+    where T: PosNormalChannelScalar,
           InnerColor: Color
 {
     pub fn from_color_and_alpha(color: InnerColor, alpha: T) -> Self {
         Alpha {
             color: color,
-            alpha: BoundedChannel(alpha),
+            alpha: PosNormalBoundedChannel::new(alpha),
         }
     }
     pub fn decompose(self) -> (InnerColor, T) {
@@ -51,7 +51,7 @@ impl<T, InnerColor> Alpha<T, InnerColor>
 }
 
 impl<T, InnerColor> Color for Alpha<T, InnerColor>
-    where T: BoundedChannelScalarTraits,
+    where T: PosNormalChannelScalar,
           InnerColor: Color
 {
     type Tag = AlphaTag<InnerColor::Tag>;
@@ -67,13 +67,13 @@ impl<T, InnerColor> Color for Alpha<T, InnerColor>
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         Alpha {
             color: InnerColor::from_tuple(values.0),
-            alpha: BoundedChannel(values.1),
+            alpha: PosNormalBoundedChannel::new(values.1),
         }
     }
 }
 
 impl<T, InnerColor> Invert for Alpha<T, InnerColor>
-    where T: BoundedChannelScalarTraits,
+    where T: PosNormalChannelScalar,
           InnerColor: Color + Invert
 {
     fn invert(self) -> Self {
@@ -85,7 +85,7 @@ impl<T, InnerColor> Invert for Alpha<T, InnerColor>
 }
 
 impl<T, InnerColor> Lerp for Alpha<T, InnerColor>
-    where T: BoundedChannelScalarTraits + Lerp<Position = InnerColor::Position>,
+    where T: PosNormalChannelScalar + Lerp<Position = InnerColor::Position>,
           InnerColor: Color + Lerp
 {
     type Position = InnerColor::Position;
@@ -99,7 +99,7 @@ impl<T, InnerColor> Lerp for Alpha<T, InnerColor>
 }
 
 impl<T, InnerColor> Bounded for Alpha<T, InnerColor>
-    where T: BoundedChannelScalarTraits,
+    where T: PosNormalChannelScalar,
           InnerColor: Color + Bounded
 {
     fn normalize(self) -> Self {
@@ -114,14 +114,14 @@ impl<T, InnerColor> Bounded for Alpha<T, InnerColor>
 }
 
 impl<T, InnerColor> HomogeneousColor for Alpha<T, InnerColor>
-    where T: BoundedChannelScalarTraits,
+    where T: PosNormalChannelScalar,
           InnerColor: Color + HomogeneousColor<ChannelFormat = T>
 {
     type ChannelFormat = T;
     fn broadcast(value: T) -> Self {
         Alpha {
             color: InnerColor::broadcast(value.clone()),
-            alpha: BoundedChannel(value),
+            alpha: PosNormalBoundedChannel::new(value),
         }
     }
     fn clamp(self, min: T, max: T) -> Self {
@@ -133,7 +133,7 @@ impl<T, InnerColor> HomogeneousColor for Alpha<T, InnerColor>
 }
 
 impl<T, InnerColor> Flatten for Alpha<T, InnerColor>
-    where T: BoundedChannelScalarTraits,
+    where T: PosNormalChannelScalar,
           InnerColor: Color + Flatten<ScalarFormat = T>
 {
     type ScalarFormat = T;
@@ -143,13 +143,13 @@ impl<T, InnerColor> Flatten for Alpha<T, InnerColor>
     fn from_slice(values: &[T]) -> Self {
         Alpha {
             color: InnerColor::from_slice(values),
-            alpha: BoundedChannel(values[Self::num_channels() as usize - 1].clone()),
+            alpha: PosNormalBoundedChannel::new(values[Self::num_channels() as usize - 1].clone()),
         }
     }
 }
 
 impl<T, InnerColor> PolarColor for Alpha<T, InnerColor>
-    where T: BoundedChannelScalarTraits,
+    where T: PosNormalChannelScalar,
           InnerColor: Color + PolarColor<Cartesian = T>
 {
     type Angular = InnerColor::Angular;
@@ -159,7 +159,7 @@ impl<T, InnerColor> PolarColor for Alpha<T, InnerColor>
 
 
 impl<T, InnerColor> approx::ApproxEq for Alpha<T, InnerColor>
-    where T: BoundedChannelScalarTraits + approx::ApproxEq<Epsilon = InnerColor::Epsilon>,
+    where T: PosNormalChannelScalar + approx::ApproxEq<Epsilon = InnerColor::Epsilon>,
           InnerColor: Color + approx::ApproxEq,
           InnerColor::Epsilon: Clone + num::Float
 {
@@ -167,19 +167,19 @@ impl<T, InnerColor> approx::ApproxEq for Alpha<T, InnerColor>
 }
 
 impl<T, InnerColor> Default for Alpha<T, InnerColor>
-    where T: BoundedChannelScalarTraits + Default + num::Zero,
+    where T: PosNormalChannelScalar + Default + num::Zero,
           InnerColor: Color + Default + num::Zero
 {
     fn default() -> Self {
         Alpha {
             color: InnerColor::default(),
-            alpha: BoundedChannel::default(),
+            alpha: PosNormalBoundedChannel::default(),
         }
     }
 }
 
 impl<T, InnerColor> fmt::Display for Alpha<T, InnerColor>
-    where T: BoundedChannelScalarTraits + fmt::Display,
+    where T: PosNormalChannelScalar + fmt::Display,
           InnerColor: Color + fmt::Display
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

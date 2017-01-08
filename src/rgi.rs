@@ -4,7 +4,7 @@ use std::fmt;
 use approx;
 use num;
 use num::Float;
-use channel::{BoundedChannel, BoundedChannelScalarTraits, ColorChannel, ChannelFormatCast,
+use channel::{PosNormalBoundedChannel, PosNormalChannelScalar, ColorChannel, ChannelFormatCast,
               ChannelCast};
 use color::{Color, Lerp, Flatten, Bounded};
 use convert::FromColor;
@@ -15,13 +15,13 @@ pub struct RgiTag;
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct Rgi<T> {
-    red: BoundedChannel<T>,
-    green: BoundedChannel<T>,
-    intensity: BoundedChannel<T>,
+    red: PosNormalBoundedChannel<T>,
+    green: PosNormalBoundedChannel<T>,
+    intensity: PosNormalBoundedChannel<T>,
 }
 
 impl<T> Rgi<T>
-    where T: BoundedChannelScalarTraits + Float
+    where T: PosNormalChannelScalar + Float
 {
     pub fn from_channels(red: T, green: T, intensity: T) -> Self {
         let zero = num::cast(0.0).unwrap();
@@ -31,13 +31,14 @@ impl<T> Rgi<T>
         assert!(red >= zero);
         assert!(green >= zero);
         Rgi {
-            red: BoundedChannel(red),
-            green: BoundedChannel(green),
-            intensity: BoundedChannel(intensity),
+            red: PosNormalBoundedChannel::new(red),
+            green: PosNormalBoundedChannel::new(green),
+            intensity: PosNormalBoundedChannel::new(intensity),
         }
     }
 
-    impl_color_color_cast_square!(Rgi {red, green, intensity});
+    impl_color_color_cast_square!(Rgi {red, green, intensity},
+        chan_traits=PosNormalChannelScalar);
 
     pub fn red(&self) -> T {
         self.red.0.clone()
@@ -75,7 +76,8 @@ impl<T> Rgi<T>
 
     fn rescale_channels(primary: T, c2: T, c3: T) -> (T, T, T) {
         let new_primary = primary;
-        if new_primary > BoundedChannel::max_bound() || new_primary < BoundedChannel::min_bound() {
+        if new_primary > PosNormalBoundedChannel::max_bound() ||
+           new_primary < PosNormalBoundedChannel::min_bound() {
             panic!("rgi color channels must be 1.0 or below");
         }
 
@@ -92,7 +94,7 @@ impl<T> Rgi<T>
 }
 
 impl<T> Color for Rgi<T>
-    where T: BoundedChannelScalarTraits + Float
+    where T: PosNormalChannelScalar + Float
 {
     type Tag = RgiTag;
     type ChannelsTuple = (T, T, T);
@@ -104,9 +106,9 @@ impl<T> Color for Rgi<T>
 
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         Rgi {
-            red: BoundedChannel(values.0),
-            green: BoundedChannel(values.1),
-            intensity: BoundedChannel(values.2),
+            red: PosNormalBoundedChannel::new(values.0),
+            green: PosNormalBoundedChannel::new(values.1),
+            intensity: PosNormalBoundedChannel::new(values.2),
         }
     }
     fn to_tuple(self) -> Self::ChannelsTuple {
@@ -115,43 +117,44 @@ impl<T> Color for Rgi<T>
 }
 
 impl<T> Lerp for Rgi<T>
-    where T: BoundedChannelScalarTraits + Lerp + Float
+    where T: PosNormalChannelScalar + Lerp + Float
 {
     type Position = <T as Lerp>::Position;
     impl_color_lerp_square!(Rgi {red, green, intensity});
 }
 
 impl<T> Flatten for Rgi<T>
-    where T: BoundedChannelScalarTraits + Float
+    where T: PosNormalChannelScalar + Float
 {
     type ScalarFormat = T;
 
     impl_color_as_slice!(T);
-    impl_color_from_slice_square!(Rgi<T> {red:0, green:1, intensity:2});
+    impl_color_from_slice_square!(Rgi<T> {red:0, green:1, intensity:2},
+        chan=PosNormalBoundedChannel);
 }
 
 impl<T> Bounded for Rgi<T>
-    where T: BoundedChannelScalarTraits + Float
+    where T: PosNormalChannelScalar + Float
 {
     impl_color_bounded!(Rgi {red, green, intensity});
 }
 
 impl<T> approx::ApproxEq for Rgi<T>
-    where T: BoundedChannelScalarTraits + approx::ApproxEq + Float,
+    where T: PosNormalChannelScalar + approx::ApproxEq + Float,
           T::Epsilon: Clone
 {
     impl_approx_eq!({red, green, intensity});
 }
 
 impl<T> Default for Rgi<T>
-    where T: BoundedChannelScalarTraits + num::Zero + Float
+    where T: PosNormalChannelScalar + num::Zero + Float
 {
-    impl_color_default!(Rgi {red:BoundedChannel, green:BoundedChannel, 
-        intensity:BoundedChannel});
+    impl_color_default!(Rgi {red:PosNormalBoundedChannel, green:PosNormalBoundedChannel, 
+        intensity:PosNormalBoundedChannel});
 }
 
 impl<T> fmt::Display for Rgi<T>
-    where T: BoundedChannelScalarTraits + fmt::Display + Float
+    where T: PosNormalChannelScalar + fmt::Display + Float
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Rgi({}, {}, {})", self.red, self.green, self.intensity)
@@ -159,7 +162,7 @@ impl<T> fmt::Display for Rgi<T>
 }
 
 impl<T> FromColor<Rgb<T>> for Rgi<T>
-    where T: BoundedChannelScalarTraits + Float
+    where T: PosNormalChannelScalar + Float
 {
     fn from_color(from: &Rgb<T>) -> Self {
         let zero = num::cast(0.0).unwrap();
@@ -179,7 +182,7 @@ impl<T> FromColor<Rgb<T>> for Rgi<T>
 }
 
 impl<T> FromColor<Rgi<T>> for Rgb<T>
-    where T: BoundedChannelScalarTraits + Float
+    where T: PosNormalChannelScalar + Float
 {
     fn from_color(from: &Rgi<T>) -> Self {
         let sum = from.intensity() * num::cast(3.0).unwrap();

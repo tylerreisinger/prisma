@@ -7,7 +7,7 @@ use channel::ChannelCast;
 use channel::cast::ChannelFormatCast;
 use ::color;
 
-//pub struct BoundedChannelTag;
+// pub struct BoundedChannelTag;
 pub struct PosNormalChannelTag;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

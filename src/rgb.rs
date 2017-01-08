@@ -4,7 +4,7 @@ use std::slice;
 use num;
 use num::cast;
 use approx;
-use channel::{BoundedChannel, ColorChannel, BoundedChannelScalarTraits, AngularChannelTraits,
+use channel::{PosNormalBoundedChannel, ColorChannel, PosNormalChannelScalar, AngularChannelScalar,
               ChannelFormatCast, ChannelCast};
 use color;
 use color::{Color, HomogeneousColor};
@@ -21,25 +21,26 @@ pub struct RgbTag;
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Rgb<T> {
-    pub red: BoundedChannel<T>,
-    pub green: BoundedChannel<T>,
-    pub blue: BoundedChannel<T>,
+    pub red: PosNormalBoundedChannel<T>,
+    pub green: PosNormalBoundedChannel<T>,
+    pub blue: PosNormalBoundedChannel<T>,
 }
 
 pub type Rgba<T> = Alpha<T, Rgb<T>>;
 
 impl<T> Rgb<T>
-    where T: BoundedChannelScalarTraits
+    where T: PosNormalChannelScalar
 {
     pub fn from_channels(red: T, green: T, blue: T) -> Self {
         Rgb {
-            red: BoundedChannel(red),
-            green: BoundedChannel(green),
-            blue: BoundedChannel(blue),
+            red: PosNormalBoundedChannel(red),
+            green: PosNormalBoundedChannel(green),
+            blue: PosNormalBoundedChannel(blue),
         }
     }
 
-    impl_color_color_cast_square!(Rgb {red, green, blue});
+    impl_color_color_cast_square!(Rgb {red, green, blue}, 
+        chan_traits=PosNormalChannelScalar);
 
     pub fn red(&self) -> T {
         self.red.0.clone()
@@ -71,7 +72,7 @@ impl<T> Rgb<T>
 }
 
 impl<T> Rgb<T>
-    where T: BoundedChannelScalarTraits + num::Float
+    where T: PosNormalChannelScalar + num::Float
 {
     pub fn get_chromaticity_coordinates(&self) -> ChromaticityCoordinates<T> {
         let alpha = cast::<_, T>(0.5).unwrap() *
@@ -88,7 +89,7 @@ impl<T> Rgb<T>
 }
 
 impl<T> Color for Rgb<T>
-    where T: BoundedChannelScalarTraits
+    where T: PosNormalChannelScalar
 {
     type Tag = RgbTag;
     type ChannelsTuple = (T, T, T);
@@ -100,9 +101,9 @@ impl<T> Color for Rgb<T>
 
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         Rgb {
-            red: BoundedChannel(values.0),
-            green: BoundedChannel(values.1),
-            blue: BoundedChannel(values.2),
+            red: PosNormalBoundedChannel(values.0),
+            green: PosNormalBoundedChannel(values.1),
+            blue: PosNormalBoundedChannel(values.2),
         }
     }
     fn to_tuple(self) -> Self::ChannelsTuple {
@@ -111,59 +112,62 @@ impl<T> Color for Rgb<T>
 }
 
 impl<T> HomogeneousColor for Rgb<T>
-    where T: BoundedChannelScalarTraits
+    where T: PosNormalChannelScalar
 {
     type ChannelFormat = T;
 
-    impl_color_homogeneous_color_square!(Rgb<T> {red, green, blue});
+    impl_color_homogeneous_color_square!(Rgb<T> {red, green, blue}, 
+        chan=PosNormalBoundedChannel);
 }
 
-impl<T> color::Color3 for Rgb<T> where T: BoundedChannelScalarTraits {}
+impl<T> color::Color3 for Rgb<T> where T: PosNormalChannelScalar {}
 
 impl<T> color::Invert for Rgb<T>
-    where T: BoundedChannelScalarTraits
+    where T: PosNormalChannelScalar
 {
     impl_color_invert!(Rgb {red, green, blue});
 }
 
 impl<T> color::Bounded for Rgb<T>
-    where T: BoundedChannelScalarTraits
+    where T: PosNormalChannelScalar
 {
     impl_color_bounded!(Rgb {red, green, blue});
 }
 
 impl<T> color::Lerp for Rgb<T>
-    where T: BoundedChannelScalarTraits + color::Lerp
+    where T: PosNormalChannelScalar + color::Lerp
 {
     type Position = <T as color::Lerp>::Position;
     impl_color_lerp_square!(Rgb {red, green, blue});
 }
 
 impl<T> color::Flatten for Rgb<T>
-    where T: BoundedChannelScalarTraits
+    where T: PosNormalChannelScalar
 {
     type ScalarFormat = T;
 
     impl_color_as_slice!(T);
-    impl_color_from_slice_square!(Rgb<T> {red:0, green:1, blue:2});
+    impl_color_from_slice_square!(Rgb<T> {red:0, green:1, blue:2}, 
+        chan=PosNormalBoundedChannel);
 }
 
 impl<T> approx::ApproxEq for Rgb<T>
-    where T: BoundedChannelScalarTraits + approx::ApproxEq,
+    where T: PosNormalChannelScalar + approx::ApproxEq,
           T::Epsilon: Clone
 {
     impl_approx_eq!({red, green, blue});
 }
 
 impl<T> Default for Rgb<T>
-    where T: BoundedChannelScalarTraits + num::Zero
+    where T: PosNormalChannelScalar + num::Zero
 {
-    impl_color_default!(Rgb {red:BoundedChannel, green:BoundedChannel, 
-        blue:BoundedChannel});
+    impl_color_default!(Rgb {red:PosNormalBoundedChannel, 
+        green:PosNormalBoundedChannel, 
+        blue:PosNormalBoundedChannel});
 }
 
 impl<T> fmt::Display for Rgb<T>
-    where T: BoundedChannelScalarTraits + fmt::Display
+    where T: PosNormalChannelScalar + fmt::Display
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Rgb({}, {}, {})", self.red, self.green, self.blue)
@@ -171,7 +175,7 @@ impl<T> fmt::Display for Rgb<T>
 }
 
 fn get_hue_factor_and_ordered_chans<T>(color: &Rgb<T>) -> (T, T, T, T, T)
-    where T: BoundedChannelScalarTraits + num::Float
+    where T: PosNormalChannelScalar + num::Float
 {
     let mut scaling_factor = T::zero();
     let (mut c1, mut c2, mut c3) = color.clone().to_tuple();
@@ -196,7 +200,7 @@ fn make_hue_from_factor_and_ordered_chans<T>(c1: &T,
                                              min_chan: &T,
                                              scale_factor: &T)
                                              -> T
-    where T: BoundedChannelScalarTraits + num::Float
+    where T: PosNormalChannelScalar + num::Float
 {
     let epsilon = cast(1e-10).unwrap();
     let hue_scalar = *scale_factor +
@@ -206,7 +210,7 @@ fn make_hue_from_factor_and_ordered_chans<T>(c1: &T,
 }
 
 impl<T> convert::GetChroma for Rgb<T>
-    where T: BoundedChannelScalarTraits
+    where T: PosNormalChannelScalar
 {
     type ChromaType = T;
     fn get_chroma(&self) -> T {
@@ -225,7 +229,7 @@ impl<T> convert::GetChroma for Rgb<T>
 }
 
 impl<T> convert::GetHue for Rgb<T>
-    where T: BoundedChannelScalarTraits + num::Float
+    where T: PosNormalChannelScalar + num::Float
 {
     type InternalAngle = angle::Turns<T>;
     fn get_hue<U>(&self) -> U
@@ -241,8 +245,8 @@ impl<T> convert::GetHue for Rgb<T>
 }
 
 impl<T, A> convert::FromColor<Rgb<T>> for hsv::Hsv<T, A>
-    where T: BoundedChannelScalarTraits + num::Float,
-          A: AngularChannelTraits + angle::FromAngle<angle::Turns<T>>
+    where T: PosNormalChannelScalar + num::Float,
+          A: AngularChannelScalar + angle::FromAngle<angle::Turns<T>>
 {
     fn from_color(from: &Rgb<T>) -> Self {
         let epsilon = cast(1e-10).unwrap();
@@ -258,8 +262,8 @@ impl<T, A> convert::FromColor<Rgb<T>> for hsv::Hsv<T, A>
 }
 
 impl<T, A> convert::FromColor<Rgb<T>> for hsl::Hsl<T, A>
-    where T: BoundedChannelScalarTraits + num::Float,
-          A: AngularChannelTraits + angle::FromAngle<angle::Turns<T>>
+    where T: PosNormalChannelScalar + num::Float,
+          A: AngularChannelScalar + angle::FromAngle<angle::Turns<T>>
 {
     fn from_color(from: &Rgb<T>) -> Self {
         let epsilon = cast(1e-10).unwrap();
@@ -279,8 +283,8 @@ impl<T, A> convert::FromColor<Rgb<T>> for hsl::Hsl<T, A>
 }
 
 impl<T, A> convert::FromColor<Rgb<T>> for hwb::Hwb<T, A>
-    where T: BoundedChannelScalarTraits + num::Float,
-          A: AngularChannelTraits + angle::FromAngle<angle::Turns<T>>
+    where T: PosNormalChannelScalar + num::Float,
+          A: AngularChannelScalar + angle::FromAngle<angle::Turns<T>>
 {
     fn from_color(from: &Rgb<T>) -> Self {
         let (scaling_factor, c1, c2, c3, min_channel) = get_hue_factor_and_ordered_chans(from);

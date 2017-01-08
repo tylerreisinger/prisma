@@ -159,12 +159,13 @@ macro_rules! impl_color_default {
 }
 
 macro_rules! impl_color_color_cast_square {
-    ($name:ident {$($fields:ident),*}, phantom={$($phantom:ident),*},
+    ($name:ident {$($fields:ident),*}, chan_traits=$chan_traits:ident,
+     phantom={$($phantom:ident),*},
         types={$($ts:ident),*}) => 
     {
         pub fn color_cast<TOut>(&self) -> $name<TOut, $($ts),*>
             where T: ChannelFormatCast<TOut>,
-                  TOut: BoundedChannelScalarTraits
+                  TOut: $chan_traits
         {
             $name {
                 $($fields: self.$fields.clone().channel_cast()),*,
@@ -173,8 +174,9 @@ macro_rules! impl_color_color_cast_square {
         }
     };
 
-    ($name:ident {$($fields:ident),*}) => {
-        impl_color_color_cast_square!($name {$($fields),*}, phantom={}, types={});
+    ($name:ident {$($fields:ident),*}, chan_traits=$chan_traits:ident) => {
+        impl_color_color_cast_square!($name {$($fields),*}, chan_traits=$chan_traits, 
+            phantom={}, types={});
     };
 }
 
@@ -205,10 +207,11 @@ macro_rules! impl_color_get_hue_angular {
 }
 
 macro_rules! impl_color_homogeneous_color_square {
-    ($name:ident<$T:ident> {$($fields:ident),*}, phantom={$($phantom:ident),*}) => {
+    ($name:ident<$T:ident> {$($fields:ident),*}, chan=$chan:ident,
+    phantom={$($phantom:ident),*}) => {
         fn broadcast(value: $T) -> Self {
             $name {
-                $($fields: BoundedChannel(value.clone())),*,
+                $($fields: $chan(value.clone())),*,
                 $($phantom: PhantomData),*
             }
         }
@@ -219,7 +222,8 @@ macro_rules! impl_color_homogeneous_color_square {
             }
         }
     };
-    ($name:ident<$T:ident> {$($fields:ident),*}) => {
-        impl_color_homogeneous_color_square!($name<$T> {$($fields),*}, phantom={});
+    ($name:ident<$T:ident> {$($fields:ident),*}, chan=$chan:ident) => {
+        impl_color_homogeneous_color_square!($name<$T> {$($fields),*}, 
+        chan=$chan, phantom={});
     };
 }
