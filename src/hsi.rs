@@ -36,7 +36,7 @@ impl<T, A> Hsi<T, A>
 {
     pub fn from_channels(hue: A, saturation: T, intensity: T) -> Self {
         Hsi {
-            hue: AngularChannel(hue),
+            hue: AngularChannel::new(hue),
             saturation: PosNormalBoundedChannel::new(saturation),
             intensity: PosNormalBoundedChannel::new(intensity),
         }
@@ -102,7 +102,7 @@ impl<T, A> Color for Hsi<T, A>
     }
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         Hsi {
-            hue: AngularChannel(values.0),
+            hue: AngularChannel::new(values.0),
             saturation: PosNormalBoundedChannel::new(values.1),
             intensity: PosNormalBoundedChannel::new(values.2),
         }

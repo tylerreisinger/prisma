@@ -34,7 +34,7 @@ impl<T, A> Hsv<T, A>
 {
     pub fn from_channels(hue: A, saturation: T, value: T) -> Self {
         Hsv {
-            hue: AngularChannel(hue),
+            hue: AngularChannel::new(hue),
             saturation: PosNormalBoundedChannel::new(saturation),
             value: PosNormalBoundedChannel::new(value),
         }
@@ -92,7 +92,7 @@ impl<T, A> Color for Hsv<T, A>
     }
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         Hsv {
-            hue: AngularChannel(values.0),
+            hue: AngularChannel::new(values.0),
             saturation: PosNormalBoundedChannel::new(values.1),
             value: PosNormalBoundedChannel::new(values.2),
         }

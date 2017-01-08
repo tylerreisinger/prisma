@@ -4,7 +4,7 @@ use std::slice;
 use approx;
 use num;
 use channel::{PosNormalBoundedChannel, PosNormalChannelScalar, AngularChannel, ChannelFormatCast,
-              ChannelCast, AngularChannelScalar};
+              ChannelCast, AngularChannelScalar, ColorChannel};
 use angle::{Angle, FromAngle, IntoAngle, Deg};
 use angle;
 use alpha::Alpha;
@@ -36,9 +36,9 @@ impl<T, A> Hwb<T, A>
 {
     pub fn from_channels(hue: A, whiteness: T, blackness: T) -> Self {
         Hwb {
-            hue: AngularChannel(hue),
-            whiteness: PosNormalBoundedChannel(whiteness),
-            blackness: PosNormalBoundedChannel(blackness),
+            hue: AngularChannel::new(hue),
+            whiteness: PosNormalBoundedChannel::new(whiteness),
+            blackness: PosNormalBoundedChannel::new(blackness),
         }
     }
 
@@ -89,8 +89,8 @@ impl<T, A> Hwb<T, A>
             let inv_sum = num::cast::<_, T>(1.0).unwrap() / sum;
             Hwb {
                 hue: self.hue,
-                whiteness: PosNormalBoundedChannel(self.whiteness.0 * inv_sum),
-                blackness: PosNormalBoundedChannel(self.blackness.0 * inv_sum),
+                whiteness: PosNormalBoundedChannel::new(self.whiteness.0 * inv_sum),
+                blackness: PosNormalBoundedChannel::new(self.blackness.0 * inv_sum),
             }
         } else {
             self
@@ -110,9 +110,9 @@ impl<T, A> Color for Hwb<T, A>
     }
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         Hwb {
-            hue: AngularChannel(values.0),
-            whiteness: PosNormalBoundedChannel(values.1),
-            blackness: PosNormalBoundedChannel(values.2),
+            hue: AngularChannel::new(values.0),
+            whiteness: PosNormalBoundedChannel::new(values.1),
+            blackness: PosNormalBoundedChannel::new(values.2),
         }
     }
     fn to_tuple(self) -> Self::ChannelsTuple {

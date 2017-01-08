@@ -33,9 +33,9 @@ impl<T> Rgb<T>
 {
     pub fn from_channels(red: T, green: T, blue: T) -> Self {
         Rgb {
-            red: PosNormalBoundedChannel(red),
-            green: PosNormalBoundedChannel(green),
-            blue: PosNormalBoundedChannel(blue),
+            red: PosNormalBoundedChannel::new(red),
+            green: PosNormalBoundedChannel::new(green),
+            blue: PosNormalBoundedChannel::new(blue),
         }
     }
 
@@ -101,9 +101,9 @@ impl<T> Color for Rgb<T>
 
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         Rgb {
-            red: PosNormalBoundedChannel(values.0),
-            green: PosNormalBoundedChannel(values.1),
-            blue: PosNormalBoundedChannel(values.2),
+            red: PosNormalBoundedChannel::new(values.0),
+            green: PosNormalBoundedChannel::new(values.1),
+            blue: PosNormalBoundedChannel::new(values.2),
         }
     }
     fn to_tuple(self) -> Self::ChannelsTuple {
