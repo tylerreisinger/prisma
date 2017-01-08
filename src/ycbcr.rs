@@ -4,8 +4,8 @@ use std::mem;
 use std::marker::PhantomData;
 use approx;
 use num;
-use channel::{BoundedChannel, ColorChannel, BoundedChannelScalarTraits, ChannelFormatCast,
-              ChannelCast};
+use channel::{NormalBoundedChannel, ColorChannel, NormalChannelScalar, ChannelFormatCast,
+              ChannelCast, PosNormalChannelScalar};
 use color::{Color, Lerp, Invert, HomogeneousColor, Flatten, Bounded};
 use convert::FromColor;
 use rgb::Rgb;
@@ -14,52 +14,92 @@ use linalg::Matrix3;
 pub struct YCbCrTag;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct JpegCoeffs;
+pub struct JpegCoeffs<T>(pub PhantomData<T>);
 
 pub trait YCbCrCoeffs<T>: Clone + PartialEq
-    where T: BoundedChannelScalarTraits
+    where T: NormalChannelScalar
 {
-    type OutputScalar: num::Float + fmt::Display;
+    type OutputScalar: num::Float;
     fn get_transform() -> Matrix3<Self::OutputScalar>;
     fn get_shift() -> (Self::OutputScalar, Self::OutputScalar, Self::OutputScalar);
 }
 
-
-impl YCbCrCoeffs<u8> for JpegCoeffs {
-    type OutputScalar = f32;
-    fn get_transform() -> Matrix3<f32> {
-        Matrix3::new([0.299, 0.587, 0.114, -0.168736, -0.331264, 0.5, 0.5, -0.418688, -0.081312])
-    }
-    fn get_shift() -> (f32, f32, f32) {
-        (0.0, 128.0, 128.0)
-    }
-}
-
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct YCbCr<T, Coeffs = JpegCoeffs> {
-    luma: BoundedChannel<T>,
-    cb: BoundedChannel<T>,
-    cr: BoundedChannel<T>,
+pub struct YCbCr<T, Coeffs = JpegCoeffs<T>> {
+    luma: NormalBoundedChannel<T>,
+    cb: NormalBoundedChannel<T>,
+    cr: NormalBoundedChannel<T>,
     coeffs: PhantomData<Coeffs>,
 }
 
-pub type YCbCrJpeg<T> = YCbCr<T, JpegCoeffs>;
+macro_rules! impl_jpeg_coeffs_int {
+    ($ty:ident, $flt_ty:ident) => {
+        impl YCbCrCoeffs<$ty> for JpegCoeffs<$ty> {
+            type OutputScalar = $flt_ty;
+            #[inline]
+            fn get_transform() -> Matrix3<$flt_ty> {
+                Matrix3::new([
+                    0.299, 0.587, 0.114, 
+                    -0.168736, -0.331264, 0.5, 
+                    0.5, -0.418688, -0.081312]
+                )
+            }
+            #[inline]
+            fn get_shift() -> ($flt_ty, $flt_ty, $flt_ty) {
+                let center_chan = ((<$ty as NormalChannelScalar>::max_bound() >> 1) + 1) as $flt_ty;
+                (0.0, 
+                center_chan,
+                center_chan)
+            }
+        }
+    };
+}
+
+macro_rules! impl_jpeg_coeffs_float {
+    ($ty:ident) => {
+        impl YCbCrCoeffs<$ty> for JpegCoeffs<$ty> {
+            type OutputScalar = $ty;
+
+            #[inline]
+            fn get_transform() -> Matrix3<$ty> {
+                Matrix3::new([
+                    0.299, 0.587, 0.114, 
+                    -0.168736, -0.331264, 0.5, 
+                    0.5, -0.418688, -0.081312]
+                )
+            }
+            #[inline]
+            fn get_shift() -> ($ty, $ty, $ty) {
+                (0.0, 0.0, 0.0)
+            }
+        }
+    }
+}
+
+impl_jpeg_coeffs_int!(u8, f32);
+impl_jpeg_coeffs_int!(u16, f32);
+impl_jpeg_coeffs_int!(u32, f32);
+impl_jpeg_coeffs_float!(f32);
+impl_jpeg_coeffs_float!(f64);
+
+pub type YCbCrJpeg<T> = YCbCr<T, JpegCoeffs<T>>;
 
 impl<T, Coeffs> YCbCr<T, Coeffs>
-    where T: BoundedChannelScalarTraits,
+    where T: NormalChannelScalar,
           Coeffs: YCbCrCoeffs<T>
 {
     pub fn from_channels(y: T, cb: T, cr: T) -> Self {
         YCbCr {
-            luma: BoundedChannel(y),
-            cb: BoundedChannel(cb),
-            cr: BoundedChannel(cr),
+            luma: NormalBoundedChannel::new(y),
+            cb: NormalBoundedChannel::new(cb),
+            cr: NormalBoundedChannel::new(cr),
             coeffs: PhantomData,
         }
     }
 
-    impl_color_color_cast_square!(YCbCr {luma, cb, cr}, phantom={coeffs}, types={Coeffs});
+    impl_color_color_cast_square!(YCbCr {luma, cb, cr}, chan_traits=NormalChannelScalar,
+        phantom={coeffs}, types={Coeffs});
 
     pub fn luma(&self) -> T {
         self.luma.0.clone()
@@ -92,7 +132,7 @@ impl<T, Coeffs> YCbCr<T, Coeffs>
 
 
 impl<T, Coeffs> Color for YCbCr<T, Coeffs>
-    where T: BoundedChannelScalarTraits,
+    where T: NormalChannelScalar,
           Coeffs: YCbCrCoeffs<T>
 {
     type Tag = YCbCrTag;
@@ -105,9 +145,9 @@ impl<T, Coeffs> Color for YCbCr<T, Coeffs>
 
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         YCbCr {
-            luma: BoundedChannel(values.0),
-            cb: BoundedChannel(values.1),
-            cr: BoundedChannel(values.2),
+            luma: NormalBoundedChannel::new(values.0),
+            cb: NormalBoundedChannel::new(values.1),
+            cr: NormalBoundedChannel::new(values.2),
             coeffs: PhantomData,
         }
     }
@@ -117,30 +157,31 @@ impl<T, Coeffs> Color for YCbCr<T, Coeffs>
 }
 
 impl<T, Coeffs> HomogeneousColor for YCbCr<T, Coeffs>
-    where T: BoundedChannelScalarTraits,
+    where T: NormalChannelScalar,
           Coeffs: YCbCrCoeffs<T>
 {
     type ChannelFormat = T;
 
-    impl_color_homogeneous_color_square!(YCbCr<T> {luma, cb, cr}, phantom={coeffs});
+    impl_color_homogeneous_color_square!(YCbCr<T> {luma, cb, cr}, 
+        chan=NormalBoundedChannel, phantom={coeffs});
 }
 
 impl<T, Coeffs> Invert for YCbCr<T, Coeffs>
-    where T: BoundedChannelScalarTraits,
+    where T: NormalChannelScalar,
           Coeffs: YCbCrCoeffs<T>
 {
     impl_color_invert!(YCbCr {luma, cb, cr}, phantom={coeffs});
 }
 
 impl<T, Coeffs> Bounded for YCbCr<T, Coeffs>
-    where T: BoundedChannelScalarTraits,
+    where T: NormalChannelScalar,
           Coeffs: YCbCrCoeffs<T>
 {
     impl_color_bounded!(YCbCr {luma, cb, cr}, phantom={coeffs});
 }
 
 impl<T, Coeffs> Lerp for YCbCr<T, Coeffs>
-    where T: BoundedChannelScalarTraits + Lerp,
+    where T: NormalChannelScalar + Lerp,
           Coeffs: YCbCrCoeffs<T>
 {
     type Position = <T as Lerp>::Position;
@@ -148,16 +189,17 @@ impl<T, Coeffs> Lerp for YCbCr<T, Coeffs>
 }
 
 impl<T, Coeffs> Flatten for YCbCr<T, Coeffs>
-    where T: BoundedChannelScalarTraits,
+    where T: NormalChannelScalar,
           Coeffs: YCbCrCoeffs<T>
 {
     type ScalarFormat = T;
 
     impl_color_as_slice!(T);
-    impl_color_from_slice_square!(YCbCr<T> {luma:0, cb:1, cr:2}, phantom={coeffs});
+    impl_color_from_slice_square!(YCbCr<T> {luma:0, cb:1, cr:2}, chan=NormalBoundedChannel,
+        phantom={coeffs});
 }
 impl<T, Coeffs> approx::ApproxEq for YCbCr<T, Coeffs>
-    where T: BoundedChannelScalarTraits + approx::ApproxEq,
+    where T: NormalChannelScalar + approx::ApproxEq,
           T::Epsilon: Clone,
           Coeffs: YCbCrCoeffs<T>
 {
@@ -165,15 +207,15 @@ impl<T, Coeffs> approx::ApproxEq for YCbCr<T, Coeffs>
 }
 
 impl<T, Coeffs> Default for YCbCr<T, Coeffs>
-    where T: BoundedChannelScalarTraits + num::Zero,
+    where T: NormalChannelScalar + num::Zero,
           Coeffs: YCbCrCoeffs<T>
 {
-    impl_color_default!(YCbCr {luma:BoundedChannel, cb:BoundedChannel, cr:BoundedChannel},
-                        phantom={coeffs});
+    impl_color_default!(YCbCr {luma:NormalBoundedChannel, cb:NormalBoundedChannel,
+        cr:NormalBoundedChannel}, phantom={coeffs});
 }
 
 impl<T> fmt::Display for YCbCr<T>
-    where T: BoundedChannelScalarTraits + fmt::Display
+    where T: NormalChannelScalar + fmt::Display
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "YCbCr({}, {}, {})", self.luma, self.cb, self.cr)
@@ -181,7 +223,7 @@ impl<T> fmt::Display for YCbCr<T>
 }
 
 impl<T, Coeffs> FromColor<Rgb<T>> for YCbCr<T, Coeffs>
-    where T: BoundedChannelScalarTraits + num::NumCast + fmt::Display,
+    where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
           Coeffs: YCbCrCoeffs<T>
 {
     fn from_color(from: &Rgb<T>) -> Self {
@@ -208,5 +250,9 @@ mod test {
         assert_eq!(y1.luma(), 255u8);
         assert_eq!(y1.cb(), 128);
         assert_eq!(y1.cr(), 128);
+
+        let c2 = Rgb::from_channels(0.5, 0.5, 0.5);
+        let y2 = YCbCrJpeg::from_color(&c2);
+        assert_relative_eq!(y2, YCbCrJpeg::from_channels(0.5, 0.0, 0.0), epsilon=1e-6);
     }
 }

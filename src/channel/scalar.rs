@@ -26,21 +26,24 @@ pub trait AngularChannelScalar: Clone + PartialEq + PartialOrd + Default
     fn normalize(self) -> Self;
 }
 
-
 macro_rules! impl_traits_for_angle {
     ($Struct: ident) => {
         impl<T> AngularChannelScalar for $Struct<T> 
             where T: Float
         {
+            #[inline]
             fn min_bound() -> Self {
                 $Struct(cast(0.0).unwrap())
             }
+            #[inline]
             fn max_bound() -> Self {
                 $Struct($Struct::period())
             }
+            #[inline]
             fn is_normalized(&self) -> bool {
                 <Self as Angle>::is_normalized(self)
             }
+            #[inline]
             fn normalize(self) -> Self {
                 <Self as Angle>::normalize(self)
             }
@@ -50,6 +53,7 @@ macro_rules! impl_traits_for_angle {
             where T: Float,
         {
             type Position = T;
+            #[inline]
             fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
                 self.interpolate(right, pos)
             }
@@ -69,6 +73,13 @@ pub trait PosNormalChannelScalar: BoundedChannelScalar {
     fn is_normalized(&self) -> bool;
     fn normalize(self) -> Self;
 }
+pub trait NormalChannelScalar: BoundedChannelScalar {
+    fn min_bound() -> Self;
+    fn max_bound() -> Self;
+    fn is_normalized(&self) -> bool;
+    fn normalize(self) -> Self;
+}
+
 
 fn lerp_flat_int<T, P>(left: &T, right: &T, pos: P) -> T
     where T: Integer + Clone + NumCast,
@@ -91,22 +102,26 @@ fn lerp_flat<T>(left: &T, right: &T, pos: T) -> T
 macro_rules! impl_bounded_channel_traits_int {
     ($name: ident) => {
         impl PosNormalChannelScalar for $name {
+            #[inline]
             fn min_bound() -> Self {
                 $name::min_value()
             }
+            #[inline]
             fn max_bound() -> Self {
                 $name::max_value()
             }
+            #[inline]
             fn is_normalized(&self) -> bool {
                 true
             }
+            #[inline]
             fn normalize(self) -> Self {
                 self
             }
         }
-
         impl color::Lerp for $name {
             type Position = f64;
+            #[inline]
             fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
                 lerp_flat_int(self, right, pos)
             }
@@ -117,15 +132,19 @@ macro_rules! impl_bounded_channel_traits_int {
 macro_rules! impl_bounded_channel_traits_float {
     ($name: ty) => {
         impl PosNormalChannelScalar for $name {
+            #[inline]
             fn min_bound() -> Self {
                 cast(0.0).unwrap()                
             }
+            #[inline]
             fn max_bound() -> Self {
                 cast(1.0).unwrap()
             }
+            #[inline]
             fn is_normalized(&self) -> bool {
                 *self >= 0.0 && *self <= 1.0
             }
+            #[inline]
             fn normalize(self) -> Self {
                 if self > 1.0 {
                     1.0
@@ -136,11 +155,63 @@ macro_rules! impl_bounded_channel_traits_float {
                 }
             }
         }
-
         impl color::Lerp for $name {
             type Position = $name;
+            #[inline]
             fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
                 lerp_flat(self, right, pos)
+            }
+        }
+    }
+}
+
+macro_rules! impl_normal_bounded_channel_traits_int {
+    ($name: ident) => {
+        impl NormalChannelScalar for $name {
+            #[inline]
+            fn min_bound() -> Self {
+                $name::min_value()
+            }
+            #[inline]
+            fn max_bound() -> Self {
+                $name::max_value()
+            }
+            #[inline]
+            fn is_normalized(&self) -> bool {
+                true
+            }
+            #[inline]
+            fn normalize(self) -> Self {
+                self
+            }
+        }
+    }
+}
+
+macro_rules! impl_normal_bounded_channel_traits_float {
+    ($name: ty) => {
+        impl NormalChannelScalar for $name {
+            #[inline]
+            fn min_bound() -> Self {
+                cast(0.0).unwrap()                
+            }
+            #[inline]
+            fn max_bound() -> Self {
+                cast(2.0).unwrap()
+            }
+            #[inline]
+            fn is_normalized(&self) -> bool {
+                *self >= 0.0 && *self <= 2.0
+            }
+            #[inline]
+            fn normalize(self) -> Self {
+                if self > 2.0 {
+                    2.0
+                } else if self < 0.0 {
+                    0.0
+                } else {
+                    self.clone()
+                }
             }
         }
     }
@@ -151,3 +222,9 @@ impl_bounded_channel_traits_int!(u16);
 impl_bounded_channel_traits_int!(u32);
 impl_bounded_channel_traits_float!(f32);
 impl_bounded_channel_traits_float!(f64);
+
+impl_normal_bounded_channel_traits_int!(u8);
+impl_normal_bounded_channel_traits_int!(u16);
+impl_normal_bounded_channel_traits_int!(u32);
+impl_normal_bounded_channel_traits_float!(f32);
+impl_normal_bounded_channel_traits_float!(f64);

@@ -2,16 +2,18 @@ use std::fmt;
 use num;
 use approx;
 use super::traits::ColorChannel;
-use super::scalar::PosNormalChannelScalar;
+use super::scalar::{PosNormalChannelScalar, NormalChannelScalar};
 use channel::ChannelCast;
 use channel::cast::ChannelFormatCast;
 use ::color;
 
-// pub struct BoundedChannelTag;
 pub struct PosNormalChannelTag;
+pub struct NormalChannelTag;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PosNormalBoundedChannel<T>(pub T);
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct NormalBoundedChannel<T>(pub T);
 
 macro_rules! impl_bounded_channel_type {
     ($name:ident, $scalar_type:ident, $tag:ident) => {
@@ -47,7 +49,7 @@ macro_rules! impl_bounded_channel_type {
         }
 
         impl<T> color::Invert for $name<T>
-            where T: PosNormalChannelScalar
+            where T: $scalar_type
         {
             fn invert(self) -> Self {
                 $name(Self::max_bound() - self.0)
@@ -55,7 +57,7 @@ macro_rules! impl_bounded_channel_type {
         }
 
         impl<T> color::Bounded for $name<T>
-            where T: PosNormalChannelScalar
+            where T: $scalar_type
         {
             fn normalize(self) -> Self {
                 $name(self.0.normalize())
@@ -66,7 +68,7 @@ macro_rules! impl_bounded_channel_type {
         }
 
         impl<T> color::Lerp for $name<T>
-            where T: PosNormalChannelScalar + color::Lerp
+            where T: $scalar_type + color::Lerp
         {
             type Position = <T as color::Lerp>::Position;
             fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
@@ -75,7 +77,7 @@ macro_rules! impl_bounded_channel_type {
         }
 
         impl<T> ChannelCast for $name<T>
-            where T: PosNormalChannelScalar
+            where T: $scalar_type
         {
             fn channel_cast<To>(self) -> To
                 where Self::Format: ChannelFormatCast<To::Format>,
@@ -86,7 +88,7 @@ macro_rules! impl_bounded_channel_type {
         }
 
         impl<T> Default for $name<T>
-            where T: PosNormalChannelScalar + num::Zero
+            where T: $scalar_type + num::Zero
         {
             fn default() -> Self {
                 $name(T::zero())
@@ -94,7 +96,7 @@ macro_rules! impl_bounded_channel_type {
         }
 
         impl<T> fmt::Display for $name<T>
-            where T: PosNormalChannelScalar + fmt::Display
+            where T: $scalar_type + fmt::Display
         {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 write!(f, "{}", self.0)
@@ -102,7 +104,7 @@ macro_rules! impl_bounded_channel_type {
         }
 
         impl<T> approx::ApproxEq for $name<T>
-            where T: PosNormalChannelScalar + approx::ApproxEq
+            where T: $scalar_type + approx::ApproxEq
         {
             type Epsilon = T::Epsilon;
 
@@ -135,3 +137,5 @@ macro_rules! impl_bounded_channel_type {
 
 impl_bounded_channel_type!(PosNormalBoundedChannel, PosNormalChannelScalar, 
                            PosNormalChannelTag);
+impl_bounded_channel_type!(NormalBoundedChannel, NormalChannelScalar, 
+                           NormalChannelTag);

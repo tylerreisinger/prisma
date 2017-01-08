@@ -25,7 +25,7 @@ impl<T> Clone for Matrix3<T>
 }
 
 impl<T> Matrix3<T>
-    where T: num::Num + Copy + num::Zero + num::NumCast + fmt::Display
+    where T: num::Num + Copy + num::Zero + num::NumCast
 {
     #[inline]
     pub fn new(values: [T; 9]) -> Self {
