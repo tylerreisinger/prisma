@@ -6,7 +6,7 @@ use approx;
 use num;
 use channel::{NormalBoundedChannel, ColorChannel, NormalChannelScalar, ChannelFormatCast,
               ChannelCast, PosNormalChannelScalar, PosNormalBoundedChannel};
-use color::{Color, Lerp, Invert, HomogeneousColor, Flatten, Bounded};
+use color::{Color, Lerp, Invert, Flatten, Bounded};
 use convert::FromColor;
 use rgb::Rgb;
 use linalg::Matrix3;
@@ -257,7 +257,11 @@ mod test {
         let c1 = YCbCrJpeg::from_channels(0.33, 0.55, 0.88);
         assert_relative_eq!(c1.invert().invert(), c1, epsilon=1e-6);
         assert_relative_eq!(c1.invert(), 
-            YCbCrJpeg::from_channels(0.67, 0.45, 0.12), epsilon=1e-6);
+            YCbCrJpeg::from_channels(0.67, -0.55, -0.88), epsilon=1e-6);
+
+        let c2 = YCbCrJpeg::from_channels(0.2, -0.2, 1.0);
+        assert_relative_eq!(c2.invert().invert(), c2, epsilon=1e-6);
+        assert_relative_eq!(c2.invert(), YCbCrJpeg::from_channels(0.8, 0.2, -1.0));
     }
 
     #[test]

@@ -52,7 +52,7 @@ macro_rules! impl_bounded_channel_type {
             where T: $scalar_type
         {
             fn invert(self) -> Self {
-                $name(Self::max_bound() - self.0)
+                $name((Self::max_bound() + Self::min_bound()) - self.0)
             }
         }
 
