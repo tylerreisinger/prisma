@@ -201,7 +201,7 @@ macro_rules! impl_normal_bounded_channel_traits_float {
             }
             #[inline]
             fn is_normalized(&self) -> bool {
-                *self >= 0.0 && *self <= 2.0
+                *self >= -1.0 && *self <= 1.0
             }
             #[inline]
             fn normalize(self) -> Self {
