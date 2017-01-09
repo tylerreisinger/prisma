@@ -21,7 +21,8 @@ pub trait YCbCrCoeffs<T>: Clone + PartialEq
 {
     type OutputScalar: num::Float;
     fn get_transform() -> Matrix3<Self::OutputScalar>;
-    fn get_shift() -> (Self::OutputScalar, Self::OutputScalar, Self::OutputScalar);
+    fn get_inverse_transform() -> Matrix3<Self::OutputScalar>;
+    fn get_shift() -> (T, T, T);
 }
 
 #[repr(C)]
@@ -46,9 +47,17 @@ macro_rules! impl_jpeg_coeffs_int {
                 )
             }
             #[inline]
-            fn get_shift() -> ($flt_ty, $flt_ty, $flt_ty) {
-                let center_chan = ((<$ty as NormalChannelScalar>::max_bound() >> 1) + 1) as $flt_ty;
-                (0.0, 
+            fn get_inverse_transform() -> Matrix3<$flt_ty> {
+                Matrix3::new([
+                    1.0, 0.0, 1.402,
+                    1.0, -0.3441, -0.7141,
+                    1.0, 1.772, 0.0]
+                )
+            }
+            #[inline]
+            fn get_shift() -> ($ty, $ty, $ty) {
+                let center_chan = (<$ty as NormalChannelScalar>::max_bound() >> 1) + 1;
+                (0, 
                 center_chan,
                 center_chan)
             }
@@ -67,6 +76,13 @@ macro_rules! impl_jpeg_coeffs_float {
                     0.299, 0.587, 0.114, 
                     -0.168736, -0.331264, 0.5, 
                     0.5, -0.418688, -0.081312]
+                )
+            }
+            fn get_inverse_transform() -> Matrix3<$ty> {
+                Matrix3::new([
+                    1.0, 0.0, 1.402,
+                    1.0, -0.3441, -0.7141,
+                    1.0, 1.772, 0.0]
                 )
             }
             #[inline]
@@ -98,9 +114,18 @@ impl<T, Coeffs> YCbCr<T, Coeffs>
         }
     }
 
-    impl_color_color_cast_square!(YCbCr {luma, cb, cr}, 
-        chan_traits={NormalChannelScalar,PosNormalChannelScalar},
-        phantom={coeffs}, types={Coeffs});
+    pub fn color_cast<TOut, CoeffOut>(&self) -> YCbCr<TOut, CoeffOut>
+        where T: ChannelFormatCast<TOut>,
+              TOut: NormalChannelScalar + PosNormalChannelScalar,
+              CoeffOut: YCbCrCoeffs<TOut>
+    {
+        YCbCr {
+            luma: self.luma.clone().channel_cast(),
+            cb: self.cb.clone().channel_cast(),
+            cr: self.cr.clone().channel_cast(),
+            coeffs: PhantomData,
+        }
+    }
 
     pub fn luma(&self) -> T {
         self.luma.0.clone()
@@ -222,9 +247,35 @@ impl<T, Coeffs> FromColor<Rgb<T>> for YCbCr<T, Coeffs>
 
         let (o1, o2, o3) = transform.transform_vector(from.clone().to_tuple());
         let (s1, s2, s3) = Coeffs::get_shift();
-        YCbCr::from_channels(o1 + num::cast::<_, T>(s1).unwrap(),
-                             o2 + num::cast::<_, T>(s2).unwrap(),
-                             o3 + num::cast::<_, T>(s3).unwrap())
+        YCbCr::from_channels(o1 + s1, o2 + s2, o3 + s3)
+    }
+}
+
+impl<T, Coeffs> FromColor<YCbCr<T, Coeffs>> for Rgb<T>
+    where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast + PosNormalChannelScalar,
+          Coeffs: YCbCrCoeffs<T>
+{
+    fn from_color(from: &YCbCr<T, Coeffs>) -> Self {
+        let transform = Coeffs::get_inverse_transform();
+
+        let (s1, s2, s3) = Coeffs::get_shift();
+        let (i1, i2, i3) = from.clone().to_tuple();
+
+        let v1: Coeffs::OutputScalar = num::cast::<_, Coeffs::OutputScalar>(i1).unwrap() -
+                                       num::cast(s1).unwrap();
+        let v2: Coeffs::OutputScalar = num::cast::<_, Coeffs::OutputScalar>(i2).unwrap() -
+                                       num::cast(s2).unwrap();
+        let v3: Coeffs::OutputScalar = num::cast::<_, Coeffs::OutputScalar>(i3).unwrap() -
+                                       num::cast(s3).unwrap();
+
+        let vector = (v1, v2, v3);
+
+        let (o1, o2, o3) = transform.transform_vector(vector);
+
+        Rgb::from_channels(num::cast(o1).unwrap(),
+                           num::cast(o2).unwrap(),
+                           num::cast(o3).unwrap())
+            .normalize()
     }
 }
 
@@ -234,6 +285,7 @@ mod test {
     use rgb::Rgb;
     use convert::*;
     use color::*;
+    use test;
 
     #[test]
     fn test_construct() {
@@ -305,14 +357,63 @@ mod test {
 
     #[test]
     fn test_from_rgb() {
+        let test_data = test::build_hwb_test_data();
+        for item in test_data.iter() {
+            let ycbcr = YCbCrJpeg::from_color(&item.rgb);
+            let rgb = Rgb::from_color(&ycbcr);
+            assert_relative_eq!(rgb, item.rgb, epsilon=1e-4);
+        }
+
+
         let c1 = Rgb::from_channels(255u8, 255, 255);
         let y1 = YCbCrJpeg::from_color(&c1);
         assert_eq!(y1.luma(), 255u8);
         assert_eq!(y1.cb(), 128);
         assert_eq!(y1.cr(), 128);
+        assert_eq!(Rgb::from_color(&y1), c1);
 
         let c2 = Rgb::from_channels(0.5, 0.5, 0.5);
         let y2 = YCbCrJpeg::from_color(&c2);
         assert_relative_eq!(y2, YCbCrJpeg::from_channels(0.5, 0.0, 0.0), epsilon=1e-6);
+        assert_relative_eq!(Rgb::from_color(&y2), c2, epsilon=1e-6);
+    }
+
+    #[test]
+    fn test_to_rgb() {
+        let c1 = YCbCrJpeg::from_channels(1.0, 0.0, 0.0);
+        let r1 = Rgb::from_color(&c1);
+        assert_relative_eq!(r1.red(), 1.0);
+        assert_relative_eq!(r1.green(), 1.0);
+        assert_relative_eq!(r1.blue(), 1.0);
+
+        let c2 = YCbCrJpeg::from_channels(1.0, 1.0, 1.0);
+        let r2 = Rgb::from_color(&c2);
+        assert_relative_eq!(r2.red(), 1.0);
+        assert_relative_eq!(r2.green(), 0.0);
+        assert_relative_eq!(r2.blue(), 1.0);
+
+        let c3 = YCbCrJpeg::from_channels(0.0, 0.0, 0.0);
+        let r3 = Rgb::from_color(&c3);
+        assert_relative_eq!(r3.red(), 0.0);
+        assert_relative_eq!(r3.green(), 0.0);
+        assert_relative_eq!(r3.blue(), 0.0);
+
+        let c4 = YCbCrJpeg::from_channels(0.5, 1.0, 1.0);
+        let r4 = Rgb::from_color(&c4);
+        assert_relative_eq!(r4.red(), 1.0);
+        assert_relative_eq!(r4.green(), 0.0);
+        assert_relative_eq!(r4.blue(), 1.0);
+
+        let c5 = YCbCrJpeg::from_channels(50u8, 100, 150);
+        let r5 = Rgb::from_color(&c5);
+        assert_eq!(r5, Rgb::from_channels(80u8, 43, 0));
+    }
+
+    #[test]
+    fn test_color_cast() {
+        let c1 = YCbCrJpeg::from_channels(0.65, -0.3, 0.5);
+        assert_relative_eq!(c1.color_cast(), c1);
+        assert_relative_eq!(c1.color_cast(), YCbCrJpeg::from_channels(0.65f32, -0.3f32, 0.5f32));
+        // assert_eq!(c1.color_cast(), YCbCrJpeg::from_channels(165u8, 88, 191));
     }
 }
