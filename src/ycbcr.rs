@@ -279,12 +279,32 @@ impl<T, Coeffs> FromColor<YCbCr<T, Coeffs>> for Rgb<T>
     }
 }
 
+pub fn build_transform<T>(kr: T, kb: T) -> Matrix3<T>
+    where T: num::Float
+{
+    let half = num::cast::<_, T>(0.5).unwrap();
+    let one = num::cast::<_, T>(1.0).unwrap();
+
+    let kg = one - kr - kb;
+
+    let cb_r = half * (-kr / (one - kb));
+    let cb_g = half * (-kg / (one - kb));
+    let cb_b = half;
+
+    let cr_r = half;
+    let cr_g = half * (-kg / (one - kr));
+    let cr_b = half * (-kb / (one - kr));
+
+    Matrix3::new([kr, kg, kb, cb_r, cb_g, cb_b, cr_r, cr_g, cr_b])
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
     use rgb::Rgb;
     use convert::*;
     use color::*;
+    use linalg::Matrix3;
     use test;
 
     #[test]
@@ -353,6 +373,13 @@ mod test {
         let c1 = YCbCrJpeg::from_channels(0.2, -0.3, 0.45);
         assert_eq!(c1.as_slice(), &[0.2, -0.3, 0.45]);
         assert_eq!(YCbCrJpeg::from_slice(c1.as_slice()), c1);
+    }
+
+    #[test]
+    fn test_build_transform() {
+        let matrix = build_transform(0.299f32, 0.114);
+        assert_relative_eq!(matrix, Matrix3::new([0.299f32, 0.587, 0.114, -0.168736, -0.331264,
+            0.5, 0.5, -0.418688, -0.081312]), epsilon=1e-5);
     }
 
     #[test]
