@@ -5,7 +5,7 @@ use angle::*;
 use color;
 
 pub trait BoundedChannelScalar: Clone + PartialEq + PartialOrd + Default
-        + ops::Add<Self, Output=Self> + ops::Sub<Self, Output=Self>
+        + ops::Add<Self, Output=Self> + ops::Sub<Self, Output=Self> + ops::Mul<Self, Output=Self>
 {
 }
 

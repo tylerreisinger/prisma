@@ -2,8 +2,31 @@ use num;
 use angle;
 use angle::Angle;
 
-pub trait ChannelFormatCast<Out> {
+pub trait ChannelFormatCast<Out>: Sized {
     fn cast(self) -> Out;
+    fn cast_with_rescale(self, _: f64, _: f64) -> Out {
+        Self::cast(self)
+    }
+}
+
+macro_rules! impl_cast_with_rescale_flt_to_int {
+    ($from:ty, $to:ty) => {
+        fn cast_with_rescale(self, min: f64, max: f64) -> $to {
+            let range: $from = (max - min) as $from;
+            let scaled_self = (self - (min as $from)) / range;
+            scaled_self.cast()
+        }
+    }
+}
+
+macro_rules! impl_cast_with_rescale_int_to_flt {
+    ($from:ty, $to:ty) => {
+        fn cast_with_rescale(self, min: f64, max: f64) -> $to {
+            let out: $to = self.cast();
+            let range = (max - min) as $to;
+            out * range + (min as $to)
+        }
+    }
 }
 
 impl ChannelFormatCast<u8> for u8 {
@@ -30,11 +53,13 @@ impl ChannelFormatCast<f32> for u8 {
     fn cast(self) -> f32 {
         (self as f32) / (0xFF as f32)
     }
+    impl_cast_with_rescale_int_to_flt!(u8, f32);
 }
 impl ChannelFormatCast<f64> for u8 {
     fn cast(self) -> f64 {
         (self as f64) / (0xFF as f64)
     }
+    impl_cast_with_rescale_int_to_flt!(u8, f64);
 }
 
 
@@ -62,11 +87,13 @@ impl ChannelFormatCast<f32> for u16 {
     fn cast(self) -> f32 {
         (self as f32) / (0xFFFF as f32)
     }
+    impl_cast_with_rescale_int_to_flt!(u16, f32);
 }
 impl ChannelFormatCast<f64> for u16 {
     fn cast(self) -> f64 {
         (self as f64) / (0xFFFF as f64)
     }
+    impl_cast_with_rescale_int_to_flt!(u16, f64);
 }
 
 
@@ -94,11 +121,13 @@ impl ChannelFormatCast<f32> for u32 {
     fn cast(self) -> f32 {
         (self as f32) / (0xFFFFFFFF_u32 as f32)
     }
+    impl_cast_with_rescale_int_to_flt!(u32, f32);
 }
 impl ChannelFormatCast<f64> for u32 {
     fn cast(self) -> f64 {
         (self as f64) / (0xFFFFFFFF_u32 as f64)
     }
+    impl_cast_with_rescale_int_to_flt!(u32, f64);
 }
 
 
@@ -126,11 +155,13 @@ impl ChannelFormatCast<f32> for u64 {
     fn cast(self) -> f32 {
         (self as f32) / (0xFFFFFFFFFFFFFFFF_u64 as f32)
     }
+    impl_cast_with_rescale_int_to_flt!(u64, f32);
 }
 impl ChannelFormatCast<f64> for u64 {
     fn cast(self) -> f64 {
         (self as f64) / (0xFFFFFFFFFFFFFFFF_u64 as f64)
     }
+    impl_cast_with_rescale_int_to_flt!(u64, f64);
 }
 
 
@@ -140,21 +171,25 @@ impl ChannelFormatCast<u8> for f32 {
         // This will make more than just 1.0 map to 255.
         (self * 255.99_f32).floor() as u8
     }
+    impl_cast_with_rescale_flt_to_int!(f32, u8);
 }
 impl ChannelFormatCast<u16> for f32 {
     fn cast(self) -> u16 {
         (self * (0xFFFF_u32 as f32)) as u16
     }
+    impl_cast_with_rescale_flt_to_int!(f32, u16);
 }
 impl ChannelFormatCast<u32> for f32 {
     fn cast(self) -> u32 {
         (self * (0xFFFFFFFF_u32 as f32)) as u32
     }
+    impl_cast_with_rescale_flt_to_int!(f32, u32);
 }
 impl ChannelFormatCast<u64> for f32 {
     fn cast(self) -> u64 {
         (self * (0xFFFFFFFFFFFFFFFF_u64 as f32)) as u64
     }
+    impl_cast_with_rescale_flt_to_int!(f32, u64);
 }
 impl ChannelFormatCast<f32> for f32 {
     fn cast(self) -> f32 {
@@ -174,21 +209,25 @@ impl ChannelFormatCast<u8> for f64 {
         // This will make more than just 1.0 map to 255.
         (self * 255.99_f64).floor() as u8
     }
+    impl_cast_with_rescale_flt_to_int!(f64, u8);
 }
 impl ChannelFormatCast<u16> for f64 {
     fn cast(self) -> u16 {
         (self * (0xFFFF_u32 as f64)) as u16
     }
+    impl_cast_with_rescale_flt_to_int!(f64, u16);
 }
 impl ChannelFormatCast<u32> for f64 {
     fn cast(self) -> u32 {
         (self * (0xFFFFFFFF_u32 as f64)) as u32
     }
+    impl_cast_with_rescale_flt_to_int!(f64, u32);
 }
 impl ChannelFormatCast<u64> for f64 {
     fn cast(self) -> u64 {
         (self * (0xFFFFFFFFFFFFFFFF_u64 as f64)) as u64
     }
+    impl_cast_with_rescale_flt_to_int!(f64, u64);
 }
 impl ChannelFormatCast<f32> for f64 {
     fn cast(self) -> f32 {

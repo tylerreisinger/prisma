@@ -411,9 +411,13 @@ mod test {
 
     #[test]
     fn test_color_cast() {
-        let c1 = YCbCrJpeg::from_channels(0.65, -0.3, 0.5);
+        let c1 = YCbCrJpeg::from_channels(0.65f32, -0.3, 0.5);
         assert_relative_eq!(c1.color_cast(), c1);
-        assert_relative_eq!(c1.color_cast(), YCbCrJpeg::from_channels(0.65f32, -0.3f32, 0.5f32));
-        // assert_eq!(c1.color_cast(), YCbCrJpeg::from_channels(165u8, 88, 191));
+        assert_relative_eq!(c1.color_cast(), YCbCrJpeg::from_channels(0.65, -0.3, 0.5), epsilon=1e-6);
+        assert_eq!(c1.color_cast(), YCbCrJpeg::from_channels(166u8, 89, 191));
+
+        let c2 = YCbCrJpeg::from_channels(100u8, 200u8, 100u8);
+
+        assert_relative_eq!(c2.color_cast(), YCbCrJpeg::from_channels(0.39215686f32, 0.56862745f32, -0.21568627f32));
     }
 }
