@@ -7,7 +7,7 @@ use num;
 use channel::{NormalBoundedChannel, ColorChannel, NormalChannelScalar, ChannelFormatCast,
               ChannelCast, PosNormalChannelScalar, PosNormalBoundedChannel};
 use color::{Color, Lerp, Invert, Flatten, Bounded};
-use convert::FromColor;
+use convert::{FromColor, TryFromColor};
 use rgb::Rgb;
 use linalg::Matrix3;
 
@@ -23,6 +23,11 @@ pub trait YCbCrCoeffs<T>: Clone + PartialEq
     fn get_transform() -> Matrix3<Self::OutputScalar>;
     fn get_inverse_transform() -> Matrix3<Self::OutputScalar>;
     fn get_shift() -> (T, T, T);
+}
+
+pub enum OutOfGamutMode {
+    Preserve,
+    Clip,
 }
 
 #[repr(C)]
@@ -251,15 +256,15 @@ impl<T, Coeffs> FromColor<Rgb<T>> for YCbCr<T, Coeffs>
     }
 }
 
-impl<T, Coeffs> FromColor<YCbCr<T, Coeffs>> for Rgb<T>
-    where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast + PosNormalChannelScalar,
+impl<T, Coeffs> YCbCr<T, Coeffs>
+    where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
           Coeffs: YCbCrCoeffs<T>
 {
-    fn from_color(from: &YCbCr<T, Coeffs>) -> Self {
+    fn convert_to_rgb(&self, mode: OutOfGamutMode) -> Rgb<T> {
         let transform = Coeffs::get_inverse_transform();
 
         let (s1, s2, s3) = Coeffs::get_shift();
-        let (i1, i2, i3) = from.clone().to_tuple();
+        let (i1, i2, i3) = self.clone().to_tuple();
 
         let v1: Coeffs::OutputScalar = num::cast::<_, Coeffs::OutputScalar>(i1).unwrap() -
                                        num::cast(s1).unwrap();
@@ -272,10 +277,31 @@ impl<T, Coeffs> FromColor<YCbCr<T, Coeffs>> for Rgb<T>
 
         let (o1, o2, o3) = transform.transform_vector(vector);
 
-        Rgb::from_channels(num::cast(o1).unwrap(),
-                           num::cast(o2).unwrap(),
-                           num::cast(o3).unwrap())
-            .normalize()
+
+        let out = Rgb::from_channels(num::cast(o1).unwrap(),
+                                     num::cast(o2).unwrap(),
+                                     num::cast(o3).unwrap());
+
+
+        if !out.is_normalized() {
+            match mode {
+                OutOfGamutMode::Clip => out.normalize(),
+                OutOfGamutMode::Preserve => out,
+            }
+        } else {
+            out
+        }
+    }
+}
+
+impl<T, Coeffs> TryFromColor<YCbCr<T, Coeffs>> for Rgb<T>
+    where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
+          Coeffs: YCbCrCoeffs<T>
+{
+    fn try_from_color(from: &YCbCr<T, Coeffs>) -> Option<Self> {
+        let out = from.convert_to_rgb(OutOfGamutMode::Preserve);
+
+        if out.is_normalized() { Some(out) } else { None }
     }
 }
 
@@ -387,7 +413,7 @@ mod test {
         let test_data = test::build_hwb_test_data();
         for item in test_data.iter() {
             let ycbcr = YCbCrJpeg::from_color(&item.rgb);
-            let rgb = Rgb::from_color(&ycbcr);
+            let rgb = ycbcr.convert_to_rgb(OutOfGamutMode::Preserve);
             assert_relative_eq!(rgb, item.rgb, epsilon=1e-4);
         }
 
@@ -397,42 +423,44 @@ mod test {
         assert_eq!(y1.luma(), 255u8);
         assert_eq!(y1.cb(), 128);
         assert_eq!(y1.cr(), 128);
-        assert_eq!(Rgb::from_color(&y1), c1);
+        assert_eq!(Rgb::try_from_color(&y1).unwrap(), c1);
 
         let c2 = Rgb::from_channels(0.5, 0.5, 0.5);
         let y2 = YCbCrJpeg::from_color(&c2);
         assert_relative_eq!(y2, YCbCrJpeg::from_channels(0.5, 0.0, 0.0), epsilon=1e-6);
-        assert_relative_eq!(Rgb::from_color(&y2), c2, epsilon=1e-6);
+        assert_relative_eq!(Rgb::try_from_color(&y2).unwrap(), c2, epsilon=1e-6);
     }
 
     #[test]
     fn test_to_rgb() {
         let c1 = YCbCrJpeg::from_channels(1.0, 0.0, 0.0);
-        let r1 = Rgb::from_color(&c1);
+        let r1 = Rgb::try_from_color(&c1).unwrap();
         assert_relative_eq!(r1.red(), 1.0);
         assert_relative_eq!(r1.green(), 1.0);
         assert_relative_eq!(r1.blue(), 1.0);
 
         let c2 = YCbCrJpeg::from_channels(1.0, 1.0, 1.0);
-        let r2 = Rgb::from_color(&c2);
+        assert_eq!(Rgb::try_from_color(&c2), None);
+        let r2 = c2.convert_to_rgb(OutOfGamutMode::Clip);
         assert_relative_eq!(r2.red(), 1.0);
         assert_relative_eq!(r2.green(), 0.0);
         assert_relative_eq!(r2.blue(), 1.0);
 
         let c3 = YCbCrJpeg::from_channels(0.0, 0.0, 0.0);
-        let r3 = Rgb::from_color(&c3);
+        let r3 = Rgb::try_from_color(&c3).unwrap();
         assert_relative_eq!(r3.red(), 0.0);
         assert_relative_eq!(r3.green(), 0.0);
         assert_relative_eq!(r3.blue(), 0.0);
 
         let c4 = YCbCrJpeg::from_channels(0.5, 1.0, 1.0);
-        let r4 = Rgb::from_color(&c4);
+        assert_eq!(Rgb::try_from_color(&c4), None);
+        let r4 = c4.convert_to_rgb(OutOfGamutMode::Clip);
         assert_relative_eq!(r4.red(), 1.0);
         assert_relative_eq!(r4.green(), 0.0);
         assert_relative_eq!(r4.blue(), 1.0);
 
         let c5 = YCbCrJpeg::from_channels(50u8, 100, 150);
-        let r5 = Rgb::from_color(&c5);
+        let r5 = Rgb::try_from_color(&c5).unwrap();
         assert_eq!(r5, Rgb::from_channels(80u8, 43, 0));
     }
 
