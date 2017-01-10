@@ -36,7 +36,7 @@ impl<C, E> EncodedColor<C, E>
         EncodedColor::new(decoded_color, LinearEncoding::new())
     }
 
-    pub fn reencode<Encoder>(self, new_encoding: Encoder) -> EncodedColor<C, Encoder>
+    pub fn transcode<Encoder>(self, new_encoding: Encoder) -> EncodedColor<C, Encoder>
         where Encoder: ColorEncoding
     {
         let decoded_color = self.decode();
