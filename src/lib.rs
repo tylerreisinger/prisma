@@ -12,6 +12,8 @@ pub mod color;
 pub mod chromaticity;
 pub mod linalg;
 
+pub mod encoding;
+
 pub mod alpha;
 
 pub mod rgb;

@@ -67,6 +67,12 @@ impl<T> ChannelCast for AngularChannel<T>
     {
         To::new(self.0.cast())
     }
+
+    fn scalar_cast<To>(self) -> To
+        where Self::Format: ChannelFormatCast<To>
+    {
+        self.0.cast()
+    }
 }
 
 impl<T> color::Invert for AngularChannel<T>

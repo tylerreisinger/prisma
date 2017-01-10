@@ -20,4 +20,5 @@ pub trait ChannelCast: ColorChannel {
     fn channel_cast<To>(self) -> To
         where Self::Format: ChannelFormatCast<To::Format>,
               To: ColorChannel<Tag = Self::Tag>;
+    fn scalar_cast<To>(self) -> To where Self::Format: ChannelFormatCast<To>;
 }

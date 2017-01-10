@@ -83,9 +83,15 @@ macro_rules! impl_bounded_channel_type {
                 where Self::Format: ChannelFormatCast<To::Format>,
                       To: ColorChannel<Tag = Self::Tag>
             {
+                To::new(self.scalar_cast())
+            }
+
+            fn scalar_cast<To>(self) -> To
+                where Self::Format: ChannelFormatCast<To>,
+            {
                 let max = <f64 as $scalar_type>::max_bound();
                 let min = <f64 as $scalar_type>::min_bound();
-                To::new(self.0.cast_with_rescale(min, max))
+                self.0.cast_with_rescale(min, max)
             }
         }
 
