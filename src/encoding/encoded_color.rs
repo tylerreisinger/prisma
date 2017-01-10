@@ -1,3 +1,4 @@
+use std::fmt;
 use color::Color;
 use encoding::encode::{ColorEncoding, LinearEncoding, EncodableColor};
 
@@ -52,5 +53,14 @@ impl<C> EncodedColor<C, LinearEncoding>
         let encoded_color = self.color.encode_color(&encoder);
 
         EncodedColor::new(encoded_color, encoder)
+    }
+}
+
+impl<C, E> fmt::Display for EncodedColor<C, E>
+    where C: Color + EncodableColor + fmt::Display,
+          E: ColorEncoding + fmt::Display
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "[{} @ {}]", self.color, self.encoding)
     }
 }

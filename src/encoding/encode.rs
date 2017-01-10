@@ -1,3 +1,4 @@
+use std::fmt;
 use num;
 use color::Color;
 use rgb::Rgb;
@@ -16,9 +17,7 @@ pub trait EncodableColor: Color {
     fn decode_color<Decoder>(self, dec: &Decoder) -> Self where Decoder: ChannelDecoder;
 }
 
-pub trait ColorEncoding: ChannelEncoder + ChannelDecoder + Sized + Clone {
-    fn display_name(&self) -> &str;
-}
+pub trait ColorEncoding: ChannelEncoder + ChannelDecoder + Sized + Clone {}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SrgbEncoding {}
@@ -67,9 +66,11 @@ impl ChannelEncoder for SrgbEncoding {
     }
 }
 
-impl ColorEncoding for SrgbEncoding {
-    fn display_name(&self) -> &str {
-        "sRgb"
+impl ColorEncoding for SrgbEncoding {}
+
+impl fmt::Display for SrgbEncoding {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "sRgb")
     }
 }
 
@@ -95,9 +96,11 @@ impl ChannelEncoder for LinearEncoding {
     }
 }
 
-impl ColorEncoding for LinearEncoding {
-    fn display_name(&self) -> &str {
-        "Linear"
+impl ColorEncoding for LinearEncoding {}
+
+impl fmt::Display for LinearEncoding {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Linear")
     }
 }
 
