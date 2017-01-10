@@ -143,7 +143,7 @@ macro_rules! impl_bounded_channel_type {
     };
 }
 
-impl_bounded_channel_type!(PosNormalBoundedChannel, PosNormalChannelScalar, 
+impl_bounded_channel_type!(PosNormalBoundedChannel,
+                           PosNormalChannelScalar,
                            PosNormalChannelTag);
-impl_bounded_channel_type!(NormalBoundedChannel, NormalChannelScalar, 
-                           NormalChannelTag);
+impl_bounded_channel_type!(NormalBoundedChannel, NormalChannelScalar, NormalChannelTag);
