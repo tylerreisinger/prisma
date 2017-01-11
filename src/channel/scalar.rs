@@ -4,6 +4,11 @@ use angle;
 use angle::*;
 use color;
 
+pub trait FreeChannelScalar: Clone + Float + Default {}
+
+impl FreeChannelScalar for f32 {}
+impl FreeChannelScalar for f64 {}
+
 pub trait BoundedChannelScalar: Clone + PartialEq + PartialOrd + Default
         + ops::Add<Self, Output=Self> + ops::Sub<Self, Output=Self> + ops::Mul<Self, Output=Self>
 {
