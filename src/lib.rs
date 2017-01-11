@@ -12,7 +12,10 @@ pub mod color;
 pub mod chromaticity;
 pub mod linalg;
 
+pub mod white_point;
+
 pub mod encoding;
+pub mod color_space;
 
 pub mod alpha;
 
@@ -24,6 +27,8 @@ pub mod hwb;
 pub mod hsi;
 pub mod ehsi;
 pub mod ycbcr;
+pub mod xyz;
+pub mod xyy;
 
 #[cfg(test)]
 pub mod test;
