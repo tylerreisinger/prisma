@@ -62,14 +62,14 @@ mod test {
     use super::*;
     use color_space::primary::RgbPrimary;
     use linalg::Matrix3;
-    use xyz::Xyz;
+    use white_point::{D65, NamedWhitePoint};
 
     #[test]
     fn test_build_transform() {
         let space = ColorSpace::new(RgbPrimary::new(0.6400, 0.3300),
                                     RgbPrimary::new(0.300, 0.600),
                                     RgbPrimary::new(0.150, 0.060),
-                                    Xyz::from_channels(0.950428545377, 1.0, 1.088900370798));
+                                    D65::get_xyz());
         let m = space.build_transform();
         assert_relative_eq!(m,
                             Matrix3::new([0.4124564, 0.3575761, 0.1804375, 0.2126729, 0.7151522,
