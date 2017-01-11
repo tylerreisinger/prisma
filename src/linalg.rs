@@ -5,9 +5,7 @@ use approx;
 use num;
 
 #[derive(Copy, Debug, PartialEq)]
-pub struct Matrix3<T>
-    where T: Clone
-{
+pub struct Matrix3<T> {
     pub m: [T; 9],
 }
 
