@@ -12,6 +12,8 @@ pub mod color;
 pub mod chromaticity;
 pub mod linalg;
 
+pub mod white_point;
+
 pub mod encoding;
 pub mod color_space;
 
