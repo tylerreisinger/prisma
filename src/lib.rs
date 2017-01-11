@@ -13,6 +13,7 @@ pub mod chromaticity;
 pub mod linalg;
 
 pub mod encoding;
+pub mod color_space;
 
 pub mod alpha;
 
