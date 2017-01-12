@@ -8,6 +8,8 @@ pub struct EncodedColor<C, E> {
     encoding: E,
 }
 
+pub type LinearColor<C> = EncodedColor<C, LinearEncoding>;
+
 impl<C, E> EncodedColor<C, E>
     where C: Color + EncodableColor,
           E: ColorEncoding
@@ -42,6 +44,10 @@ impl<C, E> EncodedColor<C, E>
         let decoded_color = self.decode();
         decoded_color.encode(new_encoding)
     }
+
+    pub fn to_tuple(self) -> C::ChannelsTuple {
+        self.color.to_tuple()
+    }
 }
 
 impl<C> EncodedColor<C, LinearEncoding>
@@ -61,6 +67,6 @@ impl<C, E> fmt::Display for EncodedColor<C, E>
           E: ColorEncoding + fmt::Display
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "[{} @ {}]", self.color, self.encoding)
+        write!(f, "{} @ {}", self.color, self.encoding)
     }
 }

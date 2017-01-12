@@ -3,6 +3,7 @@ use num;
 use color::Color;
 use rgb::Rgb;
 use channel::{PosNormalChannelScalar, ChannelFormatCast};
+use encoding::EncodedColor;
 
 pub trait ChannelEncoder {
     fn encode_channel<T>(&self, val: T) -> T where T: num::Float;
@@ -15,6 +16,12 @@ pub trait EncodableColor: Color {
     type IntermediateColor;
     fn encode_color<Encoder>(self, enc: &Encoder) -> Self where Encoder: ChannelEncoder;
     fn decode_color<Decoder>(self, dec: &Decoder) -> Self where Decoder: ChannelDecoder;
+
+    fn with_encoding<Encoding>(self, enc: Encoding) -> EncodedColor<Self, Encoding>
+        where Encoding: ColorEncoding
+    {
+        EncodedColor::new(self, enc)
+    }
 }
 
 pub trait ColorEncoding: ChannelEncoder + ChannelDecoder + Sized + Clone {}
