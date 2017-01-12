@@ -77,6 +77,12 @@ impl ChannelEncoder for SrgbEncoding {
 
 impl ColorEncoding for SrgbEncoding {}
 
+impl Default for SrgbEncoding {
+    fn default() -> Self {
+        SrgbEncoding {}
+    }
+}
+
 impl fmt::Display for SrgbEncoding {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "sRgb")
@@ -106,6 +112,12 @@ impl ChannelEncoder for LinearEncoding {
 }
 
 impl ColorEncoding for LinearEncoding {}
+
+impl Default for LinearEncoding {
+    fn default() -> Self {
+        LinearEncoding {}
+    }
+}
 
 impl fmt::Display for LinearEncoding {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -146,6 +158,12 @@ impl<T> ChannelEncoder for GammaEncoding<T>
 }
 
 impl<T: num::Float> ColorEncoding for GammaEncoding<T> {}
+
+impl<T: num::Float> Default for GammaEncoding<T> {
+    fn default() -> Self {
+        GammaEncoding::new(num::cast(2.2).unwrap())
+    }
+}
 
 impl<T> fmt::Display for GammaEncoding<T>
     where T: num::Float + fmt::Display
