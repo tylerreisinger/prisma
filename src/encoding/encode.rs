@@ -68,7 +68,7 @@ impl ChannelEncoder for SrgbEncoding {
         if val < linear_threshold {
             k * val
         } else {
-            (one + a) * val.powf(one / gamma)
+            (one + a) * val.powf(one / gamma) - a
         }
     }
 }
@@ -142,5 +142,39 @@ impl<T> EncodableColor for Rgb<T>
         let out_color: Rgb<T> = Rgb::from_channels(linear_r, linear_g, linear_b).color_cast();
 
         out_color
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use rgb::Rgb;
+    use color::*;
+
+    #[test]
+    fn test_srgb_encoding() {
+        let c1 = Rgb::from_channels(0.0, 0.0, 0.0).with_encoding(LinearEncoding::new());
+        let t1 = c1.clone().encode(SrgbEncoding::new());
+        assert_relative_eq!(t1.color(), c1.color(), epsilon=1e-6);
+
+        let c2 = Rgb::from_channels(1.0, 1.0, 1.0).with_encoding(LinearEncoding::new());
+        let t2 = c2.clone().encode(SrgbEncoding::new());
+        assert_relative_eq!(t2.color(), c2.color(), epsilon=1e-6);
+
+        let c3 = Rgb::from_channels(0.5, 0.5, 0.5).with_encoding(LinearEncoding::new());
+        let t3 = c3.clone().encode(SrgbEncoding::new());
+        assert_relative_eq!(*t3.color(), 
+            Rgb::broadcast(0.735356983052), epsilon=1e-6);
+        assert_relative_eq!(t3.decode(), c3, epsilon=1e-6);
+
+        let c4 = Rgb::from_channels(0.2, 0.8, 0.66).with_encoding(LinearEncoding::new());
+        let t4 = c4.clone().encode(SrgbEncoding::new());
+        assert_relative_eq!(*t4.color(), 
+            Rgb::from_channels(0.4845292044, 0.90633175, 0.83228355590), epsilon=1e-6);
+        assert_relative_eq!(t4.decode(), c4, epsilon=1e-6);
+
+        let c5 = Rgb::from_channels(0.5, 0.5, 0.5).with_encoding(SrgbEncoding::new());
+        let t5 = c5.clone().decode();
+        assert_relative_eq!(*t5.color(), Rgb::broadcast(0.21404114048), epsilon=1e-6);
     }
 }

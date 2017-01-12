@@ -3,7 +3,7 @@ use approx;
 use color::Color;
 use encoding::encode::{ColorEncoding, LinearEncoding, EncodableColor};
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct EncodedColor<C, E> {
     color: C,
     encoding: E,
