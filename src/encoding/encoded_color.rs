@@ -1,4 +1,5 @@
 use std::fmt;
+use approx;
 use color::Color;
 use encoding::encode::{ColorEncoding, LinearEncoding, EncodableColor};
 
@@ -59,6 +60,43 @@ impl<C> EncodedColor<C, LinearEncoding>
         let encoded_color = self.color.encode_color(&encoder);
 
         EncodedColor::new(encoded_color, encoder)
+    }
+}
+
+impl<C, E> approx::ApproxEq for EncodedColor<C, E>
+    where C: Color + EncodableColor + approx::ApproxEq,
+          E: ColorEncoding + PartialEq
+{
+    type Epsilon = C::Epsilon;
+
+    fn default_epsilon() -> Self::Epsilon {
+        C::default_epsilon()
+    }
+    fn default_max_relative() -> Self::Epsilon {
+        C::default_max_relative()
+    }
+    fn default_max_ulps() -> u32 {
+        C::default_max_ulps()
+    }
+    fn relative_eq(&self,
+                   other: &Self,
+                   epsilon: Self::Epsilon,
+                   max_relative: Self::Epsilon)
+                   -> bool {
+        (self.encoding == other.encoding) &&
+        self.color.relative_eq(&other.color, epsilon, max_relative)
+    }
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        (self.encoding == other.encoding) && self.color.ulps_eq(&other.color, epsilon, max_ulps)
+    }
+}
+
+impl<C, E> Default for EncodedColor<C, E>
+    where C: Color + EncodableColor + Default,
+          E: ColorEncoding + Default
+{
+    fn default() -> Self {
+        C::default().with_encoding(LinearEncoding::new()).encode(E::default())
     }
 }
 
