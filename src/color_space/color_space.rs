@@ -350,6 +350,7 @@ impl<T> FromXyz<T> for LinearColor<Rgb<T>>
 mod test {
     use super::*;
     use encoding::*;
+    use color::*;
     use color_space::primary::RgbPrimary;
     use linalg::Matrix3;
     use white_point::{D65, NamedWhitePoint};
@@ -363,6 +364,7 @@ mod test {
                                                 RgbPrimary::new(0.300, 0.600),
                                                 RgbPrimary::new(0.150, 0.060),
                                                 D65::get_xyz());
+        let srgb = sRgb::get_color_space();
 
         let r1 = Rgb::from_channels(0.0, 0.0, 0.0);
         let c1 = linear_srgb.color_to_xyz(&r1.clone().with_encoding(LinearEncoding::new()));
@@ -385,6 +387,49 @@ mod test {
         assert_relative_eq!(linear_srgb.xyz_to_color(&c3),
                             r3.with_encoding(LinearEncoding::new()),
                             epsilon = 1e-5);
+
+        let r4 = Rgb::from_channels(0.25, 0.55, 0.89);
+        let c4 = srgb.color_to_xyz(&r4);
+        assert_relative_eq!(c4,
+                            Xyz::from_channels(0.253659, 0.254514, 0.761978),
+                            epsilon = 1e-6);
+        assert_relative_eq!(srgb.xyz_to_color(&c4), r4, epsilon = 1e-6);
+    }
+
+    #[test]
+    fn test_from_rgb() {
+        let srgb = sRgb::get_color_space();
+
+        let c1 = Xyz::from_channels(0.5, 0.5, 0.5);
+        let r1 = srgb.xyz_to_color(&c1);
+        assert_relative_eq!(r1,
+                            Rgb::from_channels(0.799153, 0.718068, 0.704499),
+                            epsilon = 1e-6);
+        assert_relative_eq!(srgb.color_to_xyz(&r1), c1, epsilon = 1e-6);
+
+        let c2 = Xyz::from_channels(0.3, 0.4, 0.7);
+        let r2 = srgb.xyz_to_color(&c2);
+        assert_relative_eq!(r2,
+                            Rgb::from_channels(0.088349, 0.727874, 0.840708),
+                            epsilon = 1e-6);
+        assert_relative_eq!(srgb.color_to_xyz(&r2), c2, epsilon = 1e-6);
+
+        let c3 = Xyz::from_channels(0.5, 0.4, 0.9);
+        let r3 = srgb.xyz_to_color(&c3);
+        assert_relative_eq!(r3,
+                            Rgb::from_channels(0.771531, 0.586637, 0.953618),
+                            epsilon = 1e-6);
+        assert_relative_eq!(srgb.color_to_xyz(&r3), c3, epsilon = 1e-6);
+
+        let c4 = D65::get_xyz();
+        let r4 = srgb.xyz_to_color(&c4);
+        assert_relative_eq!(r4, Rgb::broadcast(1.0), epsilon = 1e-6);
+        assert_relative_eq!(srgb.color_to_xyz(&r4), c4, epsilon = 1e-6);
+
+        let c5 = Xyz::broadcast(0.0);
+        let r5 = srgb.xyz_to_color(&c5);
+        assert_relative_eq!(r5, Rgb::broadcast(0.0), epsilon = 1e-6);
+        assert_relative_eq!(srgb.color_to_xyz(&r5), c5, epsilon = 1e-6);
     }
 
     #[test]
