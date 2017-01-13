@@ -52,10 +52,7 @@ macro_rules! impl_color_as_slice {
 macro_rules! impl_color_from_slice_square {
     ($name: ident<$T:ident> {$($fields:ident:$chan:ident - $i:expr),*}, phantom={$($phantom:ident),*}) => {
         fn from_slice(vals: &[$T]) -> Self {
-            $name {
-                $($fields: $chan(vals[$i].clone())),*,
-                $($phantom: PhantomData),*
-            }
+            $name::from_channels($(vals[$i].clone()),*)
         }
     };
     ($name: ident<$T:ident> {$($fields:ident:$chan:ident - $i:expr),*}) => {

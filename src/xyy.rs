@@ -241,6 +241,12 @@ mod test {
 
     #[test]
     #[should_panic]
+    fn test_sum_oob_panic() {
+        let _ = XyY::from_channels(0.8, 0.5, 0.6);
+    }
+
+    #[test]
+    #[should_panic]
     fn test_neg_channel_panic() {
         let _ = XyY::from_channels(-0.2, 0.0, 0.5);
     }
@@ -291,6 +297,12 @@ mod test {
     fn test_too_high_set_panic() {
         let mut c1 = XyY::from_channels(0.2, 0.3, 0.9);
         c1.set_y(33333.0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_slice_oob_panic() {
+        let _ = XyY::from_slice(&[1.2, 0.3, 0.9]);
     }
 
     #[test]

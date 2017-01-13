@@ -259,6 +259,12 @@ mod test {
     }
 
     #[test]
+    #[should_panic]
+    fn test_slice_oob_panic() {
+        let _ = Rgi::from_slice(&[0.9, 0.3, 0.9]);
+    }
+
+    #[test]
     fn test_flatten() {
         let c1 = Rgi::from_channels(0.2, 0.5, 0.6);
         assert_eq!(c1.as_slice(), &[0.2, 0.5, 0.6]);
