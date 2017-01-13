@@ -21,7 +21,8 @@ pub trait ColorSpace<T> {
     fn apply_transform(&self, vec: (T, T, T)) -> (T, T, T);
 }
 
-pub trait ColorSpaceEncoding {
+pub trait ColorSpaceEncoding<E> {
+    fn encoding(&self) -> &E;
     fn decode_color<Color>(&self, color: Color) -> LinearColor<Color> where Color: EncodableColor;
 }
 
@@ -40,28 +41,28 @@ pub trait FromXyz<T> {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct LinearColorSpace<T> {
+pub struct EncodedColorSpace<T, E> {
     red_primary: RgbPrimary<T>,
     green_primary: RgbPrimary<T>,
     blue_primary: RgbPrimary<T>,
     white_point: Xyz<T>,
+    encoding: E,
 
     xyz_transform: Matrix3<T>,
     inv_transform: Matrix3<T>,
 }
-#[derive(Clone, Debug, PartialEq)]
-pub struct EncodedColorSpace<T, E> {
-    linear_space: LinearColorSpace<T>,
-    encoding: E,
-}
 
-impl<T> LinearColorSpace<T>
-    where T: num::Float + FreeChannelScalar + PosNormalChannelScalar
+pub type LinearColorSpace<T> = EncodedColorSpace<T, LinearEncoding>;
+
+impl<T, E> EncodedColorSpace<T, E>
+    where T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
+          E: ColorEncoding
 {
     pub fn new(red: RgbPrimary<T>,
                green: RgbPrimary<T>,
                blue: RgbPrimary<T>,
-               white_point: Xyz<T>)
+               white_point: Xyz<T>,
+               encoding: E)
                -> Self {
         let forward_transform = Self::build_transform(red.clone(),
                                                       green.clone(),
@@ -72,11 +73,12 @@ impl<T> LinearColorSpace<T>
             .expect("Singular transformation matrix, make sure red, green and blue are \
                      linearly independent");
 
-        LinearColorSpace {
+        EncodedColorSpace {
             red_primary: red,
             green_primary: green,
             blue_primary: blue,
             white_point: white_point,
+            encoding: encoding,
             xyz_transform: forward_transform,
             inv_transform: inv_transform,
         }
@@ -86,14 +88,16 @@ impl<T> LinearColorSpace<T>
                                green: RgbPrimary<T>,
                                blue: RgbPrimary<T>,
                                white_point: Xyz<T>,
+                               encoding: E,
                                xyz_transform: Matrix3<T>,
                                inv_transform: Matrix3<T>)
                                -> Self {
-        LinearColorSpace {
+        EncodedColorSpace {
             red_primary: red,
             green_primary: green,
             blue_primary: blue,
             white_point: white_point,
+            encoding: encoding,
             xyz_transform: xyz_transform,
             inv_transform: inv_transform,
         }
@@ -130,30 +134,15 @@ impl<T> LinearColorSpace<T>
     }
 }
 
-impl<T, E> EncodedColorSpace<T, E>
-    where T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
-          E: ColorEncoding
+impl<T> EncodedColorSpace<T, LinearEncoding>
+    where T: num::Float + FreeChannelScalar + PosNormalChannelScalar
 {
-    pub fn new(red_primary: RgbPrimary<T>,
-               green_primary: RgbPrimary<T>,
-               blue_primary: RgbPrimary<T>,
-               white_point: Xyz<T>,
-               encoding: E)
-               -> Self {
-        EncodedColorSpace {
-            linear_space: LinearColorSpace::new(red_primary,
-                                                green_primary,
-                                                blue_primary,
-                                                white_point),
-            encoding: encoding,
-        }
-    }
-
-    pub fn linear_color_space(&self) -> &LinearColorSpace<T> {
-        &self.linear_space
-    }
-    pub fn encoding(&self) -> &E {
-        &self.encoding
+    pub fn new_linear_color_space(red: RgbPrimary<T>,
+                                  green: RgbPrimary<T>,
+                                  blue: RgbPrimary<T>,
+                                  white_point: Xyz<T>)
+                                  -> EncodedColorSpace<T, LinearEncoding> {
+        EncodedColorSpace::new(red, green, blue, white_point, LinearEncoding::new())
     }
 }
 
@@ -167,6 +156,7 @@ impl<T, E> ChannelEncoder for EncodedColorSpace<T, E>
         self.encoding.encode_channel(val)
     }
 }
+
 impl<T, E> ChannelDecoder for EncodedColorSpace<T, E>
     where T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
           E: ColorEncoding
@@ -178,8 +168,9 @@ impl<T, E> ChannelDecoder for EncodedColorSpace<T, E>
     }
 }
 
-impl<T> ColorSpace<T> for LinearColorSpace<T>
-    where T: num::Float + FreeChannelScalar + PosNormalChannelScalar
+impl<T, E> ColorSpace<T> for EncodedColorSpace<T, E>
+    where T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
+          E: ColorEncoding
 {
     fn red_primary(&self) -> RgbPrimary<T> {
         self.red_primary.clone()
@@ -204,72 +195,19 @@ impl<T> ColorSpace<T> for LinearColorSpace<T>
     }
 }
 
-impl<T> ColorSpaceEncoding for LinearColorSpace<T>
-    where T: num::Float + FreeChannelScalar + PosNormalChannelScalar
-{
-    fn decode_color<Color>(&self, color: Color) -> LinearColor<Color>
-        where Color: EncodableColor
-    {
-        color.with_encoding(LinearEncoding::new())
-    }
-}
-
-impl<T, E> ColorSpace<T> for EncodedColorSpace<T, E>
+impl<T, E> ColorSpaceEncoding<E> for EncodedColorSpace<T, E>
     where T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
           E: ColorEncoding
 {
-    fn red_primary(&self) -> RgbPrimary<T> {
-        self.linear_space.red_primary()
+    fn encoding(&self) -> &E {
+        &self.encoding
     }
-    fn green_primary(&self) -> RgbPrimary<T> {
-        self.linear_space.green_primary()
-    }
-    fn blue_primary(&self) -> RgbPrimary<T> {
-        self.linear_space.blue_primary()
-    }
-    fn white_point(&self) -> Xyz<T> {
-        self.linear_space.white_point()
-    }
-    fn get_xyz_transform(&self) -> &Matrix3<T> {
-        self.linear_space.get_xyz_transform()
-    }
-    fn get_inverse_xyz_transform(&self) -> &Matrix3<T> {
-        self.linear_space.get_inverse_xyz_transform()
-    }
-    fn apply_transform(&self, vec: (T, T, T)) -> (T, T, T) {
-        self.get_xyz_transform().transform_vector(vec)
-    }
-}
 
-impl<T, E> ColorSpaceEncoding for EncodedColorSpace<T, E>
-    where T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
-          E: ColorEncoding
-{
     fn decode_color<Color>(&self, color: Color) -> LinearColor<Color>
         where Color: EncodableColor
     {
         let encoded_color = color.with_encoding(self.encoding.clone());
         encoded_color.decode()
-    }
-}
-
-impl<T> ColorToXyz<T, LinearColor<Rgb<T>>> for LinearColorSpace<T>
-    where T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
-          Rgb<T>: EncodableColor,
-          LinearColor<Rgb<T>>: ToXyz<T>
-{
-    fn color_to_xyz(&self, color: &LinearColor<Rgb<T>>) -> Xyz<T> {
-        color.convert_to_xyz(self)
-    }
-}
-
-impl<T> XyzToColor<T, LinearColor<Rgb<T>>> for LinearColorSpace<T>
-    where T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
-          Rgb<T>: EncodableColor,
-          LinearColor<Rgb<T>>: FromXyz<T>
-{
-    fn xyz_to_color(&self, color: &Xyz<T>) -> LinearColor<Rgb<T>> {
-        LinearColor::convert_from_xyz(color, self)
     }
 }
 
@@ -346,10 +284,10 @@ mod test {
 
     #[test]
     fn test_to_xyz() {
-        let linear_srgb = LinearColorSpace::new(RgbPrimary::new(0.6400, 0.3300),
-                                                RgbPrimary::new(0.300, 0.600),
-                                                RgbPrimary::new(0.150, 0.060),
-                                                D65::get_xyz());
+        let linear_srgb = LinearColorSpace::new_linear_color_space(RgbPrimary::new(0.6400, 0.3300),
+                                                                   RgbPrimary::new(0.300, 0.600),
+                                                                   RgbPrimary::new(0.150, 0.060),
+                                                                   D65::get_xyz());
         let srgb = sRgb::get_color_space();
 
         let r1 = Rgb::from_channels(0.0, 0.0, 0.0);
@@ -441,10 +379,11 @@ mod test {
 
     #[test]
     fn test_build_transform() {
-        let space = LinearColorSpace::new(RgbPrimary::new(0.6400, 0.3300),
-                                          RgbPrimary::new(0.300, 0.600),
-                                          RgbPrimary::new(0.150, 0.060),
-                                          D65::get_xyz());
+        let space = LinearColorSpace::new_linear_color_space(RgbPrimary::new(0.6400, 0.3300),
+                                                             RgbPrimary::new(0.300, 0.600),
+                                                             RgbPrimary::new(0.150, 0.060),
+                                                             D65::get_xyz());
+
         let m = space.get_xyz_transform();
         assert_relative_eq!(*m,
                             Matrix3::new([0.4124564, 0.3575761, 0.1804375, 0.2126729, 0.7151522,
