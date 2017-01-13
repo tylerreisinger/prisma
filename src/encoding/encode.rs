@@ -49,10 +49,11 @@ impl ChannelDecoder for SrgbEncoding {
         let gamma: T = num::cast(2.4).unwrap();
         let linear_threshold: T = num::cast(0.04045).unwrap();
 
-        if val < linear_threshold {
+        if val.abs() < linear_threshold {
             val / k
         } else {
-            ((val + a) / (one + a)).powf(gamma)
+            let operand = (val.abs() + a) / (one + a);
+            val.signum() * operand.powf(gamma)
         }
     }
 }
@@ -67,10 +68,10 @@ impl ChannelEncoder for SrgbEncoding {
         let gamma: T = num::cast(2.4).unwrap();
         let linear_threshold: T = num::cast(0.0031308).unwrap();
 
-        if val < linear_threshold {
+        if val.abs() < linear_threshold {
             k * val
         } else {
-            (one + a) * val.powf(one / gamma) - a
+            val.signum() * ((one + a) * val.abs().powf(one / gamma) - a)
         }
     }
 }
@@ -143,7 +144,7 @@ impl<T> ChannelDecoder for GammaEncoding<T>
     fn decode_channel<U>(&self, val: U) -> U
         where U: num::Float
     {
-        val.powf(num::cast(self.0).unwrap())
+        val.signum() * val.abs().powf(num::cast(self.0).unwrap())
     }
 }
 impl<T> ChannelEncoder for GammaEncoding<T>
@@ -153,7 +154,7 @@ impl<T> ChannelEncoder for GammaEncoding<T>
         where U: num::Float
     {
         let one: T = num::cast(1.0).unwrap();
-        val.powf(num::cast(one / self.0).unwrap())
+        val.signum() * val.abs().powf(num::cast(one / self.0).unwrap())
     }
 }
 
@@ -238,6 +239,11 @@ mod test {
         let c5 = Rgb::from_channels(0.5, 0.5, 0.5).with_encoding(GammaEncoding::new(2.4));
         let t5 = c5.clone().decode();
         assert_relative_eq!(*t5.color(), Rgb::broadcast(0.18946457), epsilon=1e-6);
+
+        let c6 = Rgb::from_channels(-0.3, 0.0, -1.0).with_encoding(GammaEncoding::new(2.2));
+        let t6 = c6.clone().decode();
+        assert_relative_eq!(*t6.color(), Rgb::from_channels(-0.0707403, 0.0, -1.0), epsilon=1e-6);
+        assert_relative_eq!(t6.encode(GammaEncoding::new(2.2)), c6, epsilon=1e-6);
     }
 
     #[test]
@@ -265,5 +271,11 @@ mod test {
         let c5 = Rgb::from_channels(0.5, 0.5, 0.5).with_encoding(SrgbEncoding::new());
         let t5 = c5.clone().decode();
         assert_relative_eq!(*t5.color(), Rgb::broadcast(0.21404114048), epsilon=1e-6);
+
+        let c6 = Rgb::from_channels(-0.25, -0.74, -1.00).with_encoding(LinearEncoding::new());
+        let t6 = c6.clone().encode(SrgbEncoding::new());
+        assert_relative_eq!(*t6.color(), 
+            Rgb::from_channels(-0.5370987, -0.8756056, -1.00), epsilon=1e-6);
+        assert_relative_eq!(t6.decode(), c6, epsilon=1e-6);
     }
 }
