@@ -105,11 +105,7 @@ impl<T> Color for Rgi<T>
     }
 
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        Rgi {
-            red: PosNormalBoundedChannel::new(values.0),
-            green: PosNormalBoundedChannel::new(values.1),
-            intensity: PosNormalBoundedChannel::new(values.2),
-        }
+        Rgi::from_channels(values.0, values.1, values.2)
     }
     fn to_tuple(self) -> Self::ChannelsTuple {
         (self.red.0, self.green.0, self.intensity.0)
