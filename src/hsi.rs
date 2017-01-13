@@ -8,7 +8,7 @@ use angle;
 use angle::{Angle, FromAngle, IntoAngle, Turns, Rad, Deg};
 use channel::{PosNormalBoundedChannel, AngularChannel, ChannelFormatCast, ChannelCast,
               PosNormalChannelScalar, AngularChannelScalar, ColorChannel};
-use color::{Color, PolarColor, Invert, Lerp, Bounded};
+use color::{Color, PolarColor, Invert, Lerp, Bounded, FromTuple};
 use color;
 use convert::{GetHue, FromColor, TryFromColor};
 use rgb::Rgb;
@@ -100,15 +100,17 @@ impl<T, A> Color for Hsi<T, A>
     fn num_channels() -> u32 {
         3
     }
-    fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        Hsi {
-            hue: AngularChannel::new(values.0),
-            saturation: PosNormalBoundedChannel::new(values.1),
-            intensity: PosNormalBoundedChannel::new(values.2),
-        }
-    }
     fn to_tuple(self) -> Self::ChannelsTuple {
         (self.hue.0, self.saturation.0, self.intensity.0)
+    }
+}
+
+impl<T, A> FromTuple for Hsi<T, A>
+    where T: PosNormalChannelScalar + num::Float,
+          A: AngularChannelScalar + Angle<Scalar = T>
+{
+    fn from_tuple(values: Self::ChannelsTuple) -> Self {
+        Hsi::from_channels(values.0, values.1, values.2)
     }
 }
 

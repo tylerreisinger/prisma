@@ -7,7 +7,7 @@ use num;
 use num::cast;
 use channel::{PosNormalBoundedChannel, AngularChannel, ChannelCast, PosNormalChannelScalar,
               AngularChannelScalar, ColorChannel};
-use color::{Color, PolarColor, Invert, Lerp, Bounded};
+use color::{Color, PolarColor, Invert, Lerp, Bounded, FromTuple};
 use color;
 use rgb;
 use convert;
@@ -90,15 +90,17 @@ impl<T, A> Color for Hsv<T, A>
     fn num_channels() -> u32 {
         3
     }
-    fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        Hsv {
-            hue: AngularChannel::new(values.0),
-            saturation: PosNormalBoundedChannel::new(values.1),
-            value: PosNormalBoundedChannel::new(values.2),
-        }
-    }
     fn to_tuple(self) -> Self::ChannelsTuple {
         (self.hue.0, self.saturation.0, self.value.0)
+    }
+}
+
+impl<T, A> FromTuple for Hsv<T, A>
+    where T: PosNormalChannelScalar,
+          A: AngularChannelScalar
+{
+    fn from_tuple(values: Self::ChannelsTuple) -> Self {
+        Hsv::from_channels(values.0, values.1, values.2)
     }
 }
 

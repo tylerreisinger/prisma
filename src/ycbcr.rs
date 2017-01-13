@@ -6,7 +6,7 @@ use approx;
 use num;
 use channel::{NormalBoundedChannel, ColorChannel, NormalChannelScalar, ChannelFormatCast,
               ChannelCast, PosNormalChannelScalar, PosNormalBoundedChannel};
-use color::{Color, Lerp, Invert, Flatten, Bounded};
+use color::{Color, Lerp, Invert, Flatten, Bounded, FromTuple};
 use convert::{FromColor, TryFromColor};
 use rgb::Rgb;
 use linalg::Matrix3;
@@ -174,16 +174,17 @@ impl<T, Coeffs> Color for YCbCr<T, Coeffs>
         3
     }
 
-    fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        YCbCr {
-            luma: PosNormalBoundedChannel::new(values.0),
-            cb: NormalBoundedChannel::new(values.1),
-            cr: NormalBoundedChannel::new(values.2),
-            coeffs: PhantomData,
-        }
-    }
     fn to_tuple(self) -> Self::ChannelsTuple {
         (self.luma.0, self.cb.0, self.cr.0)
+    }
+}
+
+impl<T, Coeffs> FromTuple for YCbCr<T, Coeffs>
+    where T: NormalChannelScalar + PosNormalChannelScalar,
+          Coeffs: YCbCrCoeffs<T>
+{
+    fn from_tuple(values: Self::ChannelsTuple) -> Self {
+        YCbCr::from_channels(values.0, values.1, values.2)
     }
 }
 

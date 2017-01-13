@@ -12,7 +12,7 @@ use alpha::Alpha;
 use convert;
 use convert::GetChroma;
 use color;
-use color::Color;
+use color::{Color, FromTuple};
 use rgb::Rgb;
 
 pub struct HslTag;
@@ -81,15 +81,17 @@ impl<T, A> Color for Hsl<T, A>
     fn num_channels() -> u32 {
         3
     }
-    fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        Hsl {
-            hue: AngularChannel::new(values.0),
-            saturation: PosNormalBoundedChannel::new(values.1),
-            lightness: PosNormalBoundedChannel::new(values.2),
-        }
-    }
     fn to_tuple(self) -> Self::ChannelsTuple {
         (self.hue.0, self.saturation.0, self.lightness.0)
+    }
+}
+
+impl<T, A> FromTuple for Hsl<T, A>
+    where T: PosNormalChannelScalar,
+          A: AngularChannelScalar
+{
+    fn from_tuple(values: Self::ChannelsTuple) -> Self {
+        Hsl::from_channels(values.0, values.1, values.2)
     }
 }
 

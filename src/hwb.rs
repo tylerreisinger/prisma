@@ -8,7 +8,7 @@ use channel::{PosNormalBoundedChannel, PosNormalChannelScalar, AngularChannel, C
 use angle::{Angle, FromAngle, IntoAngle, Deg};
 use angle;
 use alpha::Alpha;
-use color::Color;
+use color::{Color, FromTuple};
 use color;
 use convert;
 use rgb;
@@ -108,15 +108,17 @@ impl<T, A> Color for Hwb<T, A>
     fn num_channels() -> u32 {
         3
     }
-    fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        Hwb {
-            hue: AngularChannel::new(values.0),
-            whiteness: PosNormalBoundedChannel::new(values.1),
-            blackness: PosNormalBoundedChannel::new(values.2),
-        }
-    }
     fn to_tuple(self) -> Self::ChannelsTuple {
         (self.hue.0, self.whiteness.0, self.blackness.0)
+    }
+}
+
+impl<T, A> FromTuple for Hwb<T, A>
+    where T: HwbBoundedChannelTraits,
+          A: AngularChannelScalar
+{
+    fn from_tuple(values: Self::ChannelsTuple) -> Self {
+        Hwb::from_channels(values.0, values.1, values.2)
     }
 }
 

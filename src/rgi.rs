@@ -6,7 +6,7 @@ use num;
 use num::Float;
 use channel::{PosNormalBoundedChannel, PosNormalChannelScalar, ColorChannel, ChannelFormatCast,
               ChannelCast};
-use color::{Color, Lerp, Flatten, Bounded};
+use color::{Color, Lerp, Flatten, Bounded, FromTuple};
 use convert::FromColor;
 use rgb::Rgb;
 
@@ -103,12 +103,16 @@ impl<T> Color for Rgi<T>
     fn num_channels() -> u32 {
         3
     }
-
-    fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        Rgi::from_channels(values.0, values.1, values.2)
-    }
     fn to_tuple(self) -> Self::ChannelsTuple {
         (self.red.0, self.green.0, self.intensity.0)
+    }
+}
+
+impl<T> FromTuple for Rgi<T>
+    where T: PosNormalChannelScalar + Float
+{
+    fn from_tuple(values: Self::ChannelsTuple) -> Self {
+        Rgi::from_channels(values.0, values.1, values.2)
     }
 }
 

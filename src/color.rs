@@ -5,8 +5,11 @@ pub trait Color: Clone + PartialEq {
     type ChannelsTuple;
 
     fn num_channels() -> u32;
-    fn from_tuple(values: Self::ChannelsTuple) -> Self;
     fn to_tuple(self) -> Self::ChannelsTuple;
+}
+
+pub trait FromTuple: Color {
+    fn from_tuple(values: Self::ChannelsTuple) -> Self;
 }
 
 pub trait PolarColor: Color {

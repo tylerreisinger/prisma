@@ -6,7 +6,7 @@ use num;
 use approx;
 use channel::{FreeChannel, FreeChannelScalar, PosNormalChannelScalar, PosNormalBoundedChannel,
               ColorChannel, ChannelFormatCast, ChannelCast};
-use color::{Color, Bounded, Lerp, Flatten};
+use color::{Color, Bounded, Lerp, Flatten, FromTuple};
 use convert::FromColor;
 use xyz::Xyz;
 
@@ -100,12 +100,16 @@ impl<T> Color for XyY<T>
     fn num_channels() -> u32 {
         3
     }
-    fn from_tuple(values: (T, T, T)) -> Self {
-        let (x, y, Y) = values;
-        XyY::from_channels(x, y, Y)
-    }
     fn to_tuple(self) -> Self::ChannelsTuple {
         (self.x.0, self.y.0, self.Y.0)
+    }
+}
+
+impl<T> FromTuple for XyY<T>
+    where T: FreeChannelScalar + num::Float + PosNormalChannelScalar
+{
+    fn from_tuple(values: (T, T, T)) -> Self {
+        XyY::from_channels(values.0, values.1, values.2)
     }
 }
 

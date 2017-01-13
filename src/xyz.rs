@@ -3,7 +3,7 @@ use std::slice;
 use std::mem;
 use approx;
 use channel::{FreeChannel, FreeChannelScalar, ChannelFormatCast, ChannelCast, ColorChannel};
-use color::{Color, HomogeneousColor, Bounded, Lerp, Flatten};
+use color::{Color, HomogeneousColor, Bounded, Lerp, Flatten, FromTuple};
 
 pub struct XyzTag;
 
@@ -67,16 +67,16 @@ impl<T> Color for Xyz<T>
     fn num_channels() -> u32 {
         3
     }
-    fn from_tuple(values: (T, T, T)) -> Self {
-        let (x, y, z) = values;
-        Xyz {
-            x: FreeChannel::new(x),
-            y: FreeChannel::new(y),
-            z: FreeChannel::new(z),
-        }
-    }
     fn to_tuple(self) -> Self::ChannelsTuple {
         (self.x.0, self.y.0, self.z.0)
+    }
+}
+
+impl<T> FromTuple for Xyz<T>
+    where T: FreeChannelScalar
+{
+    fn from_tuple(values: (T, T, T)) -> Self {
+        Xyz::from_channels(values.0, values.1, values.2)
     }
 }
 

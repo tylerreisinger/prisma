@@ -5,7 +5,7 @@ use std::mem;
 use approx;
 use num;
 use channel::{PosNormalBoundedChannel, PosNormalChannelScalar, ColorChannel};
-use color::{Color, Invert, Lerp, Bounded, PolarColor, HomogeneousColor, Flatten};
+use color::{Color, Invert, Lerp, Bounded, PolarColor, HomogeneousColor, Flatten, FromTuple};
 
 pub struct AlphaTag<T>(pub PhantomData<T>);
 
@@ -64,11 +64,14 @@ impl<T, InnerColor> Color for Alpha<T, InnerColor>
     fn to_tuple(self) -> Self::ChannelsTuple {
         (self.color.to_tuple(), self.alpha.0)
     }
+}
+
+impl<T, InnerColor> FromTuple for Alpha<T, InnerColor>
+    where T: PosNormalChannelScalar,
+          InnerColor: Color + FromTuple
+{
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        Alpha {
-            color: InnerColor::from_tuple(values.0),
-            alpha: PosNormalBoundedChannel::new(values.1),
-        }
+        Alpha::from_color_and_alpha(InnerColor::from_tuple(values.0), values.1)
     }
 }
 

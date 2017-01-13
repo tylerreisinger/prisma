@@ -6,7 +6,7 @@ use num::Float;
 use approx;
 use channel::{PosNormalBoundedChannel, AngularChannel, ChannelFormatCast, ChannelCast,
               PosNormalChannelScalar, AngularChannelScalar, ColorChannel};
-use color::{Color, PolarColor, Invert, Lerp, Bounded};
+use color::{Color, PolarColor, Invert, Lerp, Bounded, FromTuple};
 use angle::{Turns, FromAngle, Angle, Deg, Rad, IntoAngle};
 use angle;
 use color;
@@ -94,15 +94,17 @@ impl<T, A> Color for eHsi<T, A>
     fn num_channels() -> u32 {
         3
     }
-    fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        eHsi {
-            hue: AngularChannel::new(values.0),
-            saturation: PosNormalBoundedChannel::new(values.1),
-            intensity: PosNormalBoundedChannel::new(values.2),
-        }
-    }
     fn to_tuple(self) -> Self::ChannelsTuple {
         (self.hue.0, self.saturation.0, self.intensity.0)
+    }
+}
+
+impl<T, A> FromTuple for eHsi<T, A>
+    where T: PosNormalChannelScalar + Float,
+          A: AngularChannelScalar + Angle<Scalar = T>
+{
+    fn from_tuple(values: Self::ChannelsTuple) -> Self {
+        eHsi::from_channels(values.0, values.1, values.2)
     }
 }
 

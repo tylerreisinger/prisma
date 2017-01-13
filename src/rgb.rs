@@ -7,7 +7,7 @@ use approx;
 use channel::{PosNormalBoundedChannel, ColorChannel, PosNormalChannelScalar, AngularChannelScalar,
               ChannelFormatCast, ChannelCast};
 use color;
-use color::{Color, HomogeneousColor};
+use color::{Color, HomogeneousColor, FromTuple};
 use convert;
 use angle;
 use hsv;
@@ -99,15 +99,16 @@ impl<T> Color for Rgb<T>
         3
     }
 
-    fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        Rgb {
-            red: PosNormalBoundedChannel::new(values.0),
-            green: PosNormalBoundedChannel::new(values.1),
-            blue: PosNormalBoundedChannel::new(values.2),
-        }
-    }
     fn to_tuple(self) -> Self::ChannelsTuple {
         (self.red.0, self.green.0, self.blue.0)
+    }
+}
+
+impl<T> FromTuple for Rgb<T>
+    where T: PosNormalChannelScalar
+{
+    fn from_tuple(values: Self::ChannelsTuple) -> Self {
+        Rgb::from_channels(values.0, values.1, values.2)
     }
 }
 
