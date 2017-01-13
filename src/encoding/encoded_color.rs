@@ -29,6 +29,9 @@ impl<C, E> EncodedColor<C, E>
     pub fn color(&self) -> &C {
         &self.color
     }
+    pub fn strip_encoding(self) -> C {
+        self.color
+    }
 
     pub fn encoding(&self) -> &E {
         &self.encoding

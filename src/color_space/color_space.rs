@@ -307,20 +307,6 @@ impl<T, E> ColorToXyz<T, Rgb<T>> for EncodedColorSpace<T, E>
     }
 }
 
-impl<T, E> XyzToColor<T, Rgb<T>> for EncodedColorSpace<T, E>
-    where T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
-          Rgb<T>: EncodableColor,
-          LinearColor<Rgb<T>>: FromXyz<T>,
-          E: ColorEncoding
-{
-    fn xyz_to_color(&self, color: &Xyz<T>) -> Rgb<T> {
-        let (c, _) = LinearColor::convert_from_xyz(color, self)
-            .encode(self.encoding.clone())
-            .decompose();
-        c
-    }
-}
-
 impl<T> ToXyz<T> for LinearColor<Rgb<T>>
     where T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
           Rgb<T>: EncodableColor + Color<ChannelsTuple = (T, T, T)>
@@ -393,19 +379,21 @@ mod test {
         assert_relative_eq!(c4,
                             Xyz::from_channels(0.253659, 0.254514, 0.761978),
                             epsilon = 1e-6);
-        assert_relative_eq!(srgb.xyz_to_color(&c4), r4, epsilon = 1e-6);
+        assert_relative_eq!(srgb.xyz_to_color(&c4).strip_encoding(), r4, epsilon = 1e-6);
 
         let r5 = Rgb::from_channels(-0.3, 1.2, 0.8);
         let c5 = srgb.color_to_xyz(&r5);
-        assert_relative_eq!(c5, 
-            Xyz::from_channels(0.621130, 1.112775, 0.753199), epsilon=1e-6);
-        assert_relative_eq!(srgb.xyz_to_color(&c5), r5, epsilon=1e-6);
+        assert_relative_eq!(c5,
+                            Xyz::from_channels(0.621130, 1.112775, 0.753199),
+                            epsilon = 1e-6);
+        assert_relative_eq!(srgb.xyz_to_color(&c5).strip_encoding(), r5, epsilon = 1e-6);
 
         let r6 = Rgb::from_channels(-1.5, -0.3, -0.05).with_encoding(LinearEncoding::new());
         let c6 = linear_srgb.color_to_xyz(&r6);
-        assert_relative_eq!(c6, 
-            Xyz::from_channels(-0.734979, -0.537164, -0.112274), epsilon=1e-6);
-        assert_relative_eq!(linear_srgb.xyz_to_color(&c6), r6, epsilon=1e-6);
+        assert_relative_eq!(c6,
+                            Xyz::from_channels(-0.734979, -0.537164, -0.112274),
+                            epsilon = 1e-6);
+        assert_relative_eq!(linear_srgb.xyz_to_color(&c6), r6, epsilon = 1e-6);
     }
 
     #[test]
@@ -413,41 +401,42 @@ mod test {
         let srgb = sRgb::get_color_space();
 
         let c1 = Xyz::from_channels(0.5, 0.5, 0.5);
-        let r1 = srgb.xyz_to_color(&c1);
+        let r1 = srgb.xyz_to_color(&c1).strip_encoding();
         assert_relative_eq!(r1,
                             Rgb::from_channels(0.799153, 0.718068, 0.704499),
                             epsilon = 1e-6);
         assert_relative_eq!(srgb.color_to_xyz(&r1), c1, epsilon = 1e-6);
 
         let c2 = Xyz::from_channels(0.3, 0.4, 0.7);
-        let r2 = srgb.xyz_to_color(&c2);
+        let r2 = srgb.xyz_to_color(&c2).strip_encoding();
         assert_relative_eq!(r2,
                             Rgb::from_channels(0.088349, 0.727874, 0.840708),
                             epsilon = 1e-6);
         assert_relative_eq!(srgb.color_to_xyz(&r2), c2, epsilon = 1e-6);
 
         let c3 = Xyz::from_channels(0.5, 0.4, 0.9);
-        let r3 = srgb.xyz_to_color(&c3);
+        let r3 = srgb.xyz_to_color(&c3).strip_encoding();
         assert_relative_eq!(r3,
                             Rgb::from_channels(0.771531, 0.586637, 0.953618),
                             epsilon = 1e-6);
         assert_relative_eq!(srgb.color_to_xyz(&r3), c3, epsilon = 1e-6);
 
         let c4 = D65::get_xyz();
-        let r4 = srgb.xyz_to_color(&c4);
+        let r4 = srgb.xyz_to_color(&c4).strip_encoding();
         assert_relative_eq!(r4, Rgb::broadcast(1.0), epsilon = 1e-6);
         assert_relative_eq!(srgb.color_to_xyz(&r4), c4, epsilon = 1e-6);
 
         let c5 = Xyz::broadcast(0.0);
-        let r5 = srgb.xyz_to_color(&c5);
+        let r5 = srgb.xyz_to_color(&c5).strip_encoding();
         assert_relative_eq!(r5, Rgb::broadcast(0.0), epsilon = 1e-6);
         assert_relative_eq!(srgb.color_to_xyz(&r5), c5, epsilon = 1e-6);
 
         let c6 = Xyz::from_channels(0.5, 0.2, 0.9);
-        let r6 = srgb.xyz_to_color(&c6);
+        let r6 = srgb.xyz_to_color(&c6).strip_encoding();
         assert_relative_eq!(r6,
-            Rgb::from_channels(0.937716, -0.297547, 0.972473), epsilon=1e-6);
-        assert_relative_eq!(srgb.color_to_xyz(&r6), c6, epsilon=1e-6);
+                            Rgb::from_channels(0.937716, -0.297547, 0.972473),
+                            epsilon = 1e-6);
+        assert_relative_eq!(srgb.color_to_xyz(&r6), c6, epsilon = 1e-6);
     }
 
     #[test]
