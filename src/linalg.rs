@@ -352,9 +352,17 @@ impl<T> fmt::Display for Matrix3<T>
     where T: num::Num + Copy + fmt::Display
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "|{} {} {}|\n|{} {} {}|\n|{} {} {}|", 
-               self.m[0], self.m[1], self.m[2], self.m[3],
-               self.m[4], self.m[5], self.m[6], self.m[7], self.m[8])
+        write!(f,
+               "|{} {} {}|\n|{} {} {}|\n|{} {} {}|",
+               self.m[0],
+               self.m[1],
+               self.m[2],
+               self.m[3],
+               self.m[4],
+               self.m[5],
+               self.m[6],
+               self.m[7],
+               self.m[8])
     }
 }
 
@@ -366,18 +374,18 @@ mod test {
     fn test_mul() {
         let m1 = Matrix3::<f32>::zero();
         let m2 = Matrix3::zero();
-        assert_eq!(m1*m2, Matrix3::zero());
+        assert_eq!(m1 * m2, Matrix3::zero());
         let m3 = Matrix3::<f32>::identity();
         let m4 = Matrix3::identity();
-        assert_eq!(m3*m4, Matrix3::identity());
-        assert_eq!(m3*m1, Matrix3::zero());
+        assert_eq!(m3 * m4, Matrix3::identity());
+        assert_eq!(m3 * m1, Matrix3::zero());
         let m5 = Matrix3::broadcast(1.0f32);
         assert_eq!(m5 * 2.0, Matrix3::broadcast(2.0));
-        assert_eq!(m5*m5, Matrix3::broadcast(3.0f32));
-        assert_eq!(m5*m3, m5);
+        assert_eq!(m5 * m5, Matrix3::broadcast(3.0f32));
+        assert_eq!(m5 * m3, m5);
         let m6 = Matrix3::new([1, 0, 1, 0, 1, 0, 1, 0, 1]);
-        assert_eq!(m6*m6, Matrix3::new([2, 0, 2, 0, 1, 0, 2, 0, 2]));
-        assert_eq!(m6*Matrix3::identity(), m6);
+        assert_eq!(m6 * m6, Matrix3::new([2, 0, 2, 0, 1, 0, 2, 0, 2]));
+        assert_eq!(m6 * Matrix3::identity(), m6);
     }
 
     #[test]
