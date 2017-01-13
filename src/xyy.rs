@@ -66,7 +66,7 @@ impl<T> XyY<T>
         self.x.0 = x;
         self.y.0 = y;
     }
-    pub fn set_Y(&mut self, val: T) {
+    pub fn set_z(&mut self, val: T) {
         let (_, x, y) = Self::rescale_channels(val, self.x(), self.y());
         self.x.0 = x;
         self.y.0 = y;
@@ -102,11 +102,7 @@ impl<T> Color for XyY<T>
     }
     fn from_tuple(values: (T, T, T)) -> Self {
         let (x, y, Y) = values;
-        XyY {
-            x: PosNormalBoundedChannel::new(x),
-            y: PosNormalBoundedChannel::new(y),
-            Y: FreeChannel::new(Y),
-        }
+        XyY::from_channels(x, y, Y)
     }
     fn to_tuple(self) -> Self::ChannelsTuple {
         (self.x.0, self.y.0, self.Y.0)
@@ -208,6 +204,121 @@ mod test {
     use super::*;
     use xyz::Xyz;
     use convert::*;
+    use color::*;
+
+    #[test]
+    fn test_construct() {
+        let c1 = XyY::from_channels(0.5, 0.3, 0.8);
+        assert_eq!(c1.x(), 0.5);
+        assert_eq!(c1.y(), 0.3);
+        assert_eq!(c1.z(), 0.2);
+        assert_eq!(c1.Y(), 0.8);
+        assert_eq!(c1.to_tuple(), (0.5, 0.3, 0.8));
+        assert_eq!(XyY::from_tuple(c1.clone().to_tuple()), c1);
+
+        let c2 = XyY::from_channels(0.0, 0.0, 1.1);
+        assert_eq!(c2.x(), 0.0);
+        assert_eq!(c2.y(), 0.0);
+        assert_eq!(c2.z(), 1.0);
+        assert_eq!(c2.Y(), 1.1);
+        assert_eq!(c2.to_tuple(), (0.0, 0.0, 1.1));
+        assert_eq!(XyY::from_tuple(c2.clone().to_tuple()), c2);
+
+        let c3 = XyY::from_tuple((0.4, 0.1, 0.0));
+        assert_eq!(c3.x(), 0.4);
+        assert_eq!(c3.y(), 0.1);
+        assert_eq!(c3.z(), 0.5);
+        assert_eq!(c3.Y(), 0.0);
+        assert_eq!(c3.to_tuple(), (0.4, 0.1, 0.0));
+        assert_eq!(XyY::from_tuple(c3.clone().to_tuple()), c3);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_tuple_oob_panic() {
+        let _ = XyY::from_tuple((1.2, 0.5, 0.8));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_neg_channel_panic() {
+        let _ = XyY::from_channels(-0.2, 0.0, 0.5);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_too_large_channel_panic() {
+        let _ = XyY::from_channels(1.3, 0.2, 0.7);
+    }
+
+    #[test]
+    fn test_set_channels() {
+        let mut c1 = XyY::from_channels(0.4, 0.3, 0.4);
+        c1.set_x(0.6);
+        assert_relative_eq!(c1.x(), 0.6);
+        assert_relative_eq!(c1.y(), 0.20);
+        assert_relative_eq!(c1.z(), 0.20);
+        assert_relative_eq!(c1.Y(), 0.4);
+        c1.set_z(0.5);
+        assert_relative_eq!(c1, XyY::from_channels(0.375, 0.125, 0.4), epsilon=1e-6);
+
+        let mut c2 = XyY::from_channels(0.3, 0.3, 1.0);
+        c2.set_y(0.8);
+        assert_relative_eq!(c2.x(), 0.2 * (3.0 / 7.0));
+        assert_relative_eq!(c2.y(), 0.8);
+        assert_relative_eq!(c2.z(), 0.2 * (4.0 / 7.0));
+        assert_relative_eq!(c2.Y(), 1.0);
+        c2.set_z(1.0);
+        assert_relative_eq!(c2.x(), 0.0);
+        assert_relative_eq!(c2.y(), 0.0);
+        assert_relative_eq!(c2.z(), 1.0);
+        c2.set_x(1.0);
+        assert_relative_eq!(c2.x(), 1.0);
+        assert_relative_eq!(c2.y(), 0.0);
+        assert_relative_eq!(c2.z(), 0.0);
+        assert_relative_eq!(c2.Y(), 1.0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_neg_set_panic() {
+        let mut c1 = XyY::from_channels(0.2, 0.3, 0.9);
+        c1.set_y(-0.3);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_too_high_set_panic() {
+        let mut c1 = XyY::from_channels(0.2, 0.3, 0.9);
+        c1.set_y(33333.0);
+    }
+
+    #[test]
+    fn test_flatten() {
+        let c1 = XyY::from_channels(0.5, 0.3, 0.8);
+        assert_eq!(c1.as_slice(), &[0.5, 0.3, 0.8]);
+        assert_relative_eq!(XyY::from_slice(c1.as_slice()), c1);
+    }
+
+    #[test]
+    fn test_normalize() {
+        let c1 = XyY::from_channels(0.3, 0.5, 1.5);
+        assert!(c1.is_normalized());
+        assert_eq!(c1.normalize(), c1);
+
+        let c2 = XyY::from_channels(0.0, 0.0, 0.0);
+        assert!(c2.is_normalized());
+        assert_eq!(c2.normalize(), c2);
+    }
+
+    #[test]
+    fn test_lerp() {
+        let c1 = XyY::from_channels(0.3, 0.1, 0.6);
+        let c2 = XyY::from_channels(0.8, 0.2, 0.6);
+        assert_relative_eq!(c1.lerp(&c2, 0.00), c1);
+        assert_relative_eq!(c1.lerp(&c2, 1.00), c2);
+        assert_relative_eq!(c1.lerp(&c2, 0.50), XyY::from_channels(0.55, 0.15, 0.6));
+    }
 
     #[test]
     fn test_from_xyz() {
@@ -258,5 +369,13 @@ mod test {
         let t4 = Xyz::from_color(&c4);
         assert_relative_eq!(t4, Xyz::from_channels(0.396173, 0.5830, 0.410908), epsilon=1e-6);
         assert_relative_eq!(XyY::from_color(&t4), c4, epsilon=1e-6);
+    }
+
+    #[test]
+    fn test_color_cast() {
+        let c1 = XyY::from_channels(0.5, 0.2, 1.0);
+        assert_relative_eq!(c1.color_cast(), c1);
+        assert_relative_eq!(c1.color_cast::<f32>().color_cast(), c1, epsilon=1e-6);
+        assert_relative_eq!(c1.color_cast(), XyY::from_channels(0.5f32, 0.2, 1.0), epsilon=1e-6);
     }
 }
