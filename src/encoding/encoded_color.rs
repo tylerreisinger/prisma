@@ -1,6 +1,6 @@
 use std::fmt;
 use approx;
-use color::Color;
+use color::{Color, PolarColor, Lerp, Invert, Bounded, HomogeneousColor, FromTuple};
 use encoding::encode::{ColorEncoding, LinearEncoding, EncodableColor};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -48,11 +48,25 @@ impl<C, E> EncodedColor<C, E>
         let decoded_color = self.decode();
         decoded_color.encode(new_encoding)
     }
-
-    pub fn to_tuple(self) -> C::ChannelsTuple {
-        self.color.to_tuple()
+}
+impl<C, E> EncodedColor<C, E>
+    where C: Color + EncodableColor + HomogeneousColor,
+          E: ColorEncoding + PartialEq
+{
+    pub fn broadcast(value: C::ChannelFormat, encoding: E) -> Self {
+        EncodedColor::new(C::broadcast(value), encoding)
     }
 }
+
+impl<C, E> EncodedColor<C, E>
+    where C: Color + EncodableColor + FromTuple,
+          E: ColorEncoding + PartialEq
+{
+    pub fn from_tuple(values: C::ChannelsTuple, encoding: E) -> Self {
+        EncodedColor::new(C::from_tuple(values), encoding)
+    }
+}
+
 
 impl<C> EncodedColor<C, LinearEncoding>
     where C: Color + EncodableColor
@@ -63,6 +77,62 @@ impl<C> EncodedColor<C, LinearEncoding>
         let encoded_color = self.color.encode_color(&encoder);
 
         EncodedColor::new(encoded_color, encoder)
+    }
+}
+
+impl<C, E> Color for EncodedColor<C, E>
+    where C: Color + EncodableColor,
+          E: ColorEncoding + PartialEq
+{
+    type Tag = C::Tag;
+    type ChannelsTuple = C::ChannelsTuple;
+
+    fn num_channels() -> u32 {
+        C::num_channels()
+    }
+    fn to_tuple(self) -> Self::ChannelsTuple {
+        self.color.to_tuple()
+    }
+}
+
+impl<C, E> PolarColor for EncodedColor<C, E>
+    where C: Color + EncodableColor + PolarColor,
+          E: ColorEncoding + PartialEq
+{
+    type Angular = C::Angular;
+    type Cartesian = C::Cartesian;
+}
+
+impl<C, E> Lerp for EncodedColor<C, E>
+    where C: Color + EncodableColor + Lerp,
+          E: ColorEncoding + PartialEq + fmt::Debug
+{
+    type Position = C::Position;
+
+    fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
+        assert_eq!(self.encoding, right.encoding);
+        EncodedColor::new(self.color.lerp(&right.color(), pos), self.encoding.clone())
+    }
+}
+
+impl<C, E> Invert for EncodedColor<C, E>
+    where C: Color + EncodableColor + Invert,
+          E: ColorEncoding + PartialEq
+{
+    fn invert(self) -> Self {
+        EncodedColor::new(self.color.invert(), self.encoding)
+    }
+}
+
+impl<C, E> Bounded for EncodedColor<C, E>
+    where C: Color + EncodableColor + Bounded,
+          E: ColorEncoding + PartialEq
+{
+    fn normalize(self) -> Self {
+        EncodedColor::new(self.color.normalize(), self.encoding)
+    }
+    fn is_normalized(&self) -> bool {
+        self.color.is_normalized()
     }
 }
 
