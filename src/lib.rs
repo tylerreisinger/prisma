@@ -29,6 +29,7 @@ pub mod ehsi;
 pub mod ycbcr;
 pub mod xyz;
 pub mod xyy;
+pub mod lab;
 
 #[cfg(test)]
 pub mod test;
