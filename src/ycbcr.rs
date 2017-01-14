@@ -39,71 +39,6 @@ pub struct YCbCr<T, Coeffs = JpegCoeffs<T>> {
     coeffs: PhantomData<Coeffs>,
 }
 
-macro_rules! impl_jpeg_coeffs_int {
-    ($ty:ident, $flt_ty:ident) => {
-        impl YCbCrCoeffs<$ty> for JpegCoeffs<$ty> {
-            type OutputScalar = $flt_ty;
-            #[inline]
-            fn get_transform() -> Matrix3<$flt_ty> {
-                Matrix3::new([
-                    0.299, 0.587, 0.114, 
-                    -0.168736, -0.331264, 0.5, 
-                    0.5, -0.418688, -0.081312]
-                )
-            }
-            #[inline]
-            fn get_inverse_transform() -> Matrix3<$flt_ty> {
-                Matrix3::new([
-                    1.0, 0.0, 1.402,
-                    1.0, -0.3441, -0.7141,
-                    1.0, 1.772, 0.0]
-                )
-            }
-            #[inline]
-            fn get_shift() -> ($ty, $ty, $ty) {
-                let center_chan = (<$ty as NormalChannelScalar>::max_bound() >> 1) + 1;
-                (0, 
-                center_chan,
-                center_chan)
-            }
-        }
-    };
-}
-
-macro_rules! impl_jpeg_coeffs_float {
-    ($ty:ident) => {
-        impl YCbCrCoeffs<$ty> for JpegCoeffs<$ty> {
-            type OutputScalar = $ty;
-
-            #[inline]
-            fn get_transform() -> Matrix3<$ty> {
-                Matrix3::new([
-                    0.299, 0.587, 0.114, 
-                    -0.168736, -0.331264, 0.5, 
-                    0.5, -0.418688, -0.081312]
-                )
-            }
-            fn get_inverse_transform() -> Matrix3<$ty> {
-                Matrix3::new([
-                    1.0, 0.0, 1.402,
-                    1.0, -0.3441, -0.7141,
-                    1.0, 1.772, 0.0]
-                )
-            }
-            #[inline]
-            fn get_shift() -> ($ty, $ty, $ty) {
-                (0.0, 0.0, 0.0)
-            }
-        }
-    }
-}
-
-impl_jpeg_coeffs_int!(u8, f32);
-impl_jpeg_coeffs_int!(u16, f32);
-impl_jpeg_coeffs_int!(u32, f32);
-impl_jpeg_coeffs_float!(f32);
-impl_jpeg_coeffs_float!(f64);
-
 pub type YCbCrJpeg<T> = YCbCr<T, JpegCoeffs<T>>;
 
 impl<T, Coeffs> YCbCr<T, Coeffs>
@@ -324,6 +259,72 @@ pub fn build_transform<T>(kr: T, kb: T) -> Matrix3<T>
 
     Matrix3::new([kr, kg, kb, cb_r, cb_g, cb_b, cr_r, cr_g, cr_b])
 }
+
+macro_rules! impl_jpeg_coeffs_int {
+    ($ty:ident, $flt_ty:ident) => {
+        impl YCbCrCoeffs<$ty> for JpegCoeffs<$ty> {
+            type OutputScalar = $flt_ty;
+            #[inline]
+            fn get_transform() -> Matrix3<$flt_ty> {
+                Matrix3::new([
+                    0.299, 0.587, 0.114, 
+                    -0.168736, -0.331264, 0.5, 
+                    0.5, -0.418688, -0.081312]
+                )
+            }
+            #[inline]
+            fn get_inverse_transform() -> Matrix3<$flt_ty> {
+                Matrix3::new([
+                    1.0, 0.0, 1.402,
+                    1.0, -0.3441, -0.7141,
+                    1.0, 1.772, 0.0]
+                )
+            }
+            #[inline]
+            fn get_shift() -> ($ty, $ty, $ty) {
+                let center_chan = (<$ty as NormalChannelScalar>::max_bound() >> 1) + 1;
+                (0, 
+                center_chan,
+                center_chan)
+            }
+        }
+    };
+}
+
+macro_rules! impl_jpeg_coeffs_float {
+    ($ty:ident) => {
+        impl YCbCrCoeffs<$ty> for JpegCoeffs<$ty> {
+            type OutputScalar = $ty;
+
+            #[inline]
+            fn get_transform() -> Matrix3<$ty> {
+                Matrix3::new([
+                    0.299, 0.587, 0.114, 
+                    -0.168736, -0.331264, 0.5, 
+                    0.5, -0.418688, -0.081312]
+                )
+            }
+            fn get_inverse_transform() -> Matrix3<$ty> {
+                Matrix3::new([
+                    1.0, 0.0, 1.402,
+                    1.0, -0.3441, -0.7141,
+                    1.0, 1.772, 0.0]
+                )
+            }
+            #[inline]
+            fn get_shift() -> ($ty, $ty, $ty) {
+                (0.0, 0.0, 0.0)
+            }
+        }
+    }
+}
+
+impl_jpeg_coeffs_int!(u8, f32);
+impl_jpeg_coeffs_int!(u16, f32);
+impl_jpeg_coeffs_int!(u32, f32);
+impl_jpeg_coeffs_float!(f32);
+impl_jpeg_coeffs_float!(f64);
+
 
 #[cfg(test)]
 mod test {
