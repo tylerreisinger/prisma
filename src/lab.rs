@@ -211,6 +211,54 @@ mod test {
     use super::*;
     use white_point::*;
     use xyz::Xyz;
+    use color::*;
+
+    #[test]
+    fn test_construct() {
+        let c1 = Lab::from_channels(82.00, -32.0, 77.7);
+        assert_relative_eq!(c1.L(), 82.00);
+        assert_relative_eq!(c1.a(), -32.0);
+        assert_relative_eq!(c1.b(), 77.7);
+        assert_eq!(c1.to_tuple(), (82.0, -32.0, 77.7));
+        assert_relative_eq!(Lab::from_tuple(c1.to_tuple()), c1);
+
+        let c2 = Lab::from_channels(0.0, -86.0, -11.0);
+        assert_relative_eq!(c2.L(), 0.0);
+        assert_relative_eq!(c2.a(), -86.0);
+        assert_relative_eq!(c2.b(), -11.0);
+        assert_eq!(c2.to_tuple(), (0.0, -86.0, -11.0));
+        assert_relative_eq!(Lab::from_tuple(c2.to_tuple()), c2);
+    }
+
+    #[test]
+    fn test_lerp() {
+        let c1 = Lab::from_channels(55.0, 25.0, 80.0);
+        let c2 = Lab::from_channels(100.0, -25.0, 20.0);
+        assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
+        assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
+        assert_relative_eq!(c1.lerp(&c2, 0.5), Lab::from_channels(77.5, 0.0, 50.0));
+        assert_relative_eq!(c1.lerp(&c2, 0.25), Lab::from_channels(66.25, 12.5, 65.0));
+    }
+
+    #[test]
+    fn test_normalize() {
+        let c1 = Lab::from_channels(100.0, -50.0, 50.0);
+        assert!(c1.is_normalized());
+        assert_relative_eq!(c1.normalize(), c1);
+        let c2 = Lab::from_channels(25.0, 250.0, -1000.0);
+        assert!(c2.is_normalized());
+        assert_relative_eq!(c2.normalize(), c2);
+        let c3 = Lab::from_channels(-25.0, 0.0, 0.0);
+        assert!(c3.is_normalized());
+        assert_relative_eq!(c3.normalize(), c3);
+    }
+
+    #[test]
+    fn test_flatten() {
+        let c1 = Lab::from_channels(50.0, 82.0, -33.33);
+        assert_eq!(c1.as_slice(), &[50.0, 82.0, -33.33]);
+        assert_relative_eq!(Lab::from_slice(c1.as_slice()), c1);
+    }
 
     #[test]
     fn test_from_xyz() {
@@ -260,5 +308,13 @@ mod test {
         let t3 = c3.to_xyz(&D75::get_xyz());
         assert_relative_eq!(t3, Xyz::from_channels(0.486257, 1.00, 4.139032), epsilon=1e-4);
         assert_relative_eq!(Lab::from_xyz(&t3, &D75::get_xyz()), c3, epsilon=1e-4);
+    }
+
+    #[test]
+    fn test_color_cast() {
+        let c1 = Lab::from_channels(30.0, -50.0, 76.0);
+        assert_relative_eq!(c1.color_cast(), c1);
+        assert_relative_eq!(c1.color_cast(), Lab::from_channels(30.0f32, -50.0, 76.0));
+        assert_relative_eq!(c1.color_cast::<f32>().color_cast(), c1);
     }
 }
