@@ -122,8 +122,12 @@ impl<T, A> Flatten for Lchab<T, A>
     type ScalarFormat = T;
 
     impl_color_as_slice!(T);
-    impl_color_from_slice_angular!(Lchab<T, A> {hue:AngularChannel - 0, 
-        chroma:PosFreeChannel - 1, L:PosFreeChannel - 2});
+
+    fn from_slice(vals: &[T]) -> Self {
+        Lchab::from_channels(vals[0].clone(),
+                             vals[1].clone(),
+                             A::from_angle(angle::Turns(vals[2].clone())))
+    }
 }
 
 impl<T, A> approx::ApproxEq for Lchab<T, A>
@@ -200,7 +204,84 @@ mod test {
     use super::*;
     use lab::Lab;
     use angle::*;
-    use convert::FromColor;
+    use convert::*;
+    use color::*;
+
+    #[test]
+    fn test_construct() {
+        let c1 = Lchab::from_channels(55.3, 12.9, Deg(90.0));
+        assert_relative_eq!(c1.L(), 55.3);
+        assert_relative_eq!(c1.chroma(), 12.9);
+        assert_relative_eq!(c1.hue(), Deg(90.0));
+        assert_eq!(c1.to_tuple(), (55.3, 12.9, Deg(90.0)));
+        assert_relative_eq!(Lchab::from_tuple(c1.to_tuple()), c1);
+
+        let c2 = Lchab::from_channels(92.0, 55.0, Turns(0.5));
+        assert_relative_eq!(c2.L(), 92.0);
+        assert_relative_eq!(c2.chroma(), 55.0);
+        assert_relative_eq!(c2.hue(), Turns(0.5));
+        assert_eq!(c2.to_tuple(), (92.0, 55.0, Turns(0.5)));
+        assert_relative_eq!(Lchab::from_tuple(c2.to_tuple()), c2);
+    }
+
+    #[test]
+    fn test_lerp() {
+        let c1 = Lchab::from_channels(25.0, 90.0, Deg(300.0));
+        let c2 = Lchab::from_channels(75.0, 50.0, Deg(50.0));
+        assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
+        assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
+        assert_relative_eq!(c1.lerp(&c2, 0.5), Lchab::from_channels(50.0, 70.0, Deg(355.0)));
+        assert_relative_eq!(c1.lerp(&c2, 0.25), Lchab::from_channels(37.5, 80.0, Deg(327.5)));
+
+        let c3 = Lchab::from_channels(0.0, 20.0, Deg(60.0));
+        let c4 = Lchab::from_channels(60.0, 80.0, Deg(140.0));
+        assert_relative_eq!(c3.lerp(&c4, 0.0), c3);
+        assert_relative_eq!(c3.lerp(&c4, 1.0), c4);
+        assert_relative_eq!(c3.lerp(&c4, 0.5), Lchab::from_channels(30.0, 50.0, Deg(100.0)));
+        assert_relative_eq!(c3.lerp(&c4, 0.75), Lchab::from_channels(45.0, 65.0, Deg(120.0)));
+    }
+
+    #[test]
+    fn test_normalize() {
+        let c1 = Lchab::from_channels(105.0, 32.0, Deg(300.0));
+        assert!(c1.is_normalized());
+        assert_relative_eq!(c1.normalize(), c1);
+
+        let c2 = Lchab::from_channels(-3.0, 1.0, Deg(220.0));
+        assert!(!c2.is_normalized());
+        assert_relative_eq!(c2.normalize(), Lchab::from_channels(0.0, 1.0, Deg(220.0)));
+
+        let c3 = Lchab::from_channels(50.0, -50.0, Turns(2.3));
+        assert!(!c3.is_normalized());
+        assert_relative_eq!(c3.normalize(), Lchab::from_channels(50.0, 0.0, Turns(0.3)));
+
+        let c4 = Lchab::from_channels(110.0, 150.0, Deg(-50.0));
+        assert!(!c4.is_normalized());
+        assert_relative_eq!(c4.normalize(), Lchab::from_channels(110.0, 150.0, Deg(310.0)));
+    }
+
+    #[test]
+    fn test_flatten() {
+        let c1 = Lchab::from_channels(85.0, 11.11, Turns(0.5));
+        assert_eq!(c1.as_slice(), &[85.0, 11.11, 0.5]);
+        assert_relative_eq!(Lchab::from_slice(c1.as_slice()), c1);
+
+        let c2 = Lchab::from_channels(55.55, 33.33, Deg(90.00));
+        assert_eq!(c2.as_slice(), &[55.55, 33.33, 90.00]);
+    }
+
+    #[test]
+    fn test_get_chroma() {
+        let c1 = Lchab::from_channels(44.44, 55.55, Deg(66.66));
+        assert_eq!(c1.get_chroma(), 55.55);
+    }
+
+    #[test]
+    fn test_get_hue() {
+        let c1 = Lchab::from_channels(20.0, 50.0, Deg(180.0));
+        assert_eq!(c1.get_hue::<Deg<_>>(), Deg(180.0));
+        assert_eq!(c1.get_hue::<Turns<_>>(), Turns(0.5));
+    }
 
     #[test]
     fn test_from_lab() {
@@ -256,5 +337,14 @@ mod test {
         let t4 = Lab::from_color(&c4);
         assert_relative_eq!(t4, Lab::from_channels(62.0, -55.8614, -55.8614), epsilon=1e-4);
         assert_relative_eq!(Lchab::from_color(&t4), c4, epsilon=1e-4);
+    }
+
+    #[test]
+    fn test_color_cast() {
+        let c1 = Lchab::from_channels(0.5f32, 42.0f32, Deg(120.0f32));
+        assert_relative_eq!(c1.color_cast(), c1);
+        assert_relative_eq!(c1.color_cast::<f32,Rad<f32>>().color_cast(), c1);
+        assert_relative_eq!(c1.color_cast(), Lchab::from_channels(0.5, 42.0, Deg(120.0)));
+        assert_relative_eq!(c1.color_cast(), Lchab::from_channels(0.5, 42.0, Turns(1.0 / 3.0)));
     }
 }
