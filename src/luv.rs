@@ -3,10 +3,12 @@
 use std::fmt;
 use std::slice;
 use std::mem;
+use num;
 use approx;
 use channel::{PosFreeChannel, FreeChannel, FreeChannelScalar, ChannelFormatCast, ChannelCast,
               ColorChannel};
 use color::{Color, Bounded, Lerp, Flatten, FromTuple};
+use xyz::Xyz;
 
 pub struct LuvTag;
 
@@ -129,5 +131,160 @@ impl<T> fmt::Display for Luv<T>
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "L*u*v*({}, {}, {})", self.L, self.u, self.v)
+    }
+}
+
+impl<T> Luv<T>
+    where T: FreeChannelScalar + fmt::Display
+{
+    pub fn from_xyz(from: &Xyz<T>, wp: &Xyz<T>) -> Self {
+        let epsilon: T = num::cast(1e-8).unwrap();
+        let four: T = num::cast(4.0).unwrap();
+        let fifteen: T = num::cast(15.0).unwrap();
+        let three: T = num::cast(3.0).unwrap();
+        let nine: T = num::cast(9.0).unwrap();
+
+        let yr = from.y() / wp.y();
+        let L = Self::compute_L(yr);
+
+        let denom = from.x() + fifteen * from.y() + three * from.z() + epsilon;
+        let r_denom = wp.x() + fifteen * wp.y() + three * wp.z() + epsilon;
+        let u_prime = (four * from.x()) / denom;
+        let v_prime = (nine * from.y()) / denom;
+        let ur_prime = (four * wp.x()) / r_denom;
+        let vr_prime = (nine * wp.y()) / r_denom;
+
+        let u = num::cast::<_, T>(13.0).unwrap() * L * (u_prime - ur_prime);
+        let v = num::cast::<_, T>(13.0).unwrap() * L * (v_prime - vr_prime);
+
+        Luv::from_channels(L, u, v)
+    }
+
+    pub fn to_xyz(&self, wp: &Xyz<T>) -> Xyz<T> {
+        let epsilon: T = num::cast(1e-8).unwrap();
+        let four: T = num::cast(4.0).unwrap();
+        let fifteen: T = num::cast(15.0).unwrap();
+        let three: T = num::cast(3.0).unwrap();
+        let nine: T = num::cast(9.0).unwrap();
+
+        let r_denom = wp.x() + fifteen * wp.y() + three * wp.z();
+        let u0 = (four * wp.x()) / r_denom;
+        let v0 = (nine * wp.y()) / r_denom;
+
+        let Y = Self::compute_Y(self.L());
+
+        let a = num::cast::<_, T>(1.0 / 3.0).unwrap() *
+                ((num::cast::<_, T>(52.0).unwrap() * self.L()) /
+                 (self.u() + num::cast::<_, T>(13.0).unwrap() * self.L() * u0 + epsilon) -
+                 num::cast(1.0).unwrap());
+
+        let b = num::cast::<_, T>(-5.0).unwrap() * Y;
+        let c: T = num::cast(-1.0 / 3.0).unwrap();
+        let d = Y *
+                ((num::cast::<_, T>(39.0).unwrap() * self.L()) /
+                 (self.v() + num::cast::<_, T>(13.0).unwrap() * self.L() * v0 + epsilon) -
+                 num::cast::<_, T>(5.0).unwrap());
+
+        println!("{} {} {} {}", a, b, c, d);
+        let X;
+        if a != c {
+            X = (d - b) / (a - c);
+        } else {
+            X = num::cast(0.0).unwrap();
+        }
+
+        let Z = X * a + b;
+
+        Xyz::from_channels(X, Y, Z)
+
+    }
+
+    fn compute_Y(L: T) -> T {
+        if L > Self::kappa() * Self::epsilon() {
+            let val = (L + num::cast::<_, T>(16.0).unwrap()) / num::cast::<_, T>(116.0).unwrap();
+            val * val * val
+        } else {
+            L / Self::kappa()
+        }
+    }
+
+    fn compute_L(yr: T) -> T {
+        if yr > Self::epsilon() {
+            num::cast::<_, T>(116.0).unwrap() * yr.cbrt() - num::cast(16.0).unwrap()
+        } else {
+            Self::kappa() * yr
+        }
+    }
+
+    #[inline]
+    pub fn epsilon() -> T {
+        num::cast(0.008856451679035631).unwrap()
+    }
+    #[inline]
+    pub fn kappa() -> T {
+        num::cast(903.2962962963).unwrap()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use xyz::Xyz;
+    use white_point::*;
+
+    #[test]
+    fn test_from_xyz() {
+        let c1 = Xyz::from_channels(0.5, 0.5, 0.5);
+        let t1 = Luv::from_xyz(&c1, &D65::get_xyz());
+        assert_relative_eq!(t1, Luv::from_channels(76.0693, 12.5457, 5.2885), epsilon=1e-4);
+        assert_relative_eq!(t1.to_xyz(&D65::get_xyz()), c1, epsilon=1e-4);
+
+        let c2 = Xyz::from_channels(0.33, 0.67, 1.0);
+        let t2 = Luv::from_xyz(&c2, &D50::get_xyz());
+        assert_relative_eq!(t2, Luv::from_channels(85.5039, -122.8324, -41.5728), epsilon=1e-4);
+        assert_relative_eq!(t2.to_xyz(&D50::get_xyz()), c2, epsilon=1e-4);
+
+        let c3 = Xyz::from_channels(0.0, 0.0, 0.0);
+        let t3 = Luv::from_xyz(&c3, &D65::get_xyz());
+        assert_relative_eq!(t3, Luv::from_channels(0.0, 0.0, 0.0), epsilon=1e-4);
+        assert_relative_eq!(t3.to_xyz(&D65::get_xyz()), c3, epsilon=1e-4);
+
+        let c4 = D75::get_xyz();
+        let t4 = Luv::from_xyz(&c4, &D75::get_xyz());
+        assert_relative_eq!(t4, Luv::from_channels(100.0, 0.0, 0.0), epsilon=1e-4);
+        assert_relative_eq!(t4.to_xyz(&D75::get_xyz()), c4, epsilon=1e-4);
+
+        let c5 = Xyz::from_channels(0.72, 0.565, 0.37);
+        let t5 = Luv::from_xyz(&c5, &D75::get_xyz());
+        assert_relative_eq!(t5, Luv::from_channels(79.8975, 89.2637, 36.2923), epsilon=1e-4);
+        assert_relative_eq!(t5.to_xyz(&D75::get_xyz()), c5, epsilon=1e-4);
+
+        let c6 = Xyz::from_channels(0.22, 0.565, 0.87);
+        let t6 = Luv::from_xyz(&c6, &A::get_xyz());
+        assert_relative_eq!(t6, Luv::from_channels(79.8975, -185.0166, -77.3701), epsilon=1e-4);
+        assert_relative_eq!(t6.to_xyz(&A::get_xyz()), c6, epsilon=1e-4);
+    }
+
+    #[test]
+    fn test_to_xyz() {
+        let c1 = Luv::from_channels(50.0, 0.0, 0.0);
+        let t1 = c1.to_xyz(&D65::get_xyz());
+        assert_relative_eq!(t1, Xyz::from_channels(0.175064, 0.184187, 0.200548), epsilon=1e-4);
+        assert_relative_eq!(Luv::from_xyz(&t1, &D65::get_xyz()), c1, epsilon=1e-4);
+
+        let c2 = Luv::from_channels(62.5, 50.0, -50.0);
+        let t2 = c2.to_xyz(&D50::get_xyz());
+        assert_relative_eq!(t2, Xyz::from_channels(0.442536, 0.309910, 0.482665), epsilon=1e-4);
+        assert_relative_eq!(Luv::from_xyz(&t2, &D50::get_xyz()), c2, epsilon=1e-4);
+
+        let c3 = Luv::from_channels(35.0, 72.5, 0.0);
+        let t3 = c3.to_xyz(&D75::get_xyz());
+        assert_relative_eq!(t3, Xyz::from_channels(0.147161, 0.084984, 0.082072), epsilon=1e-4);
+        assert_relative_eq!(Luv::from_xyz(&t3, &D75::get_xyz()), c3, epsilon=1e-4);
+
+        let c4 = Luv::from_channels(78.9, -30.0, -75.0);
+        let t4 = c4.to_xyz(&D65::get_xyz());
+        assert_relative_eq!(t4, Xyz::from_channels(0.525544, 0.547551, 1.243412), epsilon=1e-4);
+        assert_relative_eq!(Luv::from_xyz(&t4, &D65::get_xyz()), c4, epsilon=1e-4);
     }
 }
