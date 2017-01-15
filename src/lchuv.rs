@@ -205,6 +205,75 @@ mod test {
     use luv::Luv;
     use angle::*;
     use convert::*;
+    use color::*;
+
+    #[test]
+    fn test_construct() {
+        let c1 = Lchuv::from_channels(60.0, 30.0, Turns(0.33));
+        assert_relative_eq!(c1.L(), 60.0);
+        assert_relative_eq!(c1.chroma(), 30.0);
+        assert_relative_eq!(c1.hue(), Turns(0.33));
+        assert_eq!(c1.to_tuple(), (60.0, 30.0, Turns(0.33)));
+        assert_relative_eq!(Lchuv::from_tuple(c1.to_tuple()), c1);
+    }
+
+    #[test]
+    fn test_lerp() {
+        let c1 = Lchuv::from_channels(50.0, 70.0, Deg(120.0));
+        let c2 = Lchuv::from_channels(00.0, 80.0, Deg(0.0));
+        assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
+        assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
+        assert_relative_eq!(c2.lerp(&c1, 1.0), c1);
+        assert_relative_eq!(c1.lerp(&c2, 0.5), Lchuv::from_channels(25.0, 75.0, Deg(60.0)));
+        assert_relative_eq!(c1.lerp(&c2, 0.75), Lchuv::from_channels(12.5, 77.5, Deg(30.0)));
+
+        let c3 = Lchuv::from_channels(20.0, 60.0, Deg(150.0));
+        let c4 = Lchuv::from_channels(50.0, 100.0, Deg(350.0));
+        assert_relative_eq!(c3.lerp(&c4, 0.0), c3);
+        assert_relative_eq!(c3.lerp(&c4, 1.0), c4);
+        assert_relative_eq!(c3.lerp(&c4, 0.5), Lchuv::from_channels(35.0, 80.0, Deg(70.0)));
+        assert_relative_eq!(c3.lerp(&c4, 0.25), Lchuv::from_channels(27.5, 70.0, Deg(110.0)));
+    }
+
+    #[test]
+    fn test_normalize() {
+        let c1 = Lchuv::from_channels(111.1, 222.2, Deg(333.3));
+        assert!(c1.is_normalized());
+        assert_relative_eq!(c1.normalize(), c1);
+
+        let c2 = Lchuv::from_channels(-50.5, -100.0, Deg(50.0));
+        assert!(!c2.is_normalized());
+        assert_relative_eq!(c2.normalize(), Lchuv::from_channels(0.0, 0.0, Deg(50.0)));
+
+        let c3 = Lchuv::from_channels(20.0, 60.0, Turns(-1.25));
+        assert!(!c3.is_normalized());
+        assert_relative_eq!(c3.normalize(), Lchuv::from_channels(20.0, 60.0, Turns(0.75)));
+
+        let c4 = Lchuv::from_channels(60.0, -10.0, Deg(500.0));
+        assert!(!c4.is_normalized());
+        assert_relative_eq!(c4.normalize(), Lchuv::from_channels(60.0, 0.0, Deg(140.0)));
+    }
+
+    #[test]
+    fn test_flatten() {
+        let c1 = Lchuv::from_channels(55.0, 23.0, Turns(0.5));
+        assert_eq!(c1.as_slice(), &[55.0, 23.0, 0.5]);
+        assert_relative_eq!(Lchuv::from_slice(c1.as_slice()), c1);
+    }
+
+    #[test]
+    fn test_get_chroma() {
+        let c1 = Lchuv::from_channels(50.0, 25.0, Deg(65.5));
+        assert_relative_eq!(c1.chroma(), 25.0);
+    }
+
+    #[test]
+    fn test_get_hue() {
+        let c1 = Lchuv::from_channels(22.0, 98.0, Deg(120.0));
+        assert_relative_eq!(c1.get_hue(), Deg(120.0));
+        assert_relative_eq!(c1.get_hue(), Turns(1.0/3.0));
+    }
+
 
     #[test]
     fn test_from_luv() {
@@ -260,5 +329,14 @@ mod test {
         let t4 = Luv::from_color(&c4);
         assert_relative_eq!(t4, Luv::from_channels(23.0, -52.0201, -46.8391), epsilon=1e-4);
         assert_relative_eq!(Lchuv::from_color(&t4), c4, epsilon=1e-4);
+    }
+
+    #[test]
+    fn test_color_cast() {
+        let c1 = Lchuv::from_channels(88.0, 31.0, Deg(180.0));
+        assert_relative_eq!(c1.color_cast(), c1);
+        assert_relative_eq!(c1.color_cast::<f32, Turns<f32>>(), 
+            Lchuv::from_channels(88.0f32, 31.0f32, Turns(0.5f32)));
+        assert_relative_eq!(c1.color_cast::<f32, Rad<f32>>().color_cast(), c1);
     }
 }
