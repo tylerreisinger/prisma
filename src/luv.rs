@@ -231,6 +231,46 @@ mod test {
     use super::*;
     use xyz::Xyz;
     use white_point::*;
+    use color::*;
+
+    #[test]
+    fn test_construct() {
+        let c1 = Luv::from_channels(82.00, -40.0, 60.0);
+        assert_relative_eq!(c1.L(), 82.00);
+        assert_relative_eq!(c1.u(), -40.0);
+        assert_relative_eq!(c1.v(), 60.0);
+        assert_eq!(c1.to_tuple(), (82.0, -40.0, 60.0));
+        assert_relative_eq!(Luv::from_tuple(c1.to_tuple()), c1);
+    }
+
+    #[test]
+    fn test_lerp() {
+        let c1 = Luv::from_channels(30.0, 120.0, -50.0);
+        let c2 = Luv::from_channels(80.0, -90.0, 20.0);
+        assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
+        assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
+        assert_relative_eq!(c2.lerp(&c1, 0.0), c2);
+        assert_relative_eq!(c1.lerp(&c2, 0.5), Luv::from_channels(55.0, 15.0, -15.0));
+        assert_relative_eq!(c1.lerp(&c2, 0.25), Luv::from_channels(42.5, 67.5, -32.5));
+    }
+
+    #[test]
+    fn test_normalize() {
+        let c1 = Luv::from_channels(120.0, -60.0, 30.0);
+        assert!(c1.is_normalized());
+        assert_relative_eq!(c1.normalize(), c1);
+        let c2 = Luv::from_channels(-62.0, 111.11, -500.0);
+        assert!(!c2.is_normalized());
+        assert_relative_eq!(c2.normalize(), Luv::from_channels(0.0, 111.11, -500.0));
+        assert_relative_eq!(c2.normalize().normalize(), c2.normalize());
+    }
+
+    #[test]
+    fn test_flatted() {
+        let c1 = Luv::from_channels(92.0, -32.0, 70.0);
+        assert_eq!(c1.as_slice(), &[92.0, -32.0, 70.0]);
+        assert_relative_eq!(Luv::from_slice(c1.as_slice()), c1);
+    }
 
     #[test]
     fn test_from_xyz() {
@@ -286,5 +326,13 @@ mod test {
         let t4 = c4.to_xyz(&D65::get_xyz());
         assert_relative_eq!(t4, Xyz::from_channels(0.525544, 0.547551, 1.243412), epsilon=1e-4);
         assert_relative_eq!(Luv::from_xyz(&t4, &D65::get_xyz()), c4, epsilon=1e-4);
+    }
+
+    #[test]
+    fn test_color_cast() {
+        let c1 = Luv::from_channels(55.5, 88.8, -22.2);
+        assert_relative_eq!(c1.color_cast(), c1);
+        assert_relative_eq!(c1.color_cast(), Luv::from_channels(55.5f32, 88.8f32, -22.2f32), epsilon=1e-5);
+        assert_relative_eq!(c1.color_cast::<f32>().color_cast(), c1, epsilon=1e-5);
     }
 }
