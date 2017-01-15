@@ -10,7 +10,8 @@ use channel::{PosFreeChannel, FreeChannelScalar, AngularChannel, AngularChannelS
 use angle::{Deg, Angle, FromAngle, IntoAngle, Turns, Rad};
 use angle;
 use color::{Color, PolarColor, FromTuple, Lerp, Bounded, Flatten};
-use convert::{GetHue, GetChroma};
+use convert::{GetHue, GetChroma, FromColor};
+use luv::Luv;
 
 pub struct LchuvTag;
 
@@ -169,4 +170,95 @@ impl<T, A> GetHue for Lchuv<T, A>
           A: AngularChannelScalar
 {
     impl_color_get_hue_angular!(Lchuv);
+}
+
+
+impl<T, A> FromColor<Luv<T>> for Lchuv<T, A>
+    where T: FreeChannelScalar,
+          A: AngularChannelScalar + FromAngle<Rad<T>> + Angle
+{
+    fn from_color(from: &Luv<T>) -> Self {
+        let L = from.L();
+        let c = (from.u() * from.u() + from.v() * from.v()).sqrt();
+        let h = A::from_angle(Rad::atan2(from.v(), from.u()));
+
+        Lchuv::from_channels(L, c, <A as Angle>::normalize(h))
+    }
+}
+
+impl<T, A> FromColor<Lchuv<T, A>> for Luv<T>
+    where T: FreeChannelScalar,
+          A: AngularChannelScalar + Angle<Scalar = T>
+{
+    fn from_color(from: &Lchuv<T, A>) -> Self {
+        let L = from.L();
+        let u = from.chroma() * from.hue().cos();
+        let v = from.chroma() * from.hue().sin();
+
+        Luv::from_channels(L, u, v)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use luv::Luv;
+    use angle::*;
+    use convert::*;
+
+    #[test]
+    fn test_from_luv() {
+        let c1 = Luv::from_channels(60.0, 30.0, -30.0);
+        let t1 = Lchuv::from_color(&c1);
+        assert_relative_eq!(t1, Lchuv::from_channels(60.0, 42.4264, Deg(315.0)), epsilon=1e-4);
+        assert_relative_eq!(Luv::from_color(&t1), c1, epsilon=1e-4);
+
+        let c2 = Luv::from_channels(75.0, 0.0, 100.0);
+        let t2 = Lchuv::from_color(&c2);
+        assert_relative_eq!(t2, Lchuv::from_channels(75.0, 100.0, Deg(90.0)), epsilon=1e-4);
+        assert_relative_eq!(Luv::from_color(&t2), c2, epsilon=1e-4);
+
+        let c3 = Luv::from_channels(50.0, -45.0, -30.0);
+        let t3 = Lchuv::from_color(&c3);
+        assert_relative_eq!(t3, Lchuv::from_channels(50.0, 54.0833, Deg(213.6901)), epsilon=1e-4);
+        assert_relative_eq!(Luv::from_color(&t3), c3, epsilon=1e-4);
+
+        let c4 = Luv::from_channels(0.0, 0.0, 0.0);
+        let t4 = Lchuv::from_color(&c4);
+        assert_relative_eq!(t4, Lchuv::from_channels(0.0, 0.0, Rad(0.0)), epsilon=1e-4);
+        assert_relative_eq!(Luv::from_color(&t4), c4, epsilon=1e-4);
+
+        let c5 = Luv::from_channels(72.0, -100.0, -100.0);
+        let t5 = Lchuv::from_color(&c5);
+        assert_relative_eq!(t5, Lchuv::from_channels(72.0, 141.4214, Deg(225.0)), epsilon=1e-4);
+        assert_relative_eq!(Luv::from_color(&t5), c5, epsilon=1e-4);
+
+        let c6 = Luv::from_channels(88.0, 0.0, 0.0);
+        let t6 = Lchuv::from_color(&c6);
+        assert_relative_eq!(t6, Lchuv::from_channels(88.0, 0.0, Deg(0.0)), epsilon=1e-6);
+        assert_relative_eq!(Luv::from_color(&t6), c6, epsilon=1e-4);
+    }
+
+    #[test]
+    fn test_to_luv() {
+        let c1 = Lchuv::from_channels(50.0, 70.0, Turns(0.5));
+        let t1 = Luv::from_color(&c1);
+        assert_relative_eq!(t1, Luv::from_channels(50.0, -70.0, 0.0), epsilon=1e-4);
+        assert_relative_eq!(Lchuv::from_color(&t1), c1, epsilon=1e-4);
+
+        let c2 = Lchuv::from_channels(66.0, 75.0, Deg(35.35335335));
+        let t2 = Luv::from_color(&c2);
+        assert_relative_eq!(t2, Luv::from_channels(66.0, 61.1699, 43.3963), epsilon=1e-4);
+        assert_relative_eq!(Lchuv::from_color(&t2), c2, epsilon=1e-4);
+
+        let c3 = Lchuv::from_channels(100.0, 100.0, Deg(155.0));
+        let t3 = Luv::from_color(&c3);
+        assert_relative_eq!(t3, Luv::from_channels(100.0, -90.6308, 42.2618), epsilon=1e-4);
+        assert_relative_eq!(Lchuv::from_color(&t3), c3, epsilon=1e-4);
+
+        let c4 = Lchuv::from_channels(23.0, 70.0, Deg(222.0));
+        let t4 = Luv::from_color(&c4);
+        assert_relative_eq!(t4, Luv::from_channels(23.0, -52.0201, -46.8391), epsilon=1e-4);
+        assert_relative_eq!(Lchuv::from_color(&t4), c4, epsilon=1e-4);
+    }
 }
