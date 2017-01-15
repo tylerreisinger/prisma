@@ -32,6 +32,7 @@ pub mod xyy;
 pub mod lab;
 pub mod lchab;
 pub mod luv;
+pub mod lchuv;
 
 #[cfg(test)]
 pub mod test;
