@@ -2,7 +2,7 @@ use std::mem;
 use std::fmt;
 use std::slice;
 use approx;
-use channel::{PosFreeChannel, FreeChannelScalar, ChannelFormatCast, ChannelCast, ColorChannel};
+use channel::{FreeChannel, FreeChannelScalar, ChannelFormatCast, ChannelCast, ColorChannel};
 use color::{Color, FromTuple, Bounded, HomogeneousColor, Lerp, Flatten};
 
 pub struct LmsTag;
@@ -10,9 +10,9 @@ pub struct LmsTag;
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Lms<T> {
-    l: PosFreeChannel<T>,
-    m: PosFreeChannel<T>,
-    s: PosFreeChannel<T>,
+    l: FreeChannel<T>,
+    m: FreeChannel<T>,
+    s: FreeChannel<T>,
 }
 
 impl<T> Lms<T>
@@ -20,9 +20,9 @@ impl<T> Lms<T>
 {
     pub fn from_channels(l: T, m: T, s: T) -> Self {
         Lms {
-            l: PosFreeChannel::new(l),
-            m: PosFreeChannel::new(m),
-            s: PosFreeChannel::new(s),
+            l: FreeChannel::new(l),
+            m: FreeChannel::new(m),
+            s: FreeChannel::new(s),
         }
     }
 
@@ -85,7 +85,7 @@ impl<T> HomogeneousColor for Lms<T>
 {
     type ChannelFormat = T;
 
-    impl_color_homogeneous_color_square!(Lms<T> {l, m, s}, chan=PosFreeChannel);
+    impl_color_homogeneous_color_square!(Lms<T> {l, m, s}, chan=FreeChannel);
 }
 
 impl<T> Bounded for Lms<T>
@@ -96,9 +96,9 @@ impl<T> Bounded for Lms<T>
 
 impl<T> Lerp for Lms<T>
     where T: FreeChannelScalar,
-          PosFreeChannel<T>: Lerp
+          FreeChannel<T>: Lerp
 {
-    type Position = <PosFreeChannel<T> as Lerp>::Position;
+    type Position = <FreeChannel<T> as Lerp>::Position;
     impl_color_lerp_square!(Lms {l, m, s});
 }
 
@@ -108,8 +108,8 @@ impl<T> Flatten for Lms<T>
     type ScalarFormat = T;
 
     impl_color_as_slice!(T);
-    impl_color_from_slice_square!(Lms<T> {l:PosFreeChannel - 0, m:PosFreeChannel - 1,
-        s:PosFreeChannel - 2});
+    impl_color_from_slice_square!(Lms<T> {l:FreeChannel - 0, m:FreeChannel - 1,
+        s:FreeChannel - 2});
 }
 
 impl<T> approx::ApproxEq for Lms<T>
@@ -122,7 +122,7 @@ impl<T> approx::ApproxEq for Lms<T>
 impl<T> Default for Lms<T>
     where T: FreeChannelScalar
 {
-    impl_color_default!(Lms {l:PosFreeChannel, m:PosFreeChannel, s:PosFreeChannel});
+    impl_color_default!(Lms {l:FreeChannel, m:FreeChannel, s:FreeChannel});
 }
 
 impl<T> fmt::Display for Lms<T>

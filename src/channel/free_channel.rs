@@ -187,6 +187,17 @@ impl<T> Lerp for FreeChannel<T>
     }
 }
 
+impl<T> Bounded for FreeChannel<T>
+    where T: FreeChannelScalar
+{
+    fn normalize(self) -> Self {
+        self
+    }
+    fn is_normalized(&self) -> bool {
+        true
+    }
+}
+
 impl<T> ChannelCast for FreeChannel<T>
     where T: FreeChannelScalar
 {
