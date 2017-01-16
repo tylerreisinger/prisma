@@ -2,7 +2,7 @@ use std::fmt;
 use std::slice;
 use std::mem;
 use approx;
-use channel::{FreeChannel, FreeChannelScalar, ChannelFormatCast, ChannelCast, ColorChannel};
+use channel::{PosFreeChannel, FreeChannelScalar, ChannelFormatCast, ChannelCast, ColorChannel};
 use color::{Color, HomogeneousColor, Bounded, Lerp, Flatten, FromTuple};
 
 pub struct XyzTag;
@@ -10,9 +10,9 @@ pub struct XyzTag;
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Xyz<T> {
-    pub x: FreeChannel<T>,
-    pub y: FreeChannel<T>,
-    pub z: FreeChannel<T>,
+    pub x: PosFreeChannel<T>,
+    pub y: PosFreeChannel<T>,
+    pub z: PosFreeChannel<T>,
 }
 
 impl<T> Xyz<T>
@@ -20,9 +20,9 @@ impl<T> Xyz<T>
 {
     pub fn from_channels(x: T, y: T, z: T) -> Self {
         Xyz {
-            x: FreeChannel::new(x),
-            y: FreeChannel::new(y),
-            z: FreeChannel::new(z),
+            x: PosFreeChannel::new(x),
+            y: PosFreeChannel::new(y),
+            z: PosFreeChannel::new(z),
         }
     }
 
@@ -85,25 +85,20 @@ impl<T> HomogeneousColor for Xyz<T>
 {
     type ChannelFormat = T;
 
-    impl_color_homogeneous_color_square!(Xyz<T> {x, y, z}, chan=FreeChannel);
+    impl_color_homogeneous_color_square!(Xyz<T> {x, y, z}, chan=PosFreeChannel);
 }
 
 impl<T> Bounded for Xyz<T>
     where T: FreeChannelScalar
 {
-    fn normalize(self) -> Self {
-        self
-    }
-    fn is_normalized(&self) -> bool {
-        true
-    }
+    impl_color_bounded!(Xyz {x, y, z});
 }
 
 impl<T> Lerp for Xyz<T>
     where T: FreeChannelScalar,
-          FreeChannel<T>: Lerp
+          PosFreeChannel<T>: Lerp
 {
-    type Position = <FreeChannel<T> as Lerp>::Position;
+    type Position = <PosFreeChannel<T> as Lerp>::Position;
     impl_color_lerp_square!(Xyz {x, y, z});
 }
 
@@ -113,8 +108,8 @@ impl<T> Flatten for Xyz<T>
     type ScalarFormat = T;
 
     impl_color_as_slice!(T);
-    impl_color_from_slice_square!(Xyz<T> {x:FreeChannel - 0, y:FreeChannel - 1,
-        z:FreeChannel - 2});
+    impl_color_from_slice_square!(Xyz<T> {x:PosFreeChannel - 0, y:PosFreeChannel - 1,
+        z:PosFreeChannel - 2});
 }
 
 impl<T> approx::ApproxEq for Xyz<T>
@@ -127,7 +122,7 @@ impl<T> approx::ApproxEq for Xyz<T>
 impl<T> Default for Xyz<T>
     where T: FreeChannelScalar
 {
-    impl_color_default!(Xyz {x:FreeChannel, y:FreeChannel, z:FreeChannel});
+    impl_color_default!(Xyz {x:PosFreeChannel, y:PosFreeChannel, z:PosFreeChannel});
 }
 
 impl<T> fmt::Display for Xyz<T>
@@ -179,10 +174,10 @@ mod test {
     #[test]
     fn test_normalize() {
         let c1 = Xyz::from_channels(1e6, -2e7, 8e-5);
-        assert!(c1.is_normalized());
-        assert_relative_eq!(c1.normalize(), c1);
+        assert!(!c1.is_normalized());
+        assert_relative_eq!(c1.normalize(), Xyz::from_channels(1e6, 0.0, 8e-5));
 
-        let c2 = Xyz::from_channels(1.0, 0.0, -1.0);
+        let c2 = Xyz::from_channels(1.0, 0.0, 1.0);
         assert!(c2.is_normalized());
         assert_relative_eq!(c2.normalize(), c2);
     }
