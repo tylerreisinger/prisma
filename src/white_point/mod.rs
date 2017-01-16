@@ -9,5 +9,6 @@ pub trait NamedWhitePoint<T> {
 }
 
 pub mod deg_2;
+pub mod deg_10;
 
 pub use self::deg_2::*;
