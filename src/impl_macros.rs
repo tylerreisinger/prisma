@@ -114,16 +114,23 @@ macro_rules! impl_color_bounded {
 }
 
 macro_rules! impl_color_lerp_square {
-    ($name:ident {$($fields:ident),*}, phantom={$($phantom:ident),*}) => {
+    ($name:ident {$($fields:ident),*}, copy={$($copy:ident),*}, phantom={$($phantom:ident),*}) => {
         fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
             $name {
                 $($fields: self.$fields.lerp(&right.$fields, pos.clone())),*,
+                $($copy: self.$copy.clone()),*
                 $($phantom: PhantomData),*
             }
         }
     };
     ($name:ident {$($fields:ident),*}) => {
-        impl_color_lerp_square!($name {$($fields),*}, phantom={});
+        impl_color_lerp_square!($name {$($fields),*}, copy={}, phantom={});
+    };
+    ($name:ident {$($fields:ident),*}, copy={$($copy:ident),*}) => {
+        impl_color_lerp_square!($name {$($fields),*}, copy={$($copy),*}, phantom={});
+    };
+    ($name:ident {$($fields:ident),*}, phantom={$($phantom:ident),*}) => {
+        impl_color_lerp_square!($name {$($fields),*}, copy={}, phantom={$($phantom),*});
     };
 }
 
