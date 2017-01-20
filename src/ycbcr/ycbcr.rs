@@ -288,6 +288,20 @@ mod test {
     use test;
 
     #[test]
+    fn test_custom_model() {
+        let model = CustomYCbCrModel::build_from_coefficients(0.299, 0.114);
+        assert_relative_eq!(
+            <CustomYCbCrModel as YCbCrModel<f64>>::forward_transform(&model), 
+            <JpegModel as YCbCrModel<f64>>::forward_transform(&JpegModel), epsilon=1e-6);
+
+        let c1: YCbCr<_, &CustomYCbCrModel> = YCbCr::from_channels_and_model(0.5, 0.2, 0.3, &model);
+        let t1 = c1.to_rgb(OutOfGamutMode::Preserve);
+
+        assert_relative_eq!(t1, Rgb::from_channels(0.9206, 0.216932, 0.8544), epsilon=1e-5);
+        assert_relative_eq!(YCbCr::<_, &CustomYCbCrModel>::from_rgb_and_model(&t1, &model), c1, epsilon=1e-5);
+    }
+
+    #[test]
     fn test_construct() {
         let c1 = YCbCrJpeg::from_channels(0.75, 0.44, 0.21);
         assert_eq!(c1.luma(), 0.75);

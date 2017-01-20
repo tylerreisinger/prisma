@@ -1,5 +1,6 @@
 use linalg::Matrix3;
 use channel::{PosNormalChannelScalar, NormalChannelScalar};
+use ycbcr::build_transform;
 
 pub trait YCbCrShift<T> {
     fn get_shift() -> (T, T, T);
@@ -17,10 +18,64 @@ pub trait UnitModel<T>: YCbCrModel<T> {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub struct CustomYCbCrModel {
+    forward_transform: Matrix3<f64>,
+    inverse_transform: Matrix3<f64>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct StandardShift<T>(pub T);
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct JpegModel;
+
+impl CustomYCbCrModel {
+    pub fn new(forward_transform: Matrix3<f64>, inverse_transform: Matrix3<f64>) -> Self {
+        CustomYCbCrModel {
+            forward_transform: forward_transform,
+            inverse_transform: inverse_transform,
+        }
+    }
+
+    pub fn build_from_coefficients(kr: f64, kb: f64) -> Self {
+        let transform = build_transform(kr, kb);
+        let inv_transform =
+            transform.clone().inverse().expect("Singular YCbCr transformation matrix");
+        CustomYCbCrModel::new(transform, inv_transform)
+    }
+}
+
+impl<T> YCbCrModel<T> for CustomYCbCrModel
+    where T: PosNormalChannelScalar + NormalChannelScalar,
+          StandardShift<T>: YCbCrShift<T>
+{
+    type Shift = StandardShift<T>;
+    fn forward_transform(&self) -> Matrix3<f64> {
+        self.forward_transform.clone()
+    }
+    fn inverse_transform(&self) -> Matrix3<f64> {
+        self.inverse_transform.clone()
+    }
+    fn shift(&self) -> (T, T, T) {
+        Self::Shift::get_shift()
+    }
+}
+
+impl<'a, T> YCbCrModel<T> for &'a CustomYCbCrModel
+    where T: PosNormalChannelScalar + NormalChannelScalar,
+          StandardShift<T>: YCbCrShift<T>
+{
+    type Shift = StandardShift<T>;
+    fn forward_transform(&self) -> Matrix3<f64> {
+        self.forward_transform.clone()
+    }
+    fn inverse_transform(&self) -> Matrix3<f64> {
+        self.inverse_transform.clone()
+    }
+    fn shift(&self) -> (T, T, T) {
+        Self::Shift::get_shift()
+    }
+}
 
 impl<T> YCbCrModel<T> for JpegModel
     where T: PosNormalChannelScalar + NormalChannelScalar,
