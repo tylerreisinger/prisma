@@ -5,11 +5,15 @@ pub trait YCbCrShift<T> {
     fn get_shift() -> (T, T, T);
 }
 
-pub trait YCbCrModel<T>: Clone + Default + PartialEq {
+pub trait YCbCrModel<T>: Clone + PartialEq {
     type Shift: YCbCrShift<T>;
     fn forward_transform(&self) -> Matrix3<f64>;
     fn inverse_transform(&self) -> Matrix3<f64>;
     fn shift(&self) -> (T, T, T);
+}
+
+pub trait UnitModel<T>: YCbCrModel<T> {
+    fn unit_value() -> Self;
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -31,6 +35,15 @@ impl<T> YCbCrModel<T> for JpegModel
     }
     fn shift(&self) -> (T, T, T) {
         Self::Shift::get_shift()
+    }
+}
+
+impl<T> UnitModel<T> for JpegModel
+    where T: PosNormalChannelScalar + NormalChannelScalar,
+          StandardShift<T>: YCbCrShift<T>
+{
+    fn unit_value() -> Self {
+        JpegModel
     }
 }
 

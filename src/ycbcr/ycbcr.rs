@@ -10,7 +10,7 @@ use convert::TryFromColor;
 use rgb::Rgb;
 use linalg::Matrix3;
 
-use ycbcr::model::{YCbCrModel, JpegModel};
+use ycbcr::model::{YCbCrModel, JpegModel, UnitModel};
 
 pub struct YCbCrTag;
 
@@ -32,6 +32,15 @@ pub type YCbCrJpeg<T> = YCbCr<T, JpegModel>;
 
 impl<T, M> YCbCr<T, M>
     where T: NormalChannelScalar + PosNormalChannelScalar,
+          M: YCbCrModel<T> + UnitModel<T>
+{
+    pub fn from_channels(y: T, cb: T, cr: T) -> Self {
+        YCbCr::from_channels_and_model(y, cb, cr, M::unit_value())
+    }
+}
+
+impl<T, M> YCbCr<T, M>
+    where T: NormalChannelScalar + PosNormalChannelScalar,
           M: YCbCrModel<T>
 {
     pub fn from_channels_and_model(y: T, cb: T, cr: T, model: M) -> Self {
@@ -41,10 +50,6 @@ impl<T, M> YCbCr<T, M>
             cr: NormalBoundedChannel::new(cr),
             model: model,
         }
-    }
-
-    pub fn from_channels(y: T, cb: T, cr: T) -> Self {
-        YCbCr::from_channels_and_model(y, cb, cr, M::default())
     }
 
     pub fn color_cast<TOut>(&self) -> YCbCr<TOut, M>
@@ -111,7 +116,7 @@ impl<T, M> Color for YCbCr<T, M>
 
 impl<T, M> FromTuple for YCbCr<T, M>
     where T: NormalChannelScalar + PosNormalChannelScalar,
-          M: YCbCrModel<T>
+          M: YCbCrModel<T> + UnitModel<T>
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         YCbCr::from_channels(values.0, values.1, values.2)
@@ -156,7 +161,7 @@ impl<T, M> Lerp for YCbCr<T, M>
 
 impl<T, M> Flatten for YCbCr<T, M>
     where T: NormalChannelScalar + PosNormalChannelScalar,
-          M: YCbCrModel<T>
+          M: YCbCrModel<T> + UnitModel<T>
 {
     type ScalarFormat = T;
 
@@ -177,14 +182,14 @@ impl<T, M> approx::ApproxEq for YCbCr<T, M>
 
 impl<T, M> Default for YCbCr<T, M>
     where T: NormalChannelScalar + PosNormalChannelScalar + num::Zero + Default,
-          M: YCbCrModel<T>
+          M: YCbCrModel<T> + UnitModel<T>
 {
     fn default() -> Self {
         YCbCr {
             luma: PosNormalBoundedChannel::default(),
             cb: NormalBoundedChannel::default(),
             cr: NormalBoundedChannel::default(),
-            model: M::default(),
+            model: M::unit_value(),
         }
     }
 }
@@ -200,15 +205,24 @@ impl<T, M> fmt::Display for YCbCr<T, M>
 
 impl<T, M> YCbCr<T, M>
     where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
+          M: YCbCrModel<T> + UnitModel<T>
+{
+    pub fn from_rgb(from: &Rgb<T>) -> Self {
+        Self::from_rgb_and_model(from, M::unit_value())
+    }
+}
+
+impl<T, M> YCbCr<T, M>
+    where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
           M: YCbCrModel<T>
 {
-    pub fn from_rgb(from: &Rgb<T>, model: M) -> Self {
+    pub fn from_rgb_and_model(from: &Rgb<T>, model: M) -> Self {
         let transform = model.forward_transform();
         let shift = model.shift();
 
         let (y, cb, cr) = transform.transform_vector(from.clone().to_tuple());
 
-        YCbCr::from_channels(y + shift.0, cb + shift.1, cr + shift.2)
+        YCbCr::from_channels_and_model(y + shift.0, cb + shift.1, cr + shift.2, model)
     }
 
     pub fn to_rgb(&self, out_of_gamut_mode: OutOfGamutMode) -> Rgb<T> {
@@ -351,20 +365,20 @@ mod test {
     fn test_from_rgb() {
         let test_data = test::build_hwb_test_data();
         for item in test_data.iter() {
-            let ycbcr = YCbCrJpeg::from_rgb(&item.rgb, JpegModel);
+            let ycbcr = YCbCrJpeg::from_rgb(&item.rgb);
             let rgb = ycbcr.to_rgb(OutOfGamutMode::Preserve);
             assert_relative_eq!(rgb, item.rgb, epsilon=1e-4);
         }
 
         let c1 = Rgb::from_channels(255u8, 255, 255);
-        let y1 = YCbCrJpeg::from_rgb(&c1, JpegModel);
+        let y1 = YCbCrJpeg::from_rgb(&c1);
         assert_eq!(y1.luma(), 255u8);
         assert_eq!(y1.cb(), 128);
         assert_eq!(y1.cr(), 128);
         assert_eq!(Rgb::try_from_color(&y1).unwrap(), c1);
 
         let c2 = Rgb::from_channels(0.5, 0.5, 0.5);
-        let y2 = YCbCrJpeg::from_rgb(&c2, JpegModel);
+        let y2 = YCbCrJpeg::from_rgb_and_model(&c2, JpegModel);
         assert_relative_eq!(y2, YCbCrJpeg::from_channels(0.5, 0.0, 0.0), epsilon=1e-6);
         assert_relative_eq!(Rgb::try_from_color(&y2).unwrap(), c2, epsilon=1e-6);
     }
