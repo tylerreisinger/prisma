@@ -2,13 +2,14 @@ use linalg::Matrix3;
 use channel::{PosNormalChannelScalar, NormalChannelScalar};
 
 pub trait YCbCrShift<T> {
-    fn get_shift(&self) -> (T, T, T);
+    fn get_shift() -> (T, T, T);
 }
 
 pub trait YCbCrModel<T>: Clone + Default + PartialEq {
     type Shift: YCbCrShift<T>;
     fn forward_transform(&self) -> Matrix3<f64>;
     fn inverse_transform(&self) -> Matrix3<f64>;
+    fn shift(&self) -> (T, T, T);
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -28,6 +29,9 @@ impl<T> YCbCrModel<T> for JpegModel
     fn inverse_transform(&self) -> Matrix3<f64> {
         Matrix3::new([1.0, 0.0, 1.402, 1.0, -0.3441, -0.7141, 1.0, 1.772, 0.0])
     }
+    fn shift(&self) -> (T, T, T) {
+        Self::Shift::get_shift()
+    }
 }
 
 impl Default for JpegModel {
@@ -39,8 +43,8 @@ impl Default for JpegModel {
 macro_rules! impl_standard_shift_int {
     ($T:ident) => {
         impl YCbCrShift<$T> for StandardShift<$T> {
-            fn get_shift(&self) -> ($T, $T, $T) {
-                (0, $T::max_value() >> 1, $T::max_value() >> 1)
+            fn get_shift() -> ($T, $T, $T) {
+                (0, ($T::max_value() >> 1) + 1, ($T::max_value() >> 1) + 1)
             }
         }
     }
@@ -48,7 +52,7 @@ macro_rules! impl_standard_shift_int {
 macro_rules! impl_standard_shift_float {
     ($T:ident) => {
         impl YCbCrShift<$T> for StandardShift<$T> {
-            fn get_shift(&self) -> ($T, $T, $T) {
+            fn get_shift() -> ($T, $T, $T) {
                 (0.0, 0.0, 0.0)
             }
         }
