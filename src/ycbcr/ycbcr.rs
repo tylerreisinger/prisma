@@ -10,7 +10,7 @@ use convert::TryFromColor;
 use rgb::Rgb;
 use linalg::Matrix3;
 
-use ycbcr::model::{YCbCrModel, JpegModel, UnitModel};
+use ycbcr::model::{YCbCrModel, JpegModel, UnitModel, Bt709Model, CustomYCbCrModel};
 
 pub struct YCbCrTag;
 
@@ -29,6 +29,8 @@ pub struct YCbCr<T, M = JpegModel> {
 }
 
 pub type YCbCrJpeg<T> = YCbCr<T, JpegModel>;
+pub type YCbCrBt709<T> = YCbCr<T, Bt709Model>;
+pub type YCbCrCustom<'a, T> = YCbCr<T, &'a CustomYCbCrModel>;
 
 impl<T, M> YCbCr<T, M>
     where T: NormalChannelScalar + PosNormalChannelScalar,
@@ -294,7 +296,7 @@ mod test {
             <CustomYCbCrModel as YCbCrModel<f64>>::forward_transform(&model), 
             <JpegModel as YCbCrModel<f64>>::forward_transform(&JpegModel), epsilon=1e-6);
 
-        let c1: YCbCr<_, &CustomYCbCrModel> = YCbCr::from_channels_and_model(0.5, 0.2, 0.3, &model);
+        let c1: YCbCrCustom<_> = YCbCr::from_channels_and_model(0.5, 0.2, 0.3, &model);
         let t1 = c1.to_rgb(OutOfGamutMode::Preserve);
 
         assert_relative_eq!(t1, Rgb::from_channels(0.9206, 0.216932, 0.8544), epsilon=1e-5);
