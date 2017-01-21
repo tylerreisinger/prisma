@@ -6,10 +6,8 @@ use color::{Color, Lerp, Invert, Flatten, Bounded, FromTuple};
 use convert::{TryFromColor, FromColor};
 use rgb::Rgb;
 
-use ycbcr::model::{YCbCrModel, JpegModel, UnitModel, Bt709Model, CustomYCbCrModel};
-use ycbcr::bare_ycbcr::{BareYCbCr, OutOfGamutMode};
-
-pub struct YCbCrTag;
+use ycbcr::model::{YCbCrModel, JpegModel, UnitModel, Bt709Model, CustomYCbCrModel, YiqModel};
+use ycbcr::bare_ycbcr::{BareYCbCr, OutOfGamutMode, YCbCrTag};
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -18,6 +16,7 @@ pub struct YCbCr<T, M = JpegModel> {
     model: M,
 }
 
+pub type Yiq<T> = YCbCr<T, YiqModel>;
 pub type YCbCrJpeg<T> = YCbCr<T, JpegModel>;
 pub type YCbCrBt709<T> = YCbCr<T, Bt709Model>;
 pub type YCbCrCustom<'a, T> = YCbCr<T, &'a CustomYCbCrModel>;
@@ -283,6 +282,24 @@ mod test {
 
         assert_relative_eq!(t1, Rgb::from_channels(0.9206, 0.216932, 0.8544), epsilon=1e-5);
         assert_relative_eq!(YCbCr::<_, &CustomYCbCrModel>::from_rgb_and_model(&t1, &model), c1, epsilon=1e-5);
+    }
+
+    #[test]
+    fn test_yiq() {
+        let c1 = Yiq::from_channels(0.0, 0.0, 0.0);
+        let t1 = Rgb::try_from_color(&c1).unwrap();
+        assert_relative_eq!(t1, Rgb::from_channels(0.0, 0.0, 0.0), epsilon=1e-3);
+        assert_relative_eq!(c1, Yiq::from_rgb(&t1), epsilon=1e-3);
+
+        let c2 = Yiq::from_channels(1.0, 0.0, 0.0);
+        let t2 = Rgb::try_from_color(&c2).unwrap();
+        assert_relative_eq!(t2, Rgb::from_channels(1.0, 1.0, 1.0), epsilon=1e-3);
+        assert_relative_eq!(c2, Yiq::from_rgb(&t2), epsilon=1e-3);
+
+        let c3 = Yiq::from_channels(0.25, 0.5, 0.0);
+        let t3 = c3.to_rgb(OutOfGamutMode::Preserve);
+        assert_relative_eq!(t3, Rgb::from_channels(0.5347446, 0.1689848, -0.0794421), epsilon=1e-3);
+        assert_relative_eq!(c3, Yiq::from_rgb(&t3), epsilon=1e-3);
     }
 
     #[test]

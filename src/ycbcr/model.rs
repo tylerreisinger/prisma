@@ -27,6 +27,8 @@ pub struct CustomYCbCrModel {
 pub struct StandardShift<T>(pub T);
 
 #[derive(Copy, Clone, Debug, PartialEq)]
+pub struct YiqModel;
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Bt709Model;
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct JpegModel;
@@ -137,6 +139,31 @@ impl<T> UnitModel<T> for Bt709Model
 {
     fn unit_value() -> Self {
         Bt709Model
+    }
+}
+
+impl<T> YCbCrModel<T> for YiqModel
+    where T: PosNormalChannelScalar + NormalChannelScalar,
+          StandardShift<T>: YCbCrShift<T>
+{
+    type Shift = StandardShift<T>;
+    fn forward_transform(&self) -> Matrix3<f64> {
+        Matrix3::new([0.299, 0.587, 0.114, 1.0, -0.4599631, -0.540541, 0.403750, -1.0, 0.597015])
+    }
+    fn inverse_transform(&self) -> Matrix3<f64> {
+        Matrix3::new([1.0, 0.569795, 0.324938, 1.0, -0.162529, -0.338139, 1.0, -0.657578, 0.888868])
+    }
+    fn shift(&self) -> (T, T, T) {
+        Self::Shift::get_shift()
+    }
+}
+
+impl<T> UnitModel<T> for YiqModel
+    where T: PosNormalChannelScalar + NormalChannelScalar,
+          StandardShift<T>: YCbCrShift<T>
+{
+    fn unit_value() -> Self {
+        YiqModel
     }
 }
 
