@@ -8,6 +8,7 @@ use channel::{NormalBoundedChannel, ColorChannel, NormalChannelScalar, ChannelFo
 use color::{Color, FromTuple, Invert, Bounded, Lerp, Flatten};
 
 use ycbcr::model::YCbCrModel;
+use ycbcr::YCbCr;
 use rgb::Rgb;
 
 pub enum OutOfGamutMode {
@@ -65,6 +66,12 @@ impl<T> BareYCbCr<T>
     }
     pub fn set_cr(&mut self, val: T) {
         self.cr.0 = val;
+    }
+
+    pub fn with_model<M>(self, model: M) -> YCbCr<T, M>
+        where M: YCbCrModel<T>
+    {
+        YCbCr::from_color_and_model(self, model)
     }
 }
 

@@ -3,7 +3,7 @@ use approx;
 use num;
 use channel::{NormalChannelScalar, ChannelFormatCast, PosNormalChannelScalar};
 use color::{Color, Lerp, Invert, Flatten, Bounded, FromTuple};
-use convert::TryFromColor;
+use convert::{TryFromColor, FromColor};
 use rgb::Rgb;
 
 use ycbcr::model::{YCbCrModel, JpegModel, UnitModel, Bt709Model, CustomYCbCrModel};
@@ -62,7 +62,9 @@ impl<T, M> YCbCr<T, M>
     pub fn model(&self) -> &M {
         &self.model
     }
-
+    pub fn bare_ycbcr(&self) -> &BareYCbCr<T> {
+        &self.ycbcr
+    }
     pub fn luma(&self) -> T {
         self.ycbcr.luma()
     }
@@ -89,6 +91,10 @@ impl<T, M> YCbCr<T, M>
     }
     pub fn set_cr(&mut self, val: T) {
         self.ycbcr.set_cr(val);
+    }
+
+    pub fn strip_model(self) -> BareYCbCr<T> {
+        self.ycbcr
     }
 }
 
@@ -232,6 +238,15 @@ impl<T, M> YCbCr<T, M>
 
     pub fn to_rgb(&self, out_of_gamut_mode: OutOfGamutMode) -> Rgb<T> {
         self.ycbcr.to_rgb(&self.model, out_of_gamut_mode)
+    }
+}
+
+impl<T, M> FromColor<Rgb<T>> for YCbCr<T, M>
+    where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
+          M: YCbCrModel<T> + UnitModel<T>
+{
+    fn from_color(from: &Rgb<T>) -> YCbCr<T, M> {
+        YCbCr::from_rgb(from)
     }
 }
 
