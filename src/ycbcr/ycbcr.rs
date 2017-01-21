@@ -6,7 +6,8 @@ use color::{Color, Lerp, Invert, Flatten, Bounded, FromTuple};
 use convert::{TryFromColor, FromColor};
 use rgb::Rgb;
 
-use ycbcr::model::{YCbCrModel, JpegModel, UnitModel, Bt709Model, CustomYCbCrModel, YiqModel};
+use ycbcr::model::{YCbCrModel, Canonicalize, JpegModel, UnitModel, Bt709Model, CustomYCbCrModel,
+                   YiqModel};
 use ycbcr::bare_ycbcr::{BareYCbCr, OutOfGamutMode, YCbCrTag};
 
 #[repr(C)]
@@ -42,9 +43,6 @@ impl<T> Yiq<T>
     }
     pub fn set_q(&mut self, val: T) {
         self.set_cr(val)
-    }
-    pub fn to_cannonical_representation(self) -> (T, T, T) {
-        (self.luma(), self.i() * num::cast(0.5957).unwrap(), self.q() * num::cast(0.5226).unwrap())
     }
 }
 
@@ -121,6 +119,15 @@ impl<T, M> YCbCr<T, M>
 
     pub fn strip_model(self) -> BareYCbCr<T> {
         self.ycbcr
+    }
+}
+
+impl<T, M> YCbCr<T, M>
+    where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
+          M: YCbCrModel<T> + Canonicalize<T>
+{
+    pub fn to_canonical_representation(self) -> (T, T, T) {
+        M::to_canonical_representation(self)
     }
 }
 
@@ -327,6 +334,15 @@ mod test {
         let t3 = c3.to_rgb(OutOfGamutMode::Preserve);
         assert_relative_eq!(t3, Rgb::from_channels(0.5347446, 0.1689848, -0.0794421), epsilon=1e-3);
         assert_relative_eq!(c3, Yiq::from_rgb(&t3), epsilon=1e-3);
+    }
+
+    #[test]
+    fn test_canonicalize() {
+        let c1 = YCbCrJpeg::from_channels(1.0, 1.0, -1.0);
+        assert_eq!(c1.to_canonical_representation(), (1.0, 0.436, -0.615));
+
+        let c2 = Yiq::from_channels(1.0, 1.0, -1.0);
+        assert_eq!(c2.to_canonical_representation(), (1.0, 0.5957, -0.5226));
     }
 
     #[test]
