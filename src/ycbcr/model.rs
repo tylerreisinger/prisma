@@ -1,6 +1,6 @@
+use num;
 use linalg::Matrix3;
 use channel::{PosNormalChannelScalar, NormalChannelScalar};
-use ycbcr::build_transform;
 
 pub trait YCbCrShift<T> {
     fn get_shift() -> (T, T, T);
@@ -30,6 +30,26 @@ pub struct StandardShift<T>(pub T);
 pub struct Bt709Model;
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct JpegModel;
+
+pub fn build_transform<T>(kr: T, kb: T) -> Matrix3<T>
+    where T: num::Float
+{
+    let half = num::cast::<_, T>(0.5).unwrap();
+    let one = num::cast::<_, T>(1.0).unwrap();
+
+    let kg = one - kr - kb;
+
+    let cb_r = half * (-kr / (one - kb));
+    let cb_g = half * (-kg / (one - kb));
+    let cb_b = half;
+
+    let cr_r = half;
+    let cr_g = half * (-kg / (one - kr));
+    let cr_b = half * (-kb / (one - kr));
+
+    Matrix3::new([kr, kg, kb, cb_r, cb_g, cb_b, cr_r, cr_g, cr_b])
+}
+
 
 impl CustomYCbCrModel {
     pub fn new(forward_transform: Matrix3<f64>, inverse_transform: Matrix3<f64>) -> Self {

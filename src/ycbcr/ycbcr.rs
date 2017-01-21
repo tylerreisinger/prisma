@@ -1,30 +1,20 @@
 use std::fmt;
-use std::slice;
-use std::mem;
 use approx;
 use num;
-use channel::{NormalBoundedChannel, ColorChannel, NormalChannelScalar, ChannelFormatCast,
-              ChannelCast, PosNormalChannelScalar, PosNormalBoundedChannel};
+use channel::{NormalChannelScalar, ChannelFormatCast, PosNormalChannelScalar};
 use color::{Color, Lerp, Invert, Flatten, Bounded, FromTuple};
 use convert::TryFromColor;
 use rgb::Rgb;
-use linalg::Matrix3;
 
 use ycbcr::model::{YCbCrModel, JpegModel, UnitModel, Bt709Model, CustomYCbCrModel};
+use ycbcr::bare_ycbcr::{BareYCbCr, OutOfGamutMode};
 
 pub struct YCbCrTag;
-
-pub enum OutOfGamutMode {
-    Preserve,
-    Clip,
-}
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct YCbCr<T, M = JpegModel> {
-    luma: PosNormalBoundedChannel<T>,
-    cb: NormalBoundedChannel<T>,
-    cr: NormalBoundedChannel<T>,
+    ycbcr: BareYCbCr<T>,
     model: M,
 }
 
@@ -45,11 +35,16 @@ impl<T, M> YCbCr<T, M>
     where T: NormalChannelScalar + PosNormalChannelScalar,
           M: YCbCrModel<T>
 {
+    pub fn from_color_and_model(ycbcr: BareYCbCr<T>, model: M) -> Self {
+        YCbCr {
+            ycbcr: ycbcr,
+            model: model,
+        }
+    }
+
     pub fn from_channels_and_model(y: T, cb: T, cr: T, model: M) -> Self {
         YCbCr {
-            luma: PosNormalBoundedChannel::new(y),
-            cb: NormalBoundedChannel::new(cb),
-            cr: NormalBoundedChannel::new(cr),
+            ycbcr: BareYCbCr::from_channels(y, cb, cr),
             model: model,
         }
     }
@@ -59,9 +54,7 @@ impl<T, M> YCbCr<T, M>
               TOut: NormalChannelScalar + PosNormalChannelScalar
     {
         YCbCr {
-            luma: self.luma.clone().channel_cast(),
-            cb: self.cb.clone().channel_cast(),
-            cr: self.cr.clone().channel_cast(),
+            ycbcr: self.ycbcr.clone().color_cast(),
             model: self.model.clone(),
         }
     }
@@ -71,31 +64,31 @@ impl<T, M> YCbCr<T, M>
     }
 
     pub fn luma(&self) -> T {
-        self.luma.0.clone()
+        self.ycbcr.luma()
     }
     pub fn cb(&self) -> T {
-        self.cb.0.clone()
+        self.ycbcr.cb()
     }
     pub fn cr(&self) -> T {
-        self.cr.0.clone()
+        self.ycbcr.cr()
     }
     pub fn luma_mut(&mut self) -> &mut T {
-        &mut self.luma.0
+        self.ycbcr.luma_mut()
     }
     pub fn cb_mut(&mut self) -> &mut T {
-        &mut self.cb.0
+        self.ycbcr.cb_mut()
     }
     pub fn cr_mut(&mut self) -> &mut T {
-        &mut self.cr.0
+        self.ycbcr.cr_mut()
     }
     pub fn set_luma(&mut self, val: T) {
-        self.luma.0 = val;
+        self.ycbcr.set_luma(val);
     }
     pub fn set_cb(&mut self, val: T) {
-        self.cb.0 = val;
+        self.ycbcr.set_cb(val);
     }
     pub fn set_cr(&mut self, val: T) {
-        self.cr.0 = val;
+        self.ycbcr.set_cr(val);
     }
 }
 
@@ -112,7 +105,7 @@ impl<T, M> Color for YCbCr<T, M>
     }
 
     fn to_tuple(self) -> Self::ChannelsTuple {
-        (self.luma.0, self.cb.0, self.cr.0)
+        self.ycbcr.to_tuple()
     }
 }
 
@@ -130,10 +123,7 @@ impl<T, M> Invert for YCbCr<T, M>
           M: YCbCrModel<T>
 {
     fn invert(self) -> Self {
-        YCbCr::from_channels_and_model(self.luma.invert().0,
-                                       self.cb.invert().0,
-                                       self.cr.invert().0,
-                                       self.model)
+        YCbCr::from_color_and_model(self.ycbcr.invert(), self.model)
     }
 }
 impl<T, M> Bounded for YCbCr<T, M>
@@ -141,14 +131,11 @@ impl<T, M> Bounded for YCbCr<T, M>
           M: YCbCrModel<T>
 {
     fn normalize(self) -> Self {
-        YCbCr::from_channels_and_model(self.luma.normalize().0,
-                                       self.cb.normalize().0,
-                                       self.cr.normalize().0,
-                                       self.model)
+        YCbCr::from_color_and_model(self.ycbcr.normalize(), self.model)
     }
 
     fn is_normalized(&self) -> bool {
-        self.luma.is_normalized() && self.cb.is_normalized() && self.cr.is_normalized()
+        self.ycbcr.is_normalized()
     }
 }
 
@@ -157,7 +144,10 @@ impl<T, M> Lerp for YCbCr<T, M>
           M: YCbCrModel<T>
 {
     type Position = <T as Lerp>::Position;
-    impl_color_lerp_square!(YCbCr {luma, cb, cr}, copy={model});
+
+    fn lerp(&self, other: &Self, pos: Self::Position) -> Self {
+        YCbCr::from_color_and_model(self.ycbcr.lerp(&other.ycbcr, pos), self.model.clone())
+    }
 }
 
 
@@ -167,7 +157,9 @@ impl<T, M> Flatten for YCbCr<T, M>
 {
     type ScalarFormat = T;
 
-    impl_color_as_slice!(T);
+    fn as_slice(&self) -> &[T] {
+        self.ycbcr.as_slice()
+    }
 
     fn from_slice(vals: &[T]) -> Self {
         YCbCr::from_channels(vals[0].clone(), vals[1].clone(), vals[2].clone())
@@ -179,7 +171,27 @@ impl<T, M> approx::ApproxEq for YCbCr<T, M>
           T::Epsilon: Clone,
           M: YCbCrModel<T>
 {
-    impl_approx_eq!({luma, cb, cr});
+    type Epsilon = <BareYCbCr<T> as approx::ApproxEq>::Epsilon;
+
+    fn default_epsilon() -> Self::Epsilon {
+        BareYCbCr::<T>::default_epsilon()
+    }
+    fn default_max_relative() -> Self::Epsilon {
+        BareYCbCr::<T>::default_max_relative()
+    }
+    fn default_max_ulps() -> u32 {
+        BareYCbCr::<T>::default_max_ulps()
+    }
+    fn relative_eq(&self,
+                   other: &Self,
+                   epsilon: Self::Epsilon,
+                   max_relative: Self::Epsilon)
+                   -> bool {
+        self.ycbcr.relative_eq(&other.ycbcr, epsilon, max_relative)
+    }
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        self.ycbcr.ulps_eq(&other.ycbcr, epsilon, max_ulps)
+    }
 }
 
 impl<T, M> Default for YCbCr<T, M>
@@ -187,12 +199,7 @@ impl<T, M> Default for YCbCr<T, M>
           M: YCbCrModel<T> + UnitModel<T>
 {
     fn default() -> Self {
-        YCbCr {
-            luma: PosNormalBoundedChannel::default(),
-            cb: NormalBoundedChannel::default(),
-            cr: NormalBoundedChannel::default(),
-            model: M::unit_value(),
-        }
+        YCbCr::from_color_and_model(BareYCbCr::default(), M::unit_value())
     }
 }
 
@@ -201,7 +208,7 @@ impl<T, M> fmt::Display for YCbCr<T, M>
           M: YCbCrModel<T>
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "YCbCr({}, {}, {})", self.luma, self.cb, self.cr)
+        write!(f, "{}", self.ycbcr)
     }
 }
 
@@ -219,34 +226,12 @@ impl<T, M> YCbCr<T, M>
           M: YCbCrModel<T>
 {
     pub fn from_rgb_and_model(from: &Rgb<T>, model: M) -> Self {
-        let transform = model.forward_transform();
-        let shift = model.shift();
-
-        let (y, cb, cr) = transform.transform_vector(from.clone().to_tuple());
-
-        YCbCr::from_channels_and_model(y + shift.0, cb + shift.1, cr + shift.2, model)
+        let ycbcr = BareYCbCr::from_rgb_and_model(from, &model);
+        YCbCr::from_color_and_model(ycbcr, model)
     }
 
     pub fn to_rgb(&self, out_of_gamut_mode: OutOfGamutMode) -> Rgb<T> {
-        let transform = self.model.inverse_transform();
-        let shift = self.model.shift();
-
-        let (i1, i2, i3) = self.clone().to_tuple();
-        let shifted_color =
-            (num::cast::<_, f64>(i1).unwrap() - num::cast::<_, f64>(shift.0).unwrap(),
-             num::cast::<_, f64>(i2).unwrap() - num::cast::<_, f64>(shift.1).unwrap(),
-             num::cast::<_, f64>(i3).unwrap() - num::cast::<_, f64>(shift.2).unwrap());
-
-        let (r, g, b) = transform.transform_vector(shifted_color);
-
-        let out = Rgb::from_channels(num::cast(r).unwrap(),
-                                     num::cast(g).unwrap(),
-                                     num::cast(b).unwrap());
-
-        match out_of_gamut_mode {
-            OutOfGamutMode::Preserve => out,
-            OutOfGamutMode::Clip => out.normalize(),
-        }
+        self.ycbcr.to_rgb(&self.model, out_of_gamut_mode)
     }
 }
 
@@ -260,25 +245,6 @@ impl<T, M> TryFromColor<YCbCr<T, M>> for Rgb<T>
     }
 }
 
-pub fn build_transform<T>(kr: T, kb: T) -> Matrix3<T>
-    where T: num::Float
-{
-    let half = num::cast::<_, T>(0.5).unwrap();
-    let one = num::cast::<_, T>(1.0).unwrap();
-
-    let kg = one - kr - kb;
-
-    let cb_r = half * (-kr / (one - kb));
-    let cb_g = half * (-kg / (one - kb));
-    let cb_b = half;
-
-    let cr_r = half;
-    let cr_g = half * (-kg / (one - kr));
-    let cr_b = half * (-kb / (one - kr));
-
-    Matrix3::new([kr, kg, kb, cb_r, cb_g, cb_b, cr_r, cr_g, cr_b])
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -287,6 +253,7 @@ mod test {
     use color::*;
     use linalg::Matrix3;
     use ycbcr::model::*;
+    use ycbcr::bare_ycbcr::OutOfGamutMode;
     use test;
 
     #[test]
