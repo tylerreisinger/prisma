@@ -307,9 +307,7 @@ mod test {
     #[test]
     fn test_custom_model() {
         let model = CustomYCbCrModel::build_from_coefficients(0.299, 0.114);
-        assert_relative_eq!(
-            <CustomYCbCrModel as YCbCrModel<f64>>::forward_transform(&model), 
-            <JpegModel as YCbCrModel<f64>>::forward_transform(&JpegModel), epsilon=1e-6);
+        assert_relative_eq!(model.forward_transform(), JpegModel.forward_transform(), epsilon=1e-6);
 
         let c1: YCbCrCustom<_> = YCbCr::from_channels_and_model(0.5, 0.2, 0.3, &model);
         let t1 = c1.to_rgb(OutOfGamutMode::Preserve);

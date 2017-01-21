@@ -7,10 +7,13 @@ pub trait YCbCrShift<T> {
     fn get_shift() -> (T, T, T);
 }
 
-pub trait YCbCrModel<T>: Clone + PartialEq {
-    type Shift: YCbCrShift<T>;
+pub trait YCbCrTransform {
     fn forward_transform(&self) -> Matrix3<f64>;
     fn inverse_transform(&self) -> Matrix3<f64>;
+}
+
+pub trait YCbCrModel<T>: Clone + PartialEq + YCbCrTransform {
+    type Shift: YCbCrShift<T>;
     fn shift(&self) -> (T, T, T);
 }
 
@@ -74,17 +77,21 @@ impl CustomYCbCrModel {
     }
 }
 
-impl<T> YCbCrModel<T> for CustomYCbCrModel
-    where T: PosNormalChannelScalar + NormalChannelScalar,
-          StandardShift<T>: YCbCrShift<T>
+impl YCbCrTransform for CustomYCbCrModel
 {
-    type Shift = StandardShift<T>;
     fn forward_transform(&self) -> Matrix3<f64> {
         self.forward_transform.clone()
     }
     fn inverse_transform(&self) -> Matrix3<f64> {
         self.inverse_transform.clone()
     }
+}
+
+impl<T> YCbCrModel<T> for CustomYCbCrModel
+    where T: PosNormalChannelScalar + NormalChannelScalar,
+          StandardShift<T>: YCbCrShift<T>
+{
+    type Shift = StandardShift<T>;
     fn shift(&self) -> (T, T, T) {
         Self::Shift::get_shift()
     }
@@ -104,14 +111,18 @@ impl<'a, T> YCbCrModel<T> for &'a CustomYCbCrModel
           StandardShift<T>: YCbCrShift<T>
 {
     type Shift = StandardShift<T>;
+    fn shift(&self) -> (T, T, T) {
+        Self::Shift::get_shift()
+    }
+}
+
+impl<'a> YCbCrTransform for &'a CustomYCbCrModel
+{
     fn forward_transform(&self) -> Matrix3<f64> {
         self.forward_transform.clone()
     }
     fn inverse_transform(&self) -> Matrix3<f64> {
         self.inverse_transform.clone()
-    }
-    fn shift(&self) -> (T, T, T) {
-        Self::Shift::get_shift()
     }
 }
 
@@ -124,11 +135,8 @@ impl<'a, T> Canonicalize<T> for &'a CustomYCbCrModel
     }
 }
 
-impl<T> YCbCrModel<T> for Bt709Model
-    where T: PosNormalChannelScalar + NormalChannelScalar,
-          StandardShift<T>: YCbCrShift<T>
+impl YCbCrTransform for Bt709Model
 {
-    type Shift = StandardShift<T>;
     fn forward_transform(&self) -> Matrix3<f64> {
         Matrix3::new([0.2126,
                       0.7152,
@@ -152,6 +160,12 @@ impl<T> YCbCrModel<T> for Bt709Model
                       0.0])
 
     }
+}
+impl<T> YCbCrModel<T> for Bt709Model
+    where T: PosNormalChannelScalar + NormalChannelScalar,
+          StandardShift<T>: YCbCrShift<T>
+{
+    type Shift = StandardShift<T>;
     fn shift(&self) -> (T, T, T) {
         Self::Shift::get_shift()
     }
@@ -173,17 +187,21 @@ impl<T> Canonicalize<T> for Bt709Model
     }
 }
 
-impl<T> YCbCrModel<T> for YiqModel
-    where T: PosNormalChannelScalar + NormalChannelScalar,
-          StandardShift<T>: YCbCrShift<T>
+impl YCbCrTransform for YiqModel
 {
-    type Shift = StandardShift<T>;
     fn forward_transform(&self) -> Matrix3<f64> {
         Matrix3::new([0.299, 0.587, 0.114, 1.0, -0.4599631, -0.540541, 0.403750, -1.0, 0.597015])
     }
     fn inverse_transform(&self) -> Matrix3<f64> {
         Matrix3::new([1.0, 0.569795, 0.324938, 1.0, -0.162529, -0.338139, 1.0, -0.657578, 0.888868])
     }
+}
+
+impl<T> YCbCrModel<T> for YiqModel
+    where T: PosNormalChannelScalar + NormalChannelScalar,
+          StandardShift<T>: YCbCrShift<T>
+{
+    type Shift = StandardShift<T>;
     fn shift(&self) -> (T, T, T) {
         Self::Shift::get_shift()
     }
@@ -207,17 +225,21 @@ impl<T> Canonicalize<T> for YiqModel
     }
 }
 
-impl<T> YCbCrModel<T> for JpegModel
-    where T: PosNormalChannelScalar + NormalChannelScalar,
-          StandardShift<T>: YCbCrShift<T>
+impl YCbCrTransform for JpegModel
 {
-    type Shift = StandardShift<T>;
     fn forward_transform(&self) -> Matrix3<f64> {
         Matrix3::new([0.299f64, 0.587, 0.114, -0.168736, -0.331264, 0.5, 0.5, -0.418688, -0.081312])
     }
     fn inverse_transform(&self) -> Matrix3<f64> {
         Matrix3::new([1.0, 0.0, 1.402, 1.0, -0.3441, -0.7141, 1.0, 1.772, 0.0])
     }
+}
+
+impl<T> YCbCrModel<T> for JpegModel
+    where T: PosNormalChannelScalar + NormalChannelScalar,
+          StandardShift<T>: YCbCrShift<T>
+{
+    type Shift = StandardShift<T>;
     fn shift(&self) -> (T, T, T) {
         Self::Shift::get_shift()
     }
