@@ -21,6 +21,33 @@ pub type YCbCrJpeg<T> = YCbCr<T, JpegModel>;
 pub type YCbCrBt709<T> = YCbCr<T, Bt709Model>;
 pub type YCbCrCustom<'a, T> = YCbCr<T, &'a CustomYCbCrModel>;
 
+impl<T> Yiq<T>
+    where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
+          YiqModel: YCbCrModel<T>
+{
+    pub fn i(&self) -> T {
+        self.cb()
+    }
+    pub fn q(&self) -> T {
+        self.cr()
+    }
+    pub fn i_mut(&mut self) -> &mut T {
+        self.cb_mut()
+    }
+    pub fn q_mut(&mut self) -> &mut T {
+        self.cr_mut()
+    }
+    pub fn set_i(&mut self, val: T) {
+        self.set_cb(val)
+    }
+    pub fn set_q(&mut self, val: T) {
+        self.set_cr(val)
+    }
+    pub fn to_cannonical_representation(self) -> (T, T, T) {
+        (self.luma(), self.i() * num::cast(0.5957).unwrap(), self.q() * num::cast(0.5226).unwrap())
+    }
+}
+
 impl<T, M> YCbCr<T, M>
     where T: NormalChannelScalar + PosNormalChannelScalar,
           M: YCbCrModel<T> + UnitModel<T>
