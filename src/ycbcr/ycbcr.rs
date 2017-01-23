@@ -1,3 +1,5 @@
+//! Implements the core `YCbCr` struct and some convenience types.
+
 use std::fmt;
 use approx;
 use num;
@@ -10,6 +12,20 @@ use ycbcr::model::{YCbCrModel, Canonicalize, JpegModel, UnitModel, Bt709Model, C
                    YiqModel};
 use ycbcr::bare_ycbcr::{BareYCbCr, OutOfGamutMode, YCbCrTag};
 
+/// A color in the YCbCr family of color spaces.
+///
+/// See the parent module description for a discussion on the properties of the color space.
+/// The `YCbCr` type is represented with a set of channel values, plus a model. The model
+/// is stored with the color, and comes in two forms:
+///
+/// * A unit struct, defining the model at compile time. These do not store any value and thus
+///   do not increase the size of a color instance. `JpegModel`, `Bt709Model` and `YiqModel`
+///   and of this type. These types implement the `UnitModel` trait, and do not need to be
+///   passed to most functions.
+/// * A type which stores its transformations in memory at runtime. For these models, it is
+///   usually preferable to store a reference to the model in the color to minimize the size
+///   impact. However, this will still increase the size of the type by one pointer size. Only
+///   `CustomYCbCrModel` is of this type.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct YCbCr<T, M = JpegModel> {
@@ -17,30 +33,46 @@ pub struct YCbCr<T, M = JpegModel> {
     model: M,
 }
 
+/// A YCbCr color with a `YiqModel`.
 pub type Yiq<T> = YCbCr<T, YiqModel>;
+/// A YCbCr color with a `JpegModel`.
 pub type YCbCrJpeg<T> = YCbCr<T, JpegModel>;
+/// A YCbCr color with a `Bt709Model`.
 pub type YCbCrBt709<T> = YCbCr<T, Bt709Model>;
+/// A YCbCr color with a reference to a `CustomYCbCrModel`.
 pub type YCbCrCustom<'a, T> = YCbCr<T, &'a CustomYCbCrModel>;
 
-impl<T> Yiq<T>
+impl<T> YCbCr<T, YiqModel>
     where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
           YiqModel: YCbCrModel<T>
 {
+    /// The `I` channel of a YIQ color.
+    ///
+    /// Because YIQ is implemented as a model on top of YCbCr,
+    /// this is equivalent to `self.cb()`.
     pub fn i(&self) -> T {
         self.cb()
     }
+    /// The `Q` channel of a YIQ color.
+    ///
+    /// Because YIQ is implemented as a model on top of YCbCr,
+    /// this is equivalent to `self.cr()`.
     pub fn q(&self) -> T {
         self.cr()
     }
+    /// Return a mutable reference to the `I` channel.
     pub fn i_mut(&mut self) -> &mut T {
         self.cb_mut()
     }
+    /// Return a mutable reference to the `Q` channel.
     pub fn q_mut(&mut self) -> &mut T {
         self.cr_mut()
     }
+    /// Set the `I` channel to a value.
     pub fn set_i(&mut self, val: T) {
         self.set_cb(val)
     }
+    /// Set the `Q` channel to a value.
     pub fn set_q(&mut self, val: T) {
         self.set_cr(val)
     }
@@ -50,6 +82,13 @@ impl<T, M> YCbCr<T, M>
     where T: NormalChannelScalar + PosNormalChannelScalar,
           M: YCbCrModel<T> + UnitModel<T>
 {
+    /// Construct a `YCbCr` from channel values.
+    ///
+    /// This method does not take a model parameter, and is only usable for
+    /// colors where the model is a stateless type implementing UnitModel. For such types,
+    /// it sets the model to `M::unit_value()`.
+    /// For colors that have a stateful model, the `from_channels_and_model` method
+    /// should be used instead.
     pub fn from_channels(y: T, cb: T, cr: T) -> Self {
         YCbCr::from_channels_and_model(y, cb, cr, M::unit_value())
     }
@@ -59,6 +98,7 @@ impl<T, M> YCbCr<T, M>
     where T: NormalChannelScalar + PosNormalChannelScalar,
           M: YCbCrModel<T>
 {
+    /// Construct a `YCbCr` from a `BareYCbCr` and model.
     pub fn from_color_and_model(ycbcr: BareYCbCr<T>, model: M) -> Self {
         YCbCr {
             ycbcr: ycbcr,
@@ -66,6 +106,7 @@ impl<T, M> YCbCr<T, M>
         }
     }
 
+    /// Construct a `YCbCr` from channel values and a model.
     pub fn from_channels_and_model(y: T, cb: T, cr: T, model: M) -> Self {
         YCbCr {
             ycbcr: BareYCbCr::from_channels(y, cb, cr),
@@ -73,6 +114,7 @@ impl<T, M> YCbCr<T, M>
         }
     }
 
+    /// Cast between different channel scalar representation.
     pub fn color_cast<TOut>(&self) -> YCbCr<TOut, M>
         where T: ChannelFormatCast<TOut>,
               TOut: NormalChannelScalar + PosNormalChannelScalar
@@ -83,40 +125,55 @@ impl<T, M> YCbCr<T, M>
         }
     }
 
+    /// Get a reference to the model of the given `YCbCr`.
     pub fn model(&self) -> &M {
         &self.model
     }
+    /// Get a reference to the "bare" color.
     pub fn bare_ycbcr(&self) -> &BareYCbCr<T> {
         &self.ycbcr
     }
+    /// Get the luma (Y') channel.
     pub fn luma(&self) -> T {
         self.ycbcr.luma()
     }
+    /// Get the Cb channel.
     pub fn cb(&self) -> T {
         self.ycbcr.cb()
     }
+    /// Get the Cr channel.
     pub fn cr(&self) -> T {
         self.ycbcr.cr()
     }
+    /// Get a mutable reference to the luma (Y') channel.
     pub fn luma_mut(&mut self) -> &mut T {
         self.ycbcr.luma_mut()
     }
+    /// Get a mutable reference to the Cb channel.
     pub fn cb_mut(&mut self) -> &mut T {
         self.ycbcr.cb_mut()
     }
+    /// Get a mutable reference to the Cr channel.
     pub fn cr_mut(&mut self) -> &mut T {
         self.ycbcr.cr_mut()
     }
+    /// Set the luma (Y') channel to a value.
     pub fn set_luma(&mut self, val: T) {
         self.ycbcr.set_luma(val);
     }
+    /// Set the Cb channel to a value.
     pub fn set_cb(&mut self, val: T) {
         self.ycbcr.set_cb(val);
     }
+    /// Set the Cr channel to a value.
     pub fn set_cr(&mut self, val: T) {
         self.ycbcr.set_cr(val);
     }
 
+    /// Remove the model information from the given `YCbCr`.
+    ///
+    /// This returns a `BareYCbCr` with all the same channel values.
+    /// No conversion is necessary, the model information is simply dropped.
     pub fn strip_model(self) -> BareYCbCr<T> {
         self.ycbcr
     }
@@ -126,6 +183,11 @@ impl<T, M> YCbCr<T, M>
     where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
           M: YCbCrModel<T> + Canonicalize<T>
 {
+    /// Return the channels rescaled to their canonical range for the given `YCbCr`'s model.
+    ///
+    /// Most YUV and YIQ standards define the channel range to be different than the
+    /// `[-1, 1]` used by this library. This function returns the values for the same
+    /// color rescaled to the defined range.
     pub fn to_canonical_representation(self) -> (T, T, T) {
         M::to_canonical_representation(self)
     }
@@ -255,6 +317,7 @@ impl<T, M> YCbCr<T, M>
     where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
           M: YCbCrModel<T> + UnitModel<T>
 {
+    /// Convert from RGB to YCbCr for UnitModels.
     pub fn from_rgb(from: &Rgb<T>) -> Self {
         Self::from_rgb_and_model(from, M::unit_value())
     }
@@ -264,11 +327,21 @@ impl<T, M> YCbCr<T, M>
     where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
           M: YCbCrModel<T>
 {
+    /// Convert from RGB to YCbCr, using `model`.
+    ///
+    /// The returned value stores the passed model.
     pub fn from_rgb_and_model(from: &Rgb<T>, model: M) -> Self {
         let ycbcr = BareYCbCr::from_rgb_and_model(from, &model);
         YCbCr::from_color_and_model(ycbcr, model)
     }
 
+    /// Convert from YCbCr to RGB.
+    ///
+    /// # Params
+    ///
+    /// * out_of_gamut_mode - How to handle out of gamut colors.
+    ///   See [OutOfGamutMode](../bare_ycbcr/enum.OutOfGamutMode.html)
+    ///   for a description of the options.
     pub fn to_rgb(&self, out_of_gamut_mode: OutOfGamutMode) -> Rgb<T> {
         self.ycbcr.to_rgb(&self.model, out_of_gamut_mode)
     }
@@ -313,7 +386,8 @@ mod test {
         let t1 = c1.to_rgb(OutOfGamutMode::Preserve);
 
         assert_relative_eq!(t1, Rgb::from_channels(0.9206, 0.216932, 0.8544), epsilon=1e-5);
-        assert_relative_eq!(YCbCr::<_, &CustomYCbCrModel>::from_rgb_and_model(&t1, &model), c1, epsilon=1e-5);
+        assert_relative_eq!(YCbCr::<_, &CustomYCbCrModel>::from_rgb_and_model(&t1, &model),
+            c1, epsilon=1e-5);
     }
 
     #[test]
@@ -476,11 +550,13 @@ mod test {
     fn test_color_cast() {
         let c1 = YCbCrJpeg::from_channels(0.65f32, -0.3, 0.5);
         assert_relative_eq!(c1.color_cast(), c1);
-        assert_relative_eq!(c1.color_cast(), YCbCrJpeg::from_channels(0.65, -0.3, 0.5), epsilon=1e-6);
+        assert_relative_eq!(c1.color_cast(),
+            YCbCrJpeg::from_channels(0.65, -0.3, 0.5), epsilon=1e-6);
         assert_eq!(c1.color_cast(), YCbCrJpeg::from_channels(166u8, 89, 191));
 
         let c2 = YCbCrJpeg::from_channels(100u8, 200u8, 100u8);
 
-        assert_relative_eq!(c2.color_cast(), YCbCrJpeg::from_channels(0.39215686f32, 0.56862745f32, -0.21568627f32));
+        assert_relative_eq!(c2.color_cast(),
+            YCbCrJpeg::from_channels(0.39215686f32, 0.56862745f32, -0.21568627f32));
     }
 }

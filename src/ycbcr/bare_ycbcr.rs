@@ -68,27 +68,27 @@ impl<T> BareYCbCr<T>
     impl_color_color_cast_square!(BareYCbCr {luma, cb, cr},
         chan_traits={PosNormalChannelScalar, NormalChannelScalar});
 
-    /// Return the luma (Y') channel.
+    /// Get the luma (Y') channel.
     pub fn luma(&self) -> T {
         self.luma.0.clone()
     }
-    /// Return the Cb channel.
+    /// Get the Cb channel.
     pub fn cb(&self) -> T {
         self.cb.0.clone()
     }
-    /// Return the Cr channel.
+    /// Get the Cr channel.
     pub fn cr(&self) -> T {
         self.cr.0.clone()
     }
-    /// Return a mutable reference to the luma (Y') channel.
+    /// Get a mutable reference to the luma (Y') channel.
     pub fn luma_mut(&mut self) -> &mut T {
         &mut self.luma.0
     }
-    /// Return a mutable reference to the Cb channel.
+    /// Get a mutable reference to the Cb channel.
     pub fn cb_mut(&mut self) -> &mut T {
         &mut self.cb.0
     }
-    /// Return a mutable reference to the Cr channel.
+    /// Get a mutable reference to the Cr channel.
     pub fn cr_mut(&mut self) -> &mut T {
         &mut self.cr.0
     }
