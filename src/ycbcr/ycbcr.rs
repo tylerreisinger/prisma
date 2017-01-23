@@ -42,42 +42,6 @@ pub type YCbCrBt709<T> = YCbCr<T, Bt709Model>;
 /// A YCbCr color with a reference to a `CustomYCbCrModel`.
 pub type YCbCrCustom<'a, T> = YCbCr<T, &'a CustomYCbCrModel>;
 
-impl<T> YCbCr<T, YiqModel>
-    where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
-          YiqModel: YCbCrModel<T>
-{
-    /// The `I` channel of a YIQ color.
-    ///
-    /// Because YIQ is implemented as a model on top of YCbCr,
-    /// this is equivalent to `self.cb()`.
-    pub fn i(&self) -> T {
-        self.cb()
-    }
-    /// The `Q` channel of a YIQ color.
-    ///
-    /// Because YIQ is implemented as a model on top of YCbCr,
-    /// this is equivalent to `self.cr()`.
-    pub fn q(&self) -> T {
-        self.cr()
-    }
-    /// Return a mutable reference to the `I` channel.
-    pub fn i_mut(&mut self) -> &mut T {
-        self.cb_mut()
-    }
-    /// Return a mutable reference to the `Q` channel.
-    pub fn q_mut(&mut self) -> &mut T {
-        self.cr_mut()
-    }
-    /// Set the `I` channel to a value.
-    pub fn set_i(&mut self, val: T) {
-        self.set_cb(val)
-    }
-    /// Set the `Q` channel to a value.
-    pub fn set_q(&mut self, val: T) {
-        self.set_cr(val)
-    }
-}
-
 impl<T, M> YCbCr<T, M>
     where T: NormalChannelScalar + PosNormalChannelScalar,
           M: YCbCrModel<T> + UnitModel<T>
@@ -190,6 +154,42 @@ impl<T, M> YCbCr<T, M>
     /// color rescaled to the defined range.
     pub fn to_canonical_representation(self) -> (T, T, T) {
         M::to_canonical_representation(self)
+    }
+}
+
+impl<T> YCbCr<T, YiqModel>
+    where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
+          YiqModel: YCbCrModel<T>
+{
+    /// The `I` channel of a YIQ color.
+    ///
+    /// Because YIQ is implemented as a model on top of YCbCr,
+    /// this is equivalent to `self.cb()`.
+    pub fn i(&self) -> T {
+        self.cb()
+    }
+    /// The `Q` channel of a YIQ color.
+    ///
+    /// Because YIQ is implemented as a model on top of YCbCr,
+    /// this is equivalent to `self.cr()`.
+    pub fn q(&self) -> T {
+        self.cr()
+    }
+    /// Return a mutable reference to the `I` channel.
+    pub fn i_mut(&mut self) -> &mut T {
+        self.cb_mut()
+    }
+    /// Return a mutable reference to the `Q` channel.
+    pub fn q_mut(&mut self) -> &mut T {
+        self.cr_mut()
+    }
+    /// Set the `I` channel to a value.
+    pub fn set_i(&mut self, val: T) {
+        self.set_cb(val)
+    }
+    /// Set the `Q` channel to a value.
+    pub fn set_q(&mut self, val: T) {
+        self.set_cr(val)
     }
 }
 
