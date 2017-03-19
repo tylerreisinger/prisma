@@ -1,5 +1,5 @@
 [package]
-name = "simple_color"
+name = "rust-color"
 version = "0.1.0"
 authors = ["Tyler Reisinger <reisinger.tyler@gmail.com>"]
 
