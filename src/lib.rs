@@ -37,3 +37,19 @@ pub mod lms;
 
 #[cfg(test)]
 pub mod test;
+
+pub use color::*;
+pub use rgb::{Rgb, Rgba, RgbTag};
+pub use rgi::{Rgi, RgiTag};
+pub use hsv::{Hsv, Hsva, HsvTag};
+pub use hsl::{Hsl, Hsla, HslTag};
+pub use hwb::{Hwb, Hwba, HwbTag, HwbBoundedChannelTraits};
+pub use hsi::{Hsi, HsiTag};
+pub use ehsi::{eHsi, EHsiTag};
+pub use xyz::{Xyz, XyzTag};
+pub use xyy::{XyY, XyYTag};
+pub use lab::{Lab, LabTag};
+pub use lchab::{Lchab, LchabTag};
+pub use luv::{Luv, LuvTag};
+pub use lchuv::{Lchuv, LchuvTag};
+pub use lms::{Lms, LmsModel, LmsTag, LmsBradford, LmsCam97s, LmsCam2002};
