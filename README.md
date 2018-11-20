@@ -1,6 +1,22 @@
-# Simple_Color
+# Prisma
 
-A simple color representation and manipulation library
-supporting the most common device-dependent color spaces.
+A color representation, manipulation and conversion library aiming to support most color spaces used today. Prisma aims to be useful in projects needing only an efficient and full-featured Rgb or Hsv represnetation, to projects using the CIE spaces as well as linear color models and converting between device independent and device dependent models.
 
-Intended to be flexible and fast, for use in basic graphical applications.
+Presently, the following color models are supported:
+
+* **Rgb**
+* **Rgi**
+* **Hsv**
+* **Hsl**
+* **Hsi**
+* **eHsi**
+* **Hwb**
+* **XYZ**
+* **XYy**
+* **Luv**
+* **Lab**
+* **Lch(ab)**
+* **Lch(uv)**
+* **Lms**
+
+Further documentation coming soon!
