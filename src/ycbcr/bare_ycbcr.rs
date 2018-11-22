@@ -109,8 +109,8 @@ impl<T> BareYCbCr<T>
     ///
     /// Equivalent to constructing the `YCbCr` object directly:
     ///
-    /// ```
-    /// # use simple_color::ycbcr::*;
+    /// ```rust
+    /// # use prisma::ycbcr::*;
     /// let c = BareYCbCr::from_channels(0.5, 0.3, 0.2).with_model(JpegModel);
     /// assert_eq!(c, YCbCrJpeg::from_channels(0.5, 0.3, 0.2));
     /// ```

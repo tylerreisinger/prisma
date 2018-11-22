@@ -1,5 +1,5 @@
 [package]
-name = "rust-color"
+name = "prisma"
 version = "0.1.0"
 authors = ["Tyler Reisinger <reisinger.tyler@gmail.com>"]
 
