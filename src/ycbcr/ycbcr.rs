@@ -290,7 +290,7 @@ where
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        self.ycbcr.abs_diff_eq(self, other, epsilon.clone()) && self.model == other.model
+        self.ycbcr.abs_diff_eq(&other.ycbcr, epsilon.clone()) && self.model == other.model
     }
 }
 

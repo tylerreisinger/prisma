@@ -158,8 +158,8 @@ where
         epsilon: Self::Epsilon,
         max_relative: Self::Epsilon,
     ) -> bool {
-        self.0.normalize().relative_eq(
-            &other.0.normalize(),
+        self.0.clone().normalize().relative_eq(
+            &other.0.clone().normalize(),
             epsilon * num::cast(T::period()).unwrap(),
             max_relative,
         )
