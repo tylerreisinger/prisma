@@ -1,8 +1,13 @@
-use std::ops;
 use channel::ChannelFormatCast;
+use std::ops;
 
 pub trait ColorChannel {
-    type Format: Clone + PartialEq + PartialOrd + Default + ops::Add<Self::Format, Output = Self::Format> + ops::Sub<Self::Format, Output = Self::Format>;
+    type Format: Clone
+        + PartialEq
+        + PartialOrd
+        + Default
+        + ops::Add<Self::Format, Output = Self::Format>
+        + ops::Sub<Self::Format, Output = Self::Format>;
     type Scalar;
     type Tag;
 
@@ -18,7 +23,10 @@ pub trait ColorChannel {
 
 pub trait ChannelCast: ColorChannel {
     fn channel_cast<To>(self) -> To
-        where Self::Format: ChannelFormatCast<To::Format>,
-              To: ColorChannel<Tag = Self::Tag>;
-    fn scalar_cast<To>(self) -> To where Self::Format: ChannelFormatCast<To>;
+    where
+        Self::Format: ChannelFormatCast<To::Format>,
+        To: ColorChannel<Tag = Self::Tag>;
+    fn scalar_cast<To>(self) -> To
+    where
+        Self::Format: ChannelFormatCast<To>;
 }

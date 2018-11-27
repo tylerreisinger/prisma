@@ -1,14 +1,15 @@
-use std::mem;
-use std::slice;
-use std::fmt;
 use approx;
+use channel::{
+    ChannelCast, ChannelFormatCast, ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar,
+};
+use color::{Bounded, Color, Flatten, FromTuple, Lerp};
+use convert::FromColor;
 use num;
 use num::Float;
-use channel::{PosNormalBoundedChannel, PosNormalChannelScalar, ColorChannel, ChannelFormatCast,
-              ChannelCast};
-use color::{Color, Lerp, Flatten, Bounded, FromTuple};
-use convert::FromColor;
 use rgb::Rgb;
+use std::fmt;
+use std::mem;
+use std::slice;
 
 pub struct RgiTag;
 
@@ -21,7 +22,8 @@ pub struct Rgi<T> {
 }
 
 impl<T> Rgi<T>
-    where T: PosNormalChannelScalar + Float
+where
+    T: PosNormalChannelScalar + Float,
 {
     pub fn from_channels(red: T, green: T, intensity: T) -> Self {
         let zero = num::cast(0.0).unwrap();
@@ -37,8 +39,14 @@ impl<T> Rgi<T>
         }
     }
 
-    impl_color_color_cast_square!(Rgi {red, green, intensity},
-        chan_traits={PosNormalChannelScalar});
+    impl_color_color_cast_square!(
+        Rgi {
+            red,
+            green,
+            intensity
+        },
+        chan_traits = { PosNormalChannelScalar }
+    );
 
     pub fn red(&self) -> T {
         self.red.0.clone()
@@ -76,8 +84,9 @@ impl<T> Rgi<T>
 
     fn rescale_channels(primary: T, c2: T, c3: T) -> (T, T, T) {
         let new_primary = primary;
-        if new_primary > PosNormalBoundedChannel::max_bound() ||
-           new_primary < PosNormalBoundedChannel::min_bound() {
+        if new_primary > PosNormalBoundedChannel::max_bound()
+            || new_primary < PosNormalBoundedChannel::min_bound()
+        {
             panic!("rgi color channels must be 1.0 or below");
         }
 
@@ -94,7 +103,8 @@ impl<T> Rgi<T>
 }
 
 impl<T> Color for Rgi<T>
-    where T: PosNormalChannelScalar + Float
+where
+    T: PosNormalChannelScalar + Float,
 {
     type Tag = RgiTag;
     type ChannelsTuple = (T, T, T);
@@ -109,7 +119,8 @@ impl<T> Color for Rgi<T>
 }
 
 impl<T> FromTuple for Rgi<T>
-    where T: PosNormalChannelScalar + Float
+where
+    T: PosNormalChannelScalar + Float,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         Rgi::from_channels(values.0, values.1, values.2)
@@ -117,14 +128,20 @@ impl<T> FromTuple for Rgi<T>
 }
 
 impl<T> Lerp for Rgi<T>
-    where T: PosNormalChannelScalar + Lerp + Float
+where
+    T: PosNormalChannelScalar + Lerp + Float,
 {
     type Position = <T as Lerp>::Position;
-    impl_color_lerp_square!(Rgi {red, green, intensity});
+    impl_color_lerp_square!(Rgi {
+        red,
+        green,
+        intensity
+    });
 }
 
 impl<T> Flatten for Rgi<T>
-    where T: PosNormalChannelScalar + Float
+where
+    T: PosNormalChannelScalar + Float,
 {
     type ScalarFormat = T;
 
@@ -134,39 +151,52 @@ impl<T> Flatten for Rgi<T>
 }
 
 impl<T> Bounded for Rgi<T>
-    where T: PosNormalChannelScalar + Float
+where
+    T: PosNormalChannelScalar + Float,
 {
-    impl_color_bounded!(Rgi {red, green, intensity});
+    impl_color_bounded!(Rgi {
+        red,
+        green,
+        intensity
+    });
 }
 
 impl<T> approx::AbsDiffEq for Rgi<T>
-    where T: PosNormalChannelScalar + approx::AbsDiffEq + Float,
-          T::Epsilon: Clone
+where
+    T: PosNormalChannelScalar + approx::AbsDiffEq + Float,
+    T::Epsilon: Clone,
 {
     impl_abs_diff_eq!({red, green, intensity});
 }
 impl<T> approx::RelativeEq for Rgi<T>
-    where T: PosNormalChannelScalar + approx::RelativeEq + Float,
-          T::Epsilon: Clone
+where
+    T: PosNormalChannelScalar + approx::RelativeEq + Float,
+    T::Epsilon: Clone,
 {
     impl_rel_eq!({red, green, intensity});
 }
 impl<T> approx::UlpsEq for Rgi<T>
-    where T: PosNormalChannelScalar + approx::UlpsEq + Float,
-          T::Epsilon: Clone
+where
+    T: PosNormalChannelScalar + approx::UlpsEq + Float,
+    T::Epsilon: Clone,
 {
     impl_ulps_eq!({red, green, intensity});
 }
 
 impl<T> Default for Rgi<T>
-    where T: PosNormalChannelScalar + num::Zero + Float
+where
+    T: PosNormalChannelScalar + num::Zero + Float,
 {
-    impl_color_default!(Rgi {red:PosNormalBoundedChannel, green:PosNormalBoundedChannel, 
-        intensity:PosNormalBoundedChannel});
+    impl_color_default!(Rgi {
+        red: PosNormalBoundedChannel,
+        green: PosNormalBoundedChannel,
+        intensity: PosNormalBoundedChannel
+    });
 }
 
 impl<T> fmt::Display for Rgi<T>
-    where T: PosNormalChannelScalar + fmt::Display + Float
+where
+    T: PosNormalChannelScalar + fmt::Display + Float,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Rgi({}, {}, {})", self.red, self.green, self.intensity)
@@ -174,7 +204,8 @@ impl<T> fmt::Display for Rgi<T>
 }
 
 impl<T> FromColor<Rgb<T>> for Rgi<T>
-    where T: PosNormalChannelScalar + Float
+where
+    T: PosNormalChannelScalar + Float,
 {
     fn from_color(from: &Rgb<T>) -> Self {
         let zero = num::cast(0.0).unwrap();
@@ -194,7 +225,8 @@ impl<T> FromColor<Rgb<T>> for Rgi<T>
 }
 
 impl<T> FromColor<Rgi<T>> for Rgb<T>
-    where T: PosNormalChannelScalar + Float
+where
+    T: PosNormalChannelScalar + Float,
 {
     fn from_color(from: &Rgi<T>) -> Self {
         let sum = from.intensity() * num::cast(3.0).unwrap();
@@ -209,8 +241,8 @@ impl<T> FromColor<Rgi<T>> for Rgb<T>
 #[cfg(test)]
 mod test {
     use super::*;
-    use convert::*;
     use color::*;
+    use convert::*;
     use rgb::Rgb;
     use test;
 
@@ -245,27 +277,27 @@ mod test {
         let mut c1 = Rgi::from_channels(0.3, 0.2, 0.5);
         c1.set_red(0.6);
         assert_relative_eq!(c1.red(), 0.6);
-        assert_relative_eq!(c1.green(), 0.1142857, epsilon=1e-6);
-        assert_relative_eq!(c1.blue(), 0.2857143, epsilon=1e-6);
+        assert_relative_eq!(c1.green(), 0.1142857, epsilon = 1e-6);
+        assert_relative_eq!(c1.blue(), 0.2857143, epsilon = 1e-6);
         assert_relative_eq!(c1.intensity(), 0.5);
 
         let mut c2 = Rgi::from_channels(0.333333, 0.333333, 0.9);
         c2.set_green(0.5);
-        assert_relative_eq!(c2.red(), 0.25, epsilon=1e-6);
-        assert_relative_eq!(c2.green(), 0.5, epsilon=1e-6);
-        assert_relative_eq!(c2.blue(), 0.25, epsilon=1e-6);
-        assert_relative_eq!(c2.intensity(), 0.9, epsilon=1e-6);
+        assert_relative_eq!(c2.red(), 0.25, epsilon = 1e-6);
+        assert_relative_eq!(c2.green(), 0.5, epsilon = 1e-6);
+        assert_relative_eq!(c2.blue(), 0.25, epsilon = 1e-6);
+        assert_relative_eq!(c2.intensity(), 0.9, epsilon = 1e-6);
         c2.set_green(1.0);
-        assert_relative_eq!(c2.red(), 0.0, epsilon=1e-6);
-        assert_relative_eq!(c2.green(), 1.0, epsilon=1e-6);
-        assert_relative_eq!(c2.blue(), 0.0, epsilon=1e-6);
+        assert_relative_eq!(c2.red(), 0.0, epsilon = 1e-6);
+        assert_relative_eq!(c2.green(), 1.0, epsilon = 1e-6);
+        assert_relative_eq!(c2.blue(), 0.0, epsilon = 1e-6);
 
         let mut c3 = Rgi::from_channels(0.6, 0.3, 0.83);
         c3.set_blue(0.7);
-        assert_relative_eq!(c3.red(), 0.2, epsilon=1e-6);
-        assert_relative_eq!(c3.green(), 0.1, epsilon=1e-6);
-        assert_relative_eq!(c3.blue(), 0.7, epsilon=1e-6);
-        assert_relative_eq!(c3.intensity(), 0.83, epsilon=1e-6);
+        assert_relative_eq!(c3.red(), 0.2, epsilon = 1e-6);
+        assert_relative_eq!(c3.green(), 0.1, epsilon = 1e-6);
+        assert_relative_eq!(c3.blue(), 0.7, epsilon = 1e-6);
+        assert_relative_eq!(c3.intensity(), 0.83, epsilon = 1e-6);
 
         let mut c4 = Rgi::from_channels(1.0, 0.0, 0.6);
         c4.set_red(0.5);
@@ -324,8 +356,11 @@ mod test {
         assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
         assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
         assert_relative_eq!(c1.lerp(&c2, 0.5), Rgi::from_channels(0.2, 0.5, 0.75));
-        assert_relative_eq!(c1.lerp(&c2, 0.75), Rgi::from_channels(0.15, 0.45, 0.875),
-            epsilon=1e-5);
+        assert_relative_eq!(
+            c1.lerp(&c2, 0.75),
+            Rgi::from_channels(0.15, 0.45, 0.875),
+            epsilon = 1e-5
+        );
     }
 
     #[test]
@@ -334,13 +369,16 @@ mod test {
         for item in test_data.iter() {
             let rgi = Rgi::from_color(&item.rgb);
             let rgb = Rgb::from_color(&rgi);
-            assert_relative_eq!(rgb, item.rgb, epsilon=1e-6);
+            assert_relative_eq!(rgb, item.rgb, epsilon = 1e-6);
         }
 
         let rgb1 = Rgb::from_channels(0.50, 0.50, 1.0);
         let rgi1 = Rgi::from_color(&rgb1);
-        assert_relative_eq!(rgi1, Rgi::from_channels(0.25, 0.25, 0.6666666666), 
-                            epsilon=1e-6);
+        assert_relative_eq!(
+            rgi1,
+            Rgi::from_channels(0.25, 0.25, 0.6666666666),
+            epsilon = 1e-6
+        );
         assert_relative_eq!(Rgb::from_color(&rgi1), rgb1);
 
         let rgb2 = Rgb::from_channels(0.00, 0.00, 0.00);
@@ -350,8 +388,11 @@ mod test {
 
         let rgb3 = Rgb::from_channels(1.0, 1.0, 1.0);
         let rgi3 = Rgi::from_color(&rgb3);
-        assert_relative_eq!(rgi3, Rgi::from_channels(0.333333, 0.333333, 1.0),
-                            epsilon=1e-5);
+        assert_relative_eq!(
+            rgi3,
+            Rgi::from_channels(0.333333, 0.333333, 1.0),
+            epsilon = 1e-5
+        );
         assert_relative_eq!(Rgb::from_color(&rgi3), rgb3);
     }
 
@@ -360,7 +401,10 @@ mod test {
         let c1 = Rgi::from_channels(0.6f32, 0.2, 0.9);
         assert_relative_eq!(c1.color_cast(), c1);
         assert_relative_eq!(c1.color_cast::<f64>().color_cast(), c1);
-        assert_relative_eq!(c1.color_cast(), Rgi::from_channels(0.6, 0.2, 0.9), 
-            epsilon=1e-6);
+        assert_relative_eq!(
+            c1.color_cast(),
+            Rgi::from_channels(0.6, 0.2, 0.9),
+            epsilon = 1e-6
+        );
     }
 }

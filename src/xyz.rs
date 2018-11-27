@@ -1,9 +1,9 @@
-use std::fmt;
-use std::slice;
-use std::mem;
 use approx;
-use channel::{PosFreeChannel, FreeChannelScalar, ChannelFormatCast, ChannelCast, ColorChannel};
-use color::{Color, HomogeneousColor, Bounded, Lerp, Flatten, FromTuple};
+use channel::{ChannelCast, ChannelFormatCast, ColorChannel, FreeChannelScalar, PosFreeChannel};
+use color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Lerp};
+use std::fmt;
+use std::mem;
+use std::slice;
 
 pub struct XyzTag;
 
@@ -16,7 +16,8 @@ pub struct Xyz<T> {
 }
 
 impl<T> Xyz<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     pub fn from_channels(x: T, y: T, z: T) -> Self {
         Xyz {
@@ -26,7 +27,7 @@ impl<T> Xyz<T>
         }
     }
 
-    impl_color_color_cast_square!(Xyz {x, y, z}, chan_traits={FreeChannelScalar});
+    impl_color_color_cast_square!(Xyz { x, y, z }, chan_traits = { FreeChannelScalar });
 
     pub fn x(&self) -> T {
         self.x.0.clone()
@@ -58,7 +59,8 @@ impl<T> Xyz<T>
 }
 
 impl<T> Color for Xyz<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     type Tag = XyzTag;
     type ChannelsTuple = (T, T, T);
@@ -73,7 +75,8 @@ impl<T> Color for Xyz<T>
 }
 
 impl<T> FromTuple for Xyz<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     fn from_tuple(values: (T, T, T)) -> Self {
         Xyz::from_channels(values.0, values.1, values.2)
@@ -81,7 +84,8 @@ impl<T> FromTuple for Xyz<T>
 }
 
 impl<T> HomogeneousColor for Xyz<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     type ChannelFormat = T;
 
@@ -89,21 +93,24 @@ impl<T> HomogeneousColor for Xyz<T>
 }
 
 impl<T> Bounded for Xyz<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
-    impl_color_bounded!(Xyz {x, y, z});
+    impl_color_bounded!(Xyz { x, y, z });
 }
 
 impl<T> Lerp for Xyz<T>
-    where T: FreeChannelScalar,
-          PosFreeChannel<T>: Lerp
+where
+    T: FreeChannelScalar,
+    PosFreeChannel<T>: Lerp,
 {
     type Position = <PosFreeChannel<T> as Lerp>::Position;
-    impl_color_lerp_square!(Xyz {x, y, z});
+    impl_color_lerp_square!(Xyz { x, y, z });
 }
 
 impl<T> Flatten for Xyz<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     type ScalarFormat = T;
 
@@ -113,34 +120,43 @@ impl<T> Flatten for Xyz<T>
 }
 
 impl<T> approx::AbsDiffEq for Xyz<T>
-    where T: FreeChannelScalar + approx::AbsDiffEq,
-          T::Epsilon: Clone
+where
+    T: FreeChannelScalar + approx::AbsDiffEq,
+    T::Epsilon: Clone,
 {
     impl_abs_diff_eq!({x, y, z});
 }
 
 impl<T> approx::RelativeEq for Xyz<T>
-    where T: FreeChannelScalar + approx::RelativeEq,
-          T::Epsilon: Clone
+where
+    T: FreeChannelScalar + approx::RelativeEq,
+    T::Epsilon: Clone,
 {
     impl_rel_eq!({x, y, z});
 }
 
 impl<T> approx::UlpsEq for Xyz<T>
-    where T: FreeChannelScalar + approx::UlpsEq,
-          T::Epsilon: Clone
+where
+    T: FreeChannelScalar + approx::UlpsEq,
+    T::Epsilon: Clone,
 {
     impl_ulps_eq!({x, y, z});
 }
 
 impl<T> Default for Xyz<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
-    impl_color_default!(Xyz {x:PosFreeChannel, y:PosFreeChannel, z:PosFreeChannel});
+    impl_color_default!(Xyz {
+        x: PosFreeChannel,
+        y: PosFreeChannel,
+        z: PosFreeChannel
+    });
 }
 
 impl<T> fmt::Display for Xyz<T>
-    where T: FreeChannelScalar + fmt::Display
+where
+    T: FreeChannelScalar + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "XYZ({}, {}, {})", self.x, self.y, self.z)
@@ -209,6 +225,5 @@ mod test {
         assert_relative_eq!(c1.color_cast(), c1);
         assert_relative_eq!(c1.color_cast(), Xyz::from_channels(0.5f32, 1.0, 0.8));
     }
-
 
 }

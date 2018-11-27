@@ -1,8 +1,8 @@
-use std::fmt;
 use approx;
+use channel::{ChannelCast, ChannelFormatCast, ColorChannel, FreeChannelScalar};
+use color::{Bounded, Lerp};
 use num;
-use channel::{FreeChannelScalar, ColorChannel, ChannelCast, ChannelFormatCast};
-use color::{Lerp, Bounded};
+use std::fmt;
 
 pub struct FreeChannelTag;
 pub struct PosFreeChannelTag;
@@ -13,7 +13,8 @@ pub struct PosFreeChannel<T>(pub T);
 pub struct FreeChannel<T>(pub T);
 
 impl<T> ColorChannel for PosFreeChannel<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     type Format = T;
     type Scalar = T;
@@ -47,7 +48,8 @@ impl<T> ColorChannel for PosFreeChannel<T>
 }
 
 impl<T> Bounded for PosFreeChannel<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     fn normalize(self) -> Self {
         if self.0 < num::cast(0.0).unwrap() {
@@ -66,7 +68,8 @@ impl<T> Bounded for PosFreeChannel<T>
 }
 
 impl<T> Default for PosFreeChannel<T>
-    where T: FreeChannelScalar + Default
+where
+    T: FreeChannelScalar + Default,
 {
     fn default() -> Self {
         PosFreeChannel::new(T::default())
@@ -74,7 +77,8 @@ impl<T> Default for PosFreeChannel<T>
 }
 
 impl<T> Lerp for PosFreeChannel<T>
-    where T: FreeChannelScalar + Lerp
+where
+    T: FreeChannelScalar + Lerp,
 {
     type Position = <T as Lerp>::Position;
     fn lerp(&self, right: &PosFreeChannel<T>, pos: Self::Position) -> Self {
@@ -83,23 +87,27 @@ impl<T> Lerp for PosFreeChannel<T>
 }
 
 impl<T> ChannelCast for PosFreeChannel<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     fn channel_cast<To>(self) -> To
-        where Self::Format: ChannelFormatCast<To::Format>,
-              To: ColorChannel
+    where
+        Self::Format: ChannelFormatCast<To::Format>,
+        To: ColorChannel,
     {
         To::new(self.0.cast())
     }
     fn scalar_cast<To>(self) -> To
-        where Self::Format: ChannelFormatCast<To>
+    where
+        Self::Format: ChannelFormatCast<To>,
     {
         self.0.cast()
     }
 }
 
 impl<T> fmt::Display for PosFreeChannel<T>
-    where T: FreeChannelScalar + fmt::Display
+where
+    T: FreeChannelScalar + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
@@ -107,7 +115,8 @@ impl<T> fmt::Display for PosFreeChannel<T>
 }
 
 impl<T> approx::AbsDiffEq for PosFreeChannel<T>
-    where T: FreeChannelScalar + approx::AbsDiffEq
+where
+    T: FreeChannelScalar + approx::AbsDiffEq,
 {
     type Epsilon = T::Epsilon;
 
@@ -120,22 +129,25 @@ impl<T> approx::AbsDiffEq for PosFreeChannel<T>
     }
 }
 impl<T> approx::RelativeEq for PosFreeChannel<T>
-    where T: FreeChannelScalar + approx::RelativeEq
+where
+    T: FreeChannelScalar + approx::RelativeEq,
 {
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
     }
-    fn relative_eq(&self,
-                   other: &Self,
-                   epsilon: Self::Epsilon,
-                   max_relative: Self::Epsilon)
-                   -> bool {
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
         self.0.relative_eq(&other.0, epsilon, max_relative)
     }
 }
 
 impl<T> approx::UlpsEq for PosFreeChannel<T>
-    where T: FreeChannelScalar + approx::UlpsEq
+where
+    T: FreeChannelScalar + approx::UlpsEq,
 {
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()
@@ -146,7 +158,8 @@ impl<T> approx::UlpsEq for PosFreeChannel<T>
 }
 
 impl<T> ColorChannel for FreeChannel<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     type Format = T;
     type Scalar = T;
@@ -180,7 +193,8 @@ impl<T> ColorChannel for FreeChannel<T>
 }
 
 impl<T> Default for FreeChannel<T>
-    where T: FreeChannelScalar + Default
+where
+    T: FreeChannelScalar + Default,
 {
     fn default() -> Self {
         FreeChannel(T::default())
@@ -188,7 +202,8 @@ impl<T> Default for FreeChannel<T>
 }
 
 impl<T> Lerp for FreeChannel<T>
-    where T: FreeChannelScalar + Lerp
+where
+    T: FreeChannelScalar + Lerp,
 {
     type Position = <T as Lerp>::Position;
     fn lerp(&self, right: &FreeChannel<T>, pos: Self::Position) -> Self {
@@ -197,7 +212,8 @@ impl<T> Lerp for FreeChannel<T>
 }
 
 impl<T> Bounded for FreeChannel<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     fn normalize(self) -> Self {
         self
@@ -208,23 +224,27 @@ impl<T> Bounded for FreeChannel<T>
 }
 
 impl<T> ChannelCast for FreeChannel<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     fn channel_cast<To>(self) -> To
-        where Self::Format: ChannelFormatCast<To::Format>,
-              To: ColorChannel
+    where
+        Self::Format: ChannelFormatCast<To::Format>,
+        To: ColorChannel,
     {
         To::new(self.0.cast())
     }
     fn scalar_cast<To>(self) -> To
-        where Self::Format: ChannelFormatCast<To>
+    where
+        Self::Format: ChannelFormatCast<To>,
     {
         self.0.cast()
     }
 }
 
 impl<T> fmt::Display for FreeChannel<T>
-    where T: FreeChannelScalar + fmt::Display
+where
+    T: FreeChannelScalar + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
@@ -232,7 +252,8 @@ impl<T> fmt::Display for FreeChannel<T>
 }
 
 impl<T> approx::AbsDiffEq for FreeChannel<T>
-    where T: FreeChannelScalar + approx::AbsDiffEq
+where
+    T: FreeChannelScalar + approx::AbsDiffEq,
 {
     type Epsilon = T::Epsilon;
 
@@ -244,22 +265,25 @@ impl<T> approx::AbsDiffEq for FreeChannel<T>
     }
 }
 impl<T> approx::RelativeEq for FreeChannel<T>
-    where T: FreeChannelScalar + approx::RelativeEq
+where
+    T: FreeChannelScalar + approx::RelativeEq,
 {
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
     }
-    fn relative_eq(&self,
-                   other: &Self,
-                   epsilon: Self::Epsilon,
-                   max_relative: Self::Epsilon)
-                   -> bool {
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
         self.0.relative_eq(&other.0, epsilon, max_relative)
     }
 }
 
 impl<T> approx::UlpsEq for FreeChannel<T>
-    where T: FreeChannelScalar + approx::UlpsEq
+where
+    T: FreeChannelScalar + approx::UlpsEq,
 {
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()

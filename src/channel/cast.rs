@@ -1,6 +1,6 @@
-use num;
 use angle;
 use angle::Angle;
+use num;
 
 pub trait ChannelFormatCast<Out>: Sized {
     fn cast(self) -> Out;
@@ -62,7 +62,6 @@ impl ChannelFormatCast<f64> for u8 {
     impl_cast_with_rescale_int_to_flt!(u8, f64);
 }
 
-
 impl ChannelFormatCast<u8> for u16 {
     fn cast(self) -> u8 {
         (self >> 8) as u8
@@ -95,7 +94,6 @@ impl ChannelFormatCast<f64> for u16 {
     }
     impl_cast_with_rescale_int_to_flt!(u16, f64);
 }
-
 
 impl ChannelFormatCast<u8> for u32 {
     fn cast(self) -> u8 {
@@ -130,7 +128,6 @@ impl ChannelFormatCast<f64> for u32 {
     impl_cast_with_rescale_int_to_flt!(u32, f64);
 }
 
-
 impl ChannelFormatCast<u8> for u64 {
     fn cast(self) -> u8 {
         (self >> 56) as u8
@@ -163,7 +160,6 @@ impl ChannelFormatCast<f64> for u64 {
     }
     impl_cast_with_rescale_int_to_flt!(u64, f64);
 }
-
 
 impl ChannelFormatCast<u8> for f32 {
     fn cast(self) -> u8 {
@@ -201,7 +197,6 @@ impl ChannelFormatCast<f64> for f32 {
         self as f64
     }
 }
-
 
 impl ChannelFormatCast<u8> for f64 {
     fn cast(self) -> u8 {
@@ -242,18 +237,18 @@ impl ChannelFormatCast<f64> for f64 {
 
 macro_rules! impl_channel_format_cast_for_angle {
     ($angle: ident) => {
-        impl<T, A, U> ChannelFormatCast<A> for angle::$angle<T> 
-            where A: Angle<Scalar=U>,
-                  T: num::Float + ChannelFormatCast<U>,
-                  U: num::Float
+        impl<T, A, U> ChannelFormatCast<A> for angle::$angle<T>
+        where
+            A: Angle<Scalar = U>,
+            T: num::Float + ChannelFormatCast<U>,
+            U: num::Float,
         {
             fn cast(self) -> A {
-                let scalar: U = self.0.cast() 
-                    * (A::period() / num::cast(Self::period()).unwrap());
+                let scalar: U = self.0.cast() * (A::period() / num::cast(Self::period()).unwrap());
                 A::new(scalar)
             }
         }
-    }
+    };
 }
 
 impl_channel_format_cast_for_angle!(Deg);

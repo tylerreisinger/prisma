@@ -1,7 +1,7 @@
-use std::fmt;
 use approx;
-use color::{Color, PolarColor, Lerp, Invert, Bounded, HomogeneousColor, FromTuple};
-use encoding::encode::{ColorEncoding, LinearEncoding, EncodableColor};
+use color::{Bounded, Color, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor};
+use encoding::encode::{ColorEncoding, EncodableColor, LinearEncoding};
+use std::fmt;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct EncodedColor<C, E> {
@@ -12,8 +12,9 @@ pub struct EncodedColor<C, E> {
 pub type LinearColor<C> = EncodedColor<C, LinearEncoding>;
 
 impl<C, E> EncodedColor<C, E>
-    where C: Color + EncodableColor,
-          E: ColorEncoding
+where
+    C: Color + EncodableColor,
+    E: ColorEncoding,
 {
     pub fn new(color: C, encoding: E) -> Self {
         EncodedColor {
@@ -43,15 +44,17 @@ impl<C, E> EncodedColor<C, E>
     }
 
     pub fn transcode<Encoder>(self, new_encoding: Encoder) -> EncodedColor<C, Encoder>
-        where Encoder: ColorEncoding
+    where
+        Encoder: ColorEncoding,
     {
         let decoded_color = self.decode();
         decoded_color.encode(new_encoding)
     }
 }
 impl<C, E> EncodedColor<C, E>
-    where C: Color + EncodableColor + HomogeneousColor,
-          E: ColorEncoding + PartialEq
+where
+    C: Color + EncodableColor + HomogeneousColor,
+    E: ColorEncoding + PartialEq,
 {
     pub fn broadcast(value: C::ChannelFormat, encoding: E) -> Self {
         EncodedColor::new(C::broadcast(value), encoding)
@@ -59,20 +62,22 @@ impl<C, E> EncodedColor<C, E>
 }
 
 impl<C, E> EncodedColor<C, E>
-    where C: Color + EncodableColor + FromTuple,
-          E: ColorEncoding + PartialEq
+where
+    C: Color + EncodableColor + FromTuple,
+    E: ColorEncoding + PartialEq,
 {
     pub fn from_tuple(values: C::ChannelsTuple, encoding: E) -> Self {
         EncodedColor::new(C::from_tuple(values), encoding)
     }
 }
 
-
 impl<C> EncodedColor<C, LinearEncoding>
-    where C: Color + EncodableColor
+where
+    C: Color + EncodableColor,
 {
     pub fn encode<Encoder>(self, encoder: Encoder) -> EncodedColor<C, Encoder>
-        where Encoder: ColorEncoding
+    where
+        Encoder: ColorEncoding,
     {
         let encoded_color = self.color.encode_color(&encoder);
 
@@ -81,8 +86,9 @@ impl<C> EncodedColor<C, LinearEncoding>
 }
 
 impl<C, E> Color for EncodedColor<C, E>
-    where C: Color + EncodableColor,
-          E: ColorEncoding + PartialEq
+where
+    C: Color + EncodableColor,
+    E: ColorEncoding + PartialEq,
 {
     type Tag = C::Tag;
     type ChannelsTuple = C::ChannelsTuple;
@@ -96,16 +102,18 @@ impl<C, E> Color for EncodedColor<C, E>
 }
 
 impl<C, E> PolarColor for EncodedColor<C, E>
-    where C: Color + EncodableColor + PolarColor,
-          E: ColorEncoding + PartialEq
+where
+    C: Color + EncodableColor + PolarColor,
+    E: ColorEncoding + PartialEq,
 {
     type Angular = C::Angular;
     type Cartesian = C::Cartesian;
 }
 
 impl<C, E> Lerp for EncodedColor<C, E>
-    where C: Color + EncodableColor + Lerp,
-          E: ColorEncoding + PartialEq + fmt::Debug
+where
+    C: Color + EncodableColor + Lerp,
+    E: ColorEncoding + PartialEq + fmt::Debug,
 {
     type Position = C::Position;
 
@@ -116,8 +124,9 @@ impl<C, E> Lerp for EncodedColor<C, E>
 }
 
 impl<C, E> Invert for EncodedColor<C, E>
-    where C: Color + EncodableColor + Invert,
-          E: ColorEncoding + PartialEq
+where
+    C: Color + EncodableColor + Invert,
+    E: ColorEncoding + PartialEq,
 {
     fn invert(self) -> Self {
         EncodedColor::new(self.color.invert(), self.encoding)
@@ -125,8 +134,9 @@ impl<C, E> Invert for EncodedColor<C, E>
 }
 
 impl<C, E> Bounded for EncodedColor<C, E>
-    where C: Color + EncodableColor + Bounded,
-          E: ColorEncoding + PartialEq
+where
+    C: Color + EncodableColor + Bounded,
+    E: ColorEncoding + PartialEq,
 {
     fn normalize(self) -> Self {
         EncodedColor::new(self.color.normalize(), self.encoding)
@@ -137,8 +147,9 @@ impl<C, E> Bounded for EncodedColor<C, E>
 }
 
 impl<C, E> approx::AbsDiffEq for EncodedColor<C, E>
-    where C: Color + EncodableColor + approx::AbsDiffEq,
-          E: ColorEncoding + PartialEq
+where
+    C: Color + EncodableColor + approx::AbsDiffEq,
+    E: ColorEncoding + PartialEq,
 {
     type Epsilon = C::Epsilon;
 
@@ -150,25 +161,28 @@ impl<C, E> approx::AbsDiffEq for EncodedColor<C, E>
     }
 }
 impl<C, E> approx::RelativeEq for EncodedColor<C, E>
-    where C: Color + EncodableColor + approx::RelativeEq,
-          E: ColorEncoding + PartialEq
+where
+    C: Color + EncodableColor + approx::RelativeEq,
+    E: ColorEncoding + PartialEq,
 {
     fn default_max_relative() -> Self::Epsilon {
         C::default_max_relative()
     }
-    fn relative_eq(&self,
-                   other: &Self,
-                   epsilon: Self::Epsilon,
-                   max_relative: Self::Epsilon)
-                   -> bool {
-        (self.encoding == other.encoding) &&
-            self.color.relative_eq(&other.color, epsilon, max_relative)
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        (self.encoding == other.encoding)
+            && self.color.relative_eq(&other.color, epsilon, max_relative)
     }
 }
 
 impl<C, E> approx::UlpsEq for EncodedColor<C, E>
-    where C: Color + EncodableColor + approx::UlpsEq,
-          E: ColorEncoding + PartialEq
+where
+    C: Color + EncodableColor + approx::UlpsEq,
+    E: ColorEncoding + PartialEq,
 {
     fn default_max_ulps() -> u32 {
         C::default_max_ulps()
@@ -179,17 +193,21 @@ impl<C, E> approx::UlpsEq for EncodedColor<C, E>
 }
 
 impl<C, E> Default for EncodedColor<C, E>
-    where C: Color + EncodableColor + Default,
-          E: ColorEncoding + Default
+where
+    C: Color + EncodableColor + Default,
+    E: ColorEncoding + Default,
 {
     fn default() -> Self {
-        C::default().with_encoding(LinearEncoding::new()).encode(E::default())
+        C::default()
+            .with_encoding(LinearEncoding::new())
+            .encode(E::default())
     }
 }
 
 impl<C, E> fmt::Display for EncodedColor<C, E>
-    where C: Color + EncodableColor + fmt::Display,
-          E: ColorEncoding + fmt::Display
+where
+    C: Color + EncodableColor + fmt::Display,
+    E: ColorEncoding + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} @ {}", self.color, self.encoding)

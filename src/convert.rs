@@ -1,8 +1,8 @@
-use num;
-use num::Float;
 use angle;
 use angle::{Angle, FromAngle};
 use color::PolarColor;
+use num;
+use num::Float;
 
 pub trait FromColor<From>: TryFromColor<From> {
     fn from_color(from: &From) -> Self;
@@ -20,22 +20,25 @@ pub trait GetChroma {
 pub trait GetHue {
     type InternalAngle: angle::Angle;
     fn get_hue<U>(&self) -> U
-        where U: Angle<Scalar=<Self::InternalAngle as Angle>::Scalar> 
-            + FromAngle<Self::InternalAngle>;
+    where
+        U: Angle<Scalar = <Self::InternalAngle as Angle>::Scalar> + FromAngle<Self::InternalAngle>;
 }
 
 impl<T, From> TryFromColor<From> for T
-    where T: FromColor<From>
+where
+    T: FromColor<From>,
 {
     fn try_from_color(from: &From) -> Option<Self> {
         Some(T::from_color(from))
     }
 }
 
-pub fn decompose_hue_segment<Color>(color: &Color)
-                                    -> (i32, <<Color as PolarColor>::Angular as Angle>::Scalar)
-    where Color: PolarColor + GetHue<InternalAngle = <Color as PolarColor>::Angular>,
-          Color::Angular: Angle
+pub fn decompose_hue_segment<Color>(
+    color: &Color,
+) -> (i32, <<Color as PolarColor>::Angular as Angle>::Scalar)
+where
+    Color: PolarColor + GetHue<InternalAngle = <Color as PolarColor>::Angular>,
+    Color::Angular: Angle,
 {
     let scaled_hue = (color.get_hue::<angle::Turns<_>>() * num::cast(6.0).unwrap()).scalar();
     let hue_seg = scaled_hue.floor();

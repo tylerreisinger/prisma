@@ -1,17 +1,19 @@
 //! Defines `BareYCbCr` for YCbCr colors that don't store their model.
 
-use std::slice;
-use std::mem;
-use std::fmt;
-use num;
 use approx;
-use channel::{NormalBoundedChannel, ColorChannel, NormalChannelScalar, ChannelFormatCast,
-              ChannelCast, PosNormalChannelScalar, PosNormalBoundedChannel};
-use color::{Color, FromTuple, Invert, Bounded, Lerp, Flatten};
+use channel::{
+    ChannelCast, ChannelFormatCast, ColorChannel, NormalBoundedChannel, NormalChannelScalar,
+    PosNormalBoundedChannel, PosNormalChannelScalar,
+};
+use color::{Bounded, Color, Flatten, FromTuple, Invert, Lerp};
+use num;
+use std::fmt;
+use std::mem;
+use std::slice;
 
+use rgb::Rgb;
 use ycbcr::model::YCbCrModel;
 use ycbcr::YCbCr;
-use rgb::Rgb;
 
 /// Methods for handling out of gamut colors when converting to Rgb.
 ///
@@ -54,7 +56,8 @@ pub struct BareYCbCr<T> {
 }
 
 impl<T> BareYCbCr<T>
-    where T: NormalChannelScalar + PosNormalChannelScalar
+where
+    T: NormalChannelScalar + PosNormalChannelScalar,
 {
     /// Construct a `BareYCbCr` from channel values.
     pub fn from_channels(luma: T, cb: T, cr: T) -> Self {
@@ -115,14 +118,16 @@ impl<T> BareYCbCr<T>
     /// assert_eq!(c, YCbCrJpeg::from_channels(0.5, 0.3, 0.2));
     /// ```
     pub fn with_model<M>(self, model: M) -> YCbCr<T, M>
-        where M: YCbCrModel<T>
+    where
+        M: YCbCrModel<T>,
     {
         YCbCr::from_color_and_model(self, model)
     }
 }
 
 impl<T> Color for BareYCbCr<T>
-    where T: PosNormalChannelScalar + NormalChannelScalar
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
 {
     type Tag = YCbCrTag;
     type ChannelsTuple = (T, T, T);
@@ -138,7 +143,8 @@ impl<T> Color for BareYCbCr<T>
 }
 
 impl<T> FromTuple for BareYCbCr<T>
-    where T: PosNormalChannelScalar + NormalChannelScalar
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         BareYCbCr::from_channels(values.0, values.1, values.2)
@@ -146,26 +152,30 @@ impl<T> FromTuple for BareYCbCr<T>
 }
 
 impl<T> Invert for BareYCbCr<T>
-    where T: PosNormalChannelScalar + NormalChannelScalar
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
 {
-    impl_color_invert!(BareYCbCr {luma, cb, cr});
+    impl_color_invert!(BareYCbCr { luma, cb, cr });
 }
 
 impl<T> Bounded for BareYCbCr<T>
-    where T: PosNormalChannelScalar + NormalChannelScalar
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
 {
-    impl_color_bounded!(BareYCbCr {luma, cb, cr});
+    impl_color_bounded!(BareYCbCr { luma, cb, cr });
 }
 
 impl<T> Lerp for BareYCbCr<T>
-    where T: PosNormalChannelScalar + NormalChannelScalar + Lerp
+where
+    T: PosNormalChannelScalar + NormalChannelScalar + Lerp,
 {
     type Position = <T as Lerp>::Position;
-    impl_color_lerp_square!(BareYCbCr {luma, cb, cr});
+    impl_color_lerp_square!(BareYCbCr { luma, cb, cr });
 }
 
 impl<T> Flatten for BareYCbCr<T>
-    where T: PosNormalChannelScalar + NormalChannelScalar
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
 {
     type ScalarFormat = T;
 
@@ -175,34 +185,41 @@ impl<T> Flatten for BareYCbCr<T>
 }
 
 impl<T> approx::AbsDiffEq for BareYCbCr<T>
-    where T: PosNormalChannelScalar + NormalChannelScalar + approx::AbsDiffEq,
-          T::Epsilon: Clone
+where
+    T: PosNormalChannelScalar + NormalChannelScalar + approx::AbsDiffEq,
+    T::Epsilon: Clone,
 {
     impl_abs_diff_eq!({luma, cb, cr});
 }
 impl<T> approx::RelativeEq for BareYCbCr<T>
-    where T: PosNormalChannelScalar + NormalChannelScalar + approx::RelativeEq,
-          T::Epsilon: Clone
+where
+    T: PosNormalChannelScalar + NormalChannelScalar + approx::RelativeEq,
+    T::Epsilon: Clone,
 {
     impl_rel_eq!({luma, cb, cr});
 }
 impl<T> approx::UlpsEq for BareYCbCr<T>
-    where T: PosNormalChannelScalar + NormalChannelScalar + approx::UlpsEq,
-          T::Epsilon: Clone
+where
+    T: PosNormalChannelScalar + NormalChannelScalar + approx::UlpsEq,
+    T::Epsilon: Clone,
 {
     impl_ulps_eq!({luma, cb, cr});
 }
 
 impl<T> Default for BareYCbCr<T>
-    where T: PosNormalChannelScalar + NormalChannelScalar + num::Zero
+where
+    T: PosNormalChannelScalar + NormalChannelScalar + num::Zero,
 {
-    impl_color_default!(BareYCbCr {luma:PosNormalBoundedChannel,
-        cb:NormalBoundedChannel,
-        cr:NormalBoundedChannel});
+    impl_color_default!(BareYCbCr {
+        luma: PosNormalBoundedChannel,
+        cb: NormalBoundedChannel,
+        cr: NormalBoundedChannel
+    });
 }
 
 impl<T> fmt::Display for BareYCbCr<T>
-    where T: PosNormalChannelScalar + NormalChannelScalar + fmt::Display
+where
+    T: PosNormalChannelScalar + NormalChannelScalar + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "YCbCr({}, {}, {})", self.luma, self.cb, self.cr)
@@ -210,7 +227,8 @@ impl<T> fmt::Display for BareYCbCr<T>
 }
 
 impl<T> BareYCbCr<T>
-    where T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast
+where
+    T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
 {
     /// Construct a `BareYCbCr` by converting from an Rgb `value`.
     ///
@@ -239,16 +257,19 @@ impl<T> BareYCbCr<T>
         let shift = model.shift();
 
         let (i1, i2, i3) = self.clone().to_tuple();
-        let shifted_color =
-            (num::cast::<_, f64>(i1).unwrap() - num::cast::<_, f64>(shift.0).unwrap(),
-             num::cast::<_, f64>(i2).unwrap() - num::cast::<_, f64>(shift.1).unwrap(),
-             num::cast::<_, f64>(i3).unwrap() - num::cast::<_, f64>(shift.2).unwrap());
+        let shifted_color = (
+            num::cast::<_, f64>(i1).unwrap() - num::cast::<_, f64>(shift.0).unwrap(),
+            num::cast::<_, f64>(i2).unwrap() - num::cast::<_, f64>(shift.1).unwrap(),
+            num::cast::<_, f64>(i3).unwrap() - num::cast::<_, f64>(shift.2).unwrap(),
+        );
 
         let (r, g, b) = transform.transform_vector(shifted_color);
 
-        let out = Rgb::from_channels(num::cast(r).unwrap(),
-                                     num::cast(g).unwrap(),
-                                     num::cast(b).unwrap());
+        let out = Rgb::from_channels(
+            num::cast(r).unwrap(),
+            num::cast(g).unwrap(),
+            num::cast(b).unwrap(),
+        );
 
         match out_of_gamut_mode {
             OutOfGamutMode::Preserve => out,

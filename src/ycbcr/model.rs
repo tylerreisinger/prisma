@@ -5,9 +5,9 @@
 //! the most common standard models as well as a type for the creation of
 //! custom YCbCr models.
 
-use num;
+use channel::{NormalChannelScalar, PosNormalChannelScalar};
 use linalg::Matrix3;
-use channel::{PosNormalChannelScalar, NormalChannelScalar};
+use num;
 use ycbcr::YCbCr;
 
 /// A coordinate shift for the components of a `YCbCr` model.
@@ -114,9 +114,10 @@ pub struct JpegModel;
 ///
 /// Panics if either `kr` or `kb` are negative, or if the sum of them is greater than 1.0
 pub fn build_transform<T>(kr: T, kb: T) -> Matrix3<T>
-    where T: num::Float
+where
+    T: num::Float,
 {
-    assert!(kr+kb < num::cast(1.0).unwrap());
+    assert!(kr + kb < num::cast(1.0).unwrap());
     assert!(kr >= num::cast(0.0).unwrap());
     assert!(kb >= num::cast(0.0).unwrap());
 
@@ -135,7 +136,6 @@ pub fn build_transform<T>(kr: T, kb: T) -> Matrix3<T>
 
     Matrix3::new([kr, kg, kb, cb_r, cb_g, cb_b, cr_r, cr_g, cr_b])
 }
-
 
 impl CustomYCbCrModel {
     /// Construct a model from the forward and inverse transformations.
@@ -156,8 +156,10 @@ impl CustomYCbCrModel {
     /// See the `build_transform` method in the module for details on these parameters.
     pub fn build_from_coefficients(kr: f64, kb: f64) -> Self {
         let transform = build_transform(kr, kb);
-        let inv_transform =
-            transform.clone().inverse().expect("Singular YCbCr transformation matrix");
+        let inv_transform = transform
+            .clone()
+            .inverse()
+            .expect("Singular YCbCr transformation matrix");
         CustomYCbCrModel::new(transform, inv_transform)
     }
 }
@@ -172,8 +174,9 @@ impl YCbCrTransform for CustomYCbCrModel {
 }
 
 impl<T> YCbCrModel<T> for CustomYCbCrModel
-    where T: PosNormalChannelScalar + NormalChannelScalar,
-          StandardShift<T>: YCbCrShift<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
+    StandardShift<T>: YCbCrShift<T>,
 {
     type Shift = StandardShift<T>;
     fn shift(&self) -> (T, T, T) {
@@ -182,17 +185,23 @@ impl<T> YCbCrModel<T> for CustomYCbCrModel
 }
 
 impl<T> Canonicalize<T> for CustomYCbCrModel
-    where T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
-          StandardShift<T>: YCbCrShift<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
+    StandardShift<T>: YCbCrShift<T>,
 {
     fn to_canonical_representation(from: YCbCr<T, Self>) -> (T, T, T) {
-        (from.luma(), from.cb() * num::cast(0.436).unwrap(), from.cr() * num::cast(0.615).unwrap())
+        (
+            from.luma(),
+            from.cb() * num::cast(0.436).unwrap(),
+            from.cr() * num::cast(0.615).unwrap(),
+        )
     }
 }
 
 impl<'a, T> YCbCrModel<T> for &'a CustomYCbCrModel
-    where T: PosNormalChannelScalar + NormalChannelScalar,
-          StandardShift<T>: YCbCrShift<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
+    StandardShift<T>: YCbCrShift<T>,
 {
     type Shift = StandardShift<T>;
     fn shift(&self) -> (T, T, T) {
@@ -210,42 +219,51 @@ impl<'a> YCbCrTransform for &'a CustomYCbCrModel {
 }
 
 impl<'a, T> Canonicalize<T> for &'a CustomYCbCrModel
-    where T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
-          StandardShift<T>: YCbCrShift<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
+    StandardShift<T>: YCbCrShift<T>,
 {
     fn to_canonical_representation(from: YCbCr<T, Self>) -> (T, T, T) {
-        (from.luma(), from.cb() * num::cast(0.436).unwrap(), from.cr() * num::cast(0.615).unwrap())
+        (
+            from.luma(),
+            from.cb() * num::cast(0.436).unwrap(),
+            from.cr() * num::cast(0.615).unwrap(),
+        )
     }
 }
 
 impl YCbCrTransform for Bt709Model {
     fn forward_transform(&self) -> Matrix3<f64> {
-        Matrix3::new([0.2126,
-                      0.7152,
-                      0.0722,
-                      -0.11457210605733996,
-                      -0.38542789394266,
-                      0.5,
-                      0.5,
-                      -0.45415290830581656,
-                      -0.04584709169418339])
+        Matrix3::new([
+            0.2126,
+            0.7152,
+            0.0722,
+            -0.11457210605733996,
+            -0.38542789394266,
+            0.5,
+            0.5,
+            -0.45415290830581656,
+            -0.04584709169418339,
+        ])
     }
     fn inverse_transform(&self) -> Matrix3<f64> {
-        Matrix3::new([1.0,
-                      0.0,
-                      1.5748,
-                      1.0,
-                      -0.1873242729306488,
-                      -0.4681242729306488,
-                      1.0,
-                      1.8556,
-                      0.0])
-
+        Matrix3::new([
+            1.0,
+            0.0,
+            1.5748,
+            1.0,
+            -0.1873242729306488,
+            -0.4681242729306488,
+            1.0,
+            1.8556,
+            0.0,
+        ])
     }
 }
 impl<T> YCbCrModel<T> for Bt709Model
-    where T: PosNormalChannelScalar + NormalChannelScalar,
-          StandardShift<T>: YCbCrShift<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
+    StandardShift<T>: YCbCrShift<T>,
 {
     type Shift = StandardShift<T>;
     fn shift(&self) -> (T, T, T) {
@@ -253,34 +271,45 @@ impl<T> YCbCrModel<T> for Bt709Model
     }
 }
 impl<T> UnitModel<T> for Bt709Model
-    where T: PosNormalChannelScalar + NormalChannelScalar,
-          StandardShift<T>: YCbCrShift<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
+    StandardShift<T>: YCbCrShift<T>,
 {
     fn unit_value() -> Self {
         Bt709Model
     }
 }
 impl<T> Canonicalize<T> for Bt709Model
-    where T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
-          StandardShift<T>: YCbCrShift<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
+    StandardShift<T>: YCbCrShift<T>,
 {
     fn to_canonical_representation(from: YCbCr<T, Self>) -> (T, T, T) {
-        (from.luma(), from.cb() * num::cast(0.436).unwrap(), from.cr() * num::cast(0.615).unwrap())
+        (
+            from.luma(),
+            from.cb() * num::cast(0.436).unwrap(),
+            from.cr() * num::cast(0.615).unwrap(),
+        )
     }
 }
 
 impl YCbCrTransform for YiqModel {
     fn forward_transform(&self) -> Matrix3<f64> {
-        Matrix3::new([0.299, 0.587, 0.114, 1.0, -0.4599631, -0.540541, 0.403750, -1.0, 0.597015])
+        Matrix3::new([
+            0.299, 0.587, 0.114, 1.0, -0.4599631, -0.540541, 0.403750, -1.0, 0.597015,
+        ])
     }
     fn inverse_transform(&self) -> Matrix3<f64> {
-        Matrix3::new([1.0, 0.569795, 0.324938, 1.0, -0.162529, -0.338139, 1.0, -0.657578, 0.888868])
+        Matrix3::new([
+            1.0, 0.569795, 0.324938, 1.0, -0.162529, -0.338139, 1.0, -0.657578, 0.888868,
+        ])
     }
 }
 
 impl<T> YCbCrModel<T> for YiqModel
-    where T: PosNormalChannelScalar + NormalChannelScalar,
-          StandardShift<T>: YCbCrShift<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
+    StandardShift<T>: YCbCrShift<T>,
 {
     type Shift = StandardShift<T>;
     fn shift(&self) -> (T, T, T) {
@@ -288,27 +317,33 @@ impl<T> YCbCrModel<T> for YiqModel
     }
 }
 impl<T> UnitModel<T> for YiqModel
-    where T: PosNormalChannelScalar + NormalChannelScalar,
-          StandardShift<T>: YCbCrShift<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
+    StandardShift<T>: YCbCrShift<T>,
 {
     fn unit_value() -> Self {
         YiqModel
     }
 }
 impl<T> Canonicalize<T> for YiqModel
-    where T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
-          StandardShift<T>: YCbCrShift<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
+    StandardShift<T>: YCbCrShift<T>,
 {
     fn to_canonical_representation(from: YCbCr<T, Self>) -> (T, T, T) {
-        (from.luma(),
-         from.cb() * num::cast(0.5957).unwrap(),
-         from.cr() * num::cast(0.5226).unwrap())
+        (
+            from.luma(),
+            from.cb() * num::cast(0.5957).unwrap(),
+            from.cr() * num::cast(0.5226).unwrap(),
+        )
     }
 }
 
 impl YCbCrTransform for JpegModel {
     fn forward_transform(&self) -> Matrix3<f64> {
-        Matrix3::new([0.299f64, 0.587, 0.114, -0.168736, -0.331264, 0.5, 0.5, -0.418688, -0.081312])
+        Matrix3::new([
+            0.299f64, 0.587, 0.114, -0.168736, -0.331264, 0.5, 0.5, -0.418688, -0.081312,
+        ])
     }
     fn inverse_transform(&self) -> Matrix3<f64> {
         Matrix3::new([1.0, 0.0, 1.402, 1.0, -0.3441, -0.7141, 1.0, 1.772, 0.0])
@@ -316,8 +351,9 @@ impl YCbCrTransform for JpegModel {
 }
 
 impl<T> YCbCrModel<T> for JpegModel
-    where T: PosNormalChannelScalar + NormalChannelScalar,
-          StandardShift<T>: YCbCrShift<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
+    StandardShift<T>: YCbCrShift<T>,
 {
     type Shift = StandardShift<T>;
     fn shift(&self) -> (T, T, T) {
@@ -326,22 +362,27 @@ impl<T> YCbCrModel<T> for JpegModel
 }
 
 impl<T> UnitModel<T> for JpegModel
-    where T: PosNormalChannelScalar + NormalChannelScalar,
-          StandardShift<T>: YCbCrShift<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
+    StandardShift<T>: YCbCrShift<T>,
 {
     fn unit_value() -> Self {
         JpegModel
     }
 }
 impl<T> Canonicalize<T> for JpegModel
-    where T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
-          StandardShift<T>: YCbCrShift<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
+    StandardShift<T>: YCbCrShift<T>,
 {
     fn to_canonical_representation(from: YCbCr<T, Self>) -> (T, T, T) {
-        (from.luma(), from.cb() * num::cast(0.436).unwrap(), from.cr() * num::cast(0.615).unwrap())
+        (
+            from.luma(),
+            from.cb() * num::cast(0.436).unwrap(),
+            from.cr() * num::cast(0.615).unwrap(),
+        )
     }
 }
-
 
 impl Default for JpegModel {
     fn default() -> Self {
@@ -356,7 +397,7 @@ macro_rules! impl_standard_shift_int {
                 (0, ($T::max_value() >> 1) + 1, ($T::max_value() >> 1) + 1)
             }
         }
-    }
+    };
 }
 macro_rules! impl_standard_shift_float {
     ($T:ident) => {
@@ -365,7 +406,7 @@ macro_rules! impl_standard_shift_float {
                 (0.0, 0.0, 0.0)
             }
         }
-    }
+    };
 }
 
 impl_standard_shift_int!(u8);

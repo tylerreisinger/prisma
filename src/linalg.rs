@@ -1,8 +1,8 @@
-use std::mem;
-use std::fmt;
-use std::ops;
 use approx;
 use num;
+use std::fmt;
+use std::mem;
+use std::ops;
 
 #[derive(Copy, Debug, PartialEq)]
 pub struct Matrix3<T> {
@@ -10,7 +10,8 @@ pub struct Matrix3<T> {
 }
 
 impl<T> Clone for Matrix3<T>
-    where T: Clone
+where
+    T: Clone,
 {
     fn clone(&self) -> Self {
         unsafe {
@@ -23,7 +24,8 @@ impl<T> Clone for Matrix3<T>
 }
 
 impl<T> Matrix3<T>
-    where T: num::Num + Copy + num::Zero + num::NumCast
+where
+    T: num::Num + Copy + num::Zero + num::NumCast,
 {
     #[inline]
     pub fn new(values: [T; 9]) -> Self {
@@ -58,15 +60,17 @@ impl<T> Matrix3<T>
     #[inline]
     pub fn to_tuple(self) -> (T, T, T, T, T, T, T, T, T) {
         unsafe {
-            (*self.m.get_unchecked(0),
-             *self.m.get_unchecked(1),
-             *self.m.get_unchecked(2),
-             *self.m.get_unchecked(3),
-             *self.m.get_unchecked(4),
-             *self.m.get_unchecked(5),
-             *self.m.get_unchecked(6),
-             *self.m.get_unchecked(7),
-             *self.m.get_unchecked(8))
+            (
+                *self.m.get_unchecked(0),
+                *self.m.get_unchecked(1),
+                *self.m.get_unchecked(2),
+                *self.m.get_unchecked(3),
+                *self.m.get_unchecked(4),
+                *self.m.get_unchecked(5),
+                *self.m.get_unchecked(6),
+                *self.m.get_unchecked(7),
+                *self.m.get_unchecked(8),
+            )
         }
     }
 
@@ -81,7 +85,9 @@ impl<T> Matrix3<T>
     pub fn transpose(self) -> Self {
         let (a, b, c, d, e, f, g, h, i) = self.to_tuple();
 
-        Matrix3 { m: [a, d, g, b, e, h, c, f, i] }
+        Matrix3 {
+            m: [a, d, g, b, e, h, c, f, i],
+        }
     }
 
     #[inline]
@@ -110,7 +116,8 @@ impl<T> Matrix3<T>
 
     #[inline]
     pub fn transform_vector<U>(&self, vec: (U, U, U)) -> (U, U, U)
-        where U: num::NumCast
+    where
+        U: num::NumCast,
     {
         let (v1, v2, v3) = vec;
         let fv1: T = num::cast(v1).unwrap();
@@ -132,16 +139,20 @@ impl<T> Matrix3<T>
 }
 
 impl<T> Default for Matrix3<T>
-    where T: num::Num + Copy + Default
+where
+    T: num::Num + Copy + Default,
 {
     fn default() -> Self {
-        Matrix3 { m: [T::default(); 9] }
+        Matrix3 {
+            m: [T::default(); 9],
+        }
     }
 }
 
 impl<T> approx::AbsDiffEq for Matrix3<T>
-    where T: num::Num + Copy + approx::AbsDiffEq,
-          T::Epsilon: Clone
+where
+    T: num::Num + Copy + approx::AbsDiffEq,
+    T::Epsilon: Clone,
 {
     type Epsilon = T::Epsilon;
 
@@ -150,45 +161,56 @@ impl<T> approx::AbsDiffEq for Matrix3<T>
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        self.m.iter().zip(other.m.iter()).fold(true, move |st, (lhs, rhs)| {
-            st && lhs.abs_diff_eq(&rhs, epsilon.clone())
-        })
+        self.m
+            .iter()
+            .zip(other.m.iter())
+            .fold(true, move |st, (lhs, rhs)| {
+                st && lhs.abs_diff_eq(&rhs, epsilon.clone())
+            })
     }
 }
 impl<T> approx::RelativeEq for Matrix3<T>
-
-    where T: num::Num + Copy + approx::RelativeEq,
-          T::Epsilon: Clone
+where
+    T: num::Num + Copy + approx::RelativeEq,
+    T::Epsilon: Clone,
 {
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
     }
-    fn relative_eq(&self,
-                   other: &Self,
-                   epsilon: Self::Epsilon,
-                   max_relative: Self::Epsilon)
-                   -> bool {
-        self.m.iter().zip(other.m.iter()).fold(true, move |st, (lhs, rhs)| {
-            st && lhs.relative_eq(&rhs, epsilon.clone(), max_relative.clone())
-        })
-
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        self.m
+            .iter()
+            .zip(other.m.iter())
+            .fold(true, move |st, (lhs, rhs)| {
+                st && lhs.relative_eq(&rhs, epsilon.clone(), max_relative.clone())
+            })
     }
 }
 impl<T> approx::UlpsEq for Matrix3<T>
-    where T: num::Num + Copy + approx::UlpsEq,
-          T::Epsilon: Clone
+where
+    T: num::Num + Copy + approx::UlpsEq,
+    T::Epsilon: Clone,
 {
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()
     }
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        self.m.iter().zip(other.m.iter()).fold(true, move |st, (lhs, rhs)| {
-            st && lhs.ulps_eq(&rhs, epsilon.clone(), max_ulps)
-        })
+        self.m
+            .iter()
+            .zip(other.m.iter())
+            .fold(true, move |st, (lhs, rhs)| {
+                st && lhs.ulps_eq(&rhs, epsilon.clone(), max_ulps)
+            })
     }
 }
 impl<T> ops::Div<T> for Matrix3<T>
-    where T: num::Num + Copy
+where
+    T: num::Num + Copy,
 {
     type Output = Self;
     #[inline]
@@ -200,7 +222,8 @@ impl<T> ops::Div<T> for Matrix3<T>
 }
 
 impl<T> ops::DivAssign<T> for Matrix3<T>
-    where T: num::Num + Copy
+where
+    T: num::Num + Copy,
 {
     #[inline]
     fn div_assign(&mut self, rhs: T) {
@@ -219,7 +242,8 @@ impl<T> ops::DivAssign<T> for Matrix3<T>
 }
 
 impl<T> ops::Mul for Matrix3<T>
-    where T: num::Num + Copy
+where
+    T: num::Num + Copy,
 {
     type Output = Self;
     #[inline]
@@ -230,7 +254,8 @@ impl<T> ops::Mul for Matrix3<T>
     }
 }
 impl<T> ops::Mul<T> for Matrix3<T>
-    where T: num::Num + Copy
+where
+    T: num::Num + Copy,
 {
     type Output = Self;
     #[inline]
@@ -242,7 +267,8 @@ impl<T> ops::Mul<T> for Matrix3<T>
 }
 
 impl<T> ops::MulAssign<T> for Matrix3<T>
-    where T: num::Num + Copy
+where
+    T: num::Num + Copy,
 {
     #[inline]
     fn mul_assign(&mut self, rhs: T) {
@@ -261,7 +287,8 @@ impl<T> ops::MulAssign<T> for Matrix3<T>
 }
 
 impl<T> ops::MulAssign for Matrix3<T>
-    where T: num::Num + Copy
+where
+    T: num::Num + Copy,
 {
     #[inline]
     fn mul_assign(&mut self, rhs: Matrix3<T>) {
@@ -269,24 +296,28 @@ impl<T> ops::MulAssign for Matrix3<T>
         // and need to index it many times. Thus, we use
         // unchecked indexing to help performance.
         unsafe {
-            let (l1, l2, l3, l4, l5, l6, l7, l8, l9) = (*self.m.get_unchecked(0),
-                                                        *self.m.get_unchecked(1),
-                                                        *self.m.get_unchecked(2),
-                                                        *self.m.get_unchecked(3),
-                                                        *self.m.get_unchecked(4),
-                                                        *self.m.get_unchecked(5),
-                                                        *self.m.get_unchecked(6),
-                                                        *self.m.get_unchecked(7),
-                                                        *self.m.get_unchecked(8));
-            let (r1, r2, r3, r4, r5, r6, r7, r8, r9) = (*rhs.m.get_unchecked(0),
-                                                        *rhs.m.get_unchecked(1),
-                                                        *rhs.m.get_unchecked(2),
-                                                        *rhs.m.get_unchecked(3),
-                                                        *rhs.m.get_unchecked(4),
-                                                        *rhs.m.get_unchecked(5),
-                                                        *rhs.m.get_unchecked(6),
-                                                        *rhs.m.get_unchecked(7),
-                                                        *rhs.m.get_unchecked(8));
+            let (l1, l2, l3, l4, l5, l6, l7, l8, l9) = (
+                *self.m.get_unchecked(0),
+                *self.m.get_unchecked(1),
+                *self.m.get_unchecked(2),
+                *self.m.get_unchecked(3),
+                *self.m.get_unchecked(4),
+                *self.m.get_unchecked(5),
+                *self.m.get_unchecked(6),
+                *self.m.get_unchecked(7),
+                *self.m.get_unchecked(8),
+            );
+            let (r1, r2, r3, r4, r5, r6, r7, r8, r9) = (
+                *rhs.m.get_unchecked(0),
+                *rhs.m.get_unchecked(1),
+                *rhs.m.get_unchecked(2),
+                *rhs.m.get_unchecked(3),
+                *rhs.m.get_unchecked(4),
+                *rhs.m.get_unchecked(5),
+                *rhs.m.get_unchecked(6),
+                *rhs.m.get_unchecked(7),
+                *rhs.m.get_unchecked(8),
+            );
 
             *self.m.get_unchecked_mut(0) = l1 * r1 + l2 * r4 + l3 * r7;
             *self.m.get_unchecked_mut(1) = l1 * r2 + l2 * r5 + l3 * r8;
@@ -304,7 +335,8 @@ impl<T> ops::MulAssign for Matrix3<T>
 }
 
 impl<T> ops::Add for Matrix3<T>
-    where T: num::Num + Copy + ops::AddAssign<T>
+where
+    T: num::Num + Copy + ops::AddAssign<T>,
 {
     type Output = Self;
     #[inline]
@@ -316,7 +348,8 @@ impl<T> ops::Add for Matrix3<T>
 }
 
 impl<T> ops::AddAssign for Matrix3<T>
-    where T: num::Num + Copy + ops::AddAssign<T>
+where
+    T: num::Num + Copy + ops::AddAssign<T>,
 {
     #[inline]
     fn add_assign(&mut self, rhs: Self) {
@@ -335,7 +368,8 @@ impl<T> ops::AddAssign for Matrix3<T>
 }
 
 impl<T> ops::Sub for Matrix3<T>
-    where T: num::Num + Copy + ops::SubAssign<T>
+where
+    T: num::Num + Copy + ops::SubAssign<T>,
 {
     type Output = Self;
     #[inline]
@@ -347,7 +381,8 @@ impl<T> ops::Sub for Matrix3<T>
 }
 
 impl<T> ops::SubAssign for Matrix3<T>
-    where T: num::Num + Copy + ops::SubAssign<T>
+where
+    T: num::Num + Copy + ops::SubAssign<T>,
 {
     #[inline]
     fn sub_assign(&mut self, rhs: Self) {
@@ -366,20 +401,23 @@ impl<T> ops::SubAssign for Matrix3<T>
 }
 
 impl<T> fmt::Display for Matrix3<T>
-    where T: num::Num + Copy + fmt::Display
+where
+    T: num::Num + Copy + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,
-               "|{} {} {}|\n|{} {} {}|\n|{} {} {}|",
-               self.m[0],
-               self.m[1],
-               self.m[2],
-               self.m[3],
-               self.m[4],
-               self.m[5],
-               self.m[6],
-               self.m[7],
-               self.m[8])
+        write!(
+            f,
+            "|{} {} {}|\n|{} {} {}|\n|{} {} {}|",
+            self.m[0],
+            self.m[1],
+            self.m[2],
+            self.m[3],
+            self.m[4],
+            self.m[5],
+            self.m[6],
+            self.m[7],
+            self.m[8]
+        )
     }
 }
 

@@ -1,19 +1,21 @@
-use std::fmt;
-use std::ops;
-use std::mem;
-use std::slice;
-use approx;
-use num;
-use angle::{FromAngle, Angle, IntoAngle, Deg};
-use angle;
-use channel::{PosNormalBoundedChannel, AngularChannel, ChannelFormatCast, ChannelCast,
-              PosNormalChannelScalar, AngularChannelScalar, ColorChannel};
 use alpha::Alpha;
-use convert;
-use convert::GetChroma;
+use angle;
+use angle::{Angle, Deg, FromAngle, IntoAngle};
+use approx;
+use channel::{
+    AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
+    PosNormalBoundedChannel, PosNormalChannelScalar,
+};
 use color;
 use color::{Color, FromTuple};
+use convert;
+use convert::GetChroma;
+use num;
 use rgb::Rgb;
+use std::fmt;
+use std::mem;
+use std::ops;
+use std::slice;
 
 pub struct HslTag;
 
@@ -28,8 +30,9 @@ pub struct Hsl<T, A = Deg<T>> {
 pub type Hsla<T, A> = Alpha<T, Hsl<T, A>>;
 
 impl<T, A> Hsl<T, A>
-    where T: PosNormalChannelScalar,
-          A: AngularChannelScalar
+where
+    T: PosNormalChannelScalar,
+    A: AngularChannelScalar,
 {
     pub fn from_channels(hue: A, saturation: T, lightness: T) -> Self {
         Hsl {
@@ -39,8 +42,14 @@ impl<T, A> Hsl<T, A>
         }
     }
 
-    impl_color_color_cast_angular!(Hsl {hue, saturation, lightness},
-        chan_traits={PosNormalChannelScalar});
+    impl_color_color_cast_angular!(
+        Hsl {
+            hue,
+            saturation,
+            lightness
+        },
+        chan_traits = { PosNormalChannelScalar }
+    );
 
     pub fn hue(&self) -> A {
         self.hue.0.clone()
@@ -72,8 +81,9 @@ impl<T, A> Hsl<T, A>
 }
 
 impl<T, A> Color for Hsl<T, A>
-    where T: PosNormalChannelScalar,
-          A: AngularChannelScalar
+where
+    T: PosNormalChannelScalar,
+    A: AngularChannelScalar,
 {
     type Tag = HslTag;
     type ChannelsTuple = (A, T, T);
@@ -87,8 +97,9 @@ impl<T, A> Color for Hsl<T, A>
 }
 
 impl<T, A> FromTuple for Hsl<T, A>
-    where T: PosNormalChannelScalar,
-          A: AngularChannelScalar
+where
+    T: PosNormalChannelScalar,
+    A: AngularChannelScalar,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         Hsl::from_channels(values.0, values.1, values.2)
@@ -96,23 +107,30 @@ impl<T, A> FromTuple for Hsl<T, A>
 }
 
 impl<T, A> color::PolarColor for Hsl<T, A>
-    where T: PosNormalChannelScalar,
-          A: AngularChannelScalar
+where
+    T: PosNormalChannelScalar,
+    A: AngularChannelScalar,
 {
     type Angular = A;
     type Cartesian = T;
 }
 
 impl<T, A> color::Invert for Hsl<T, A>
-    where T: PosNormalChannelScalar,
-          A: AngularChannelScalar
+where
+    T: PosNormalChannelScalar,
+    A: AngularChannelScalar,
 {
-    impl_color_invert!(Hsl {hue, saturation, lightness});
+    impl_color_invert!(Hsl {
+        hue,
+        saturation,
+        lightness
+    });
 }
 
 impl<T, A> color::Lerp for Hsl<T, A>
-    where T: PosNormalChannelScalar + color::Lerp,
-          A: AngularChannelScalar + color::Lerp
+where
+    T: PosNormalChannelScalar + color::Lerp,
+    A: AngularChannelScalar + color::Lerp,
 {
     type Position = A::Position;
 
@@ -120,15 +138,21 @@ impl<T, A> color::Lerp for Hsl<T, A>
 }
 
 impl<T, A> color::Bounded for Hsl<T, A>
-    where T: PosNormalChannelScalar,
-          A: AngularChannelScalar
+where
+    T: PosNormalChannelScalar,
+    A: AngularChannelScalar,
 {
-    impl_color_bounded!(Hsl {hue, saturation, lightness});
+    impl_color_bounded!(Hsl {
+        hue,
+        saturation,
+        lightness
+    });
 }
 
 impl<T, A> color::Flatten for Hsl<T, A>
-    where T: PosNormalChannelScalar + num::Float,
-          A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>
+where
+    T: PosNormalChannelScalar + num::Float,
+    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
 {
     type ScalarFormat = T;
 
@@ -138,47 +162,59 @@ impl<T, A> color::Flatten for Hsl<T, A>
 }
 
 impl<T, A> approx::AbsDiffEq for Hsl<T, A>
-    where T: PosNormalChannelScalar + approx::AbsDiffEq<Epsilon = A::Epsilon>,
-          A: AngularChannelScalar + approx::AbsDiffEq,
-          A::Epsilon: Clone + num::Float
+where
+    T: PosNormalChannelScalar + approx::AbsDiffEq<Epsilon = A::Epsilon>,
+    A: AngularChannelScalar + approx::AbsDiffEq,
+    A::Epsilon: Clone + num::Float,
 {
     impl_abs_diff_eq!({hue, saturation, lightness});
 }
 impl<T, A> approx::RelativeEq for Hsl<T, A>
-    where T: PosNormalChannelScalar + approx::RelativeEq<Epsilon = A::Epsilon>,
-          A: AngularChannelScalar + approx::RelativeEq,
-          A::Epsilon: Clone + num::Float
+where
+    T: PosNormalChannelScalar + approx::RelativeEq<Epsilon = A::Epsilon>,
+    A: AngularChannelScalar + approx::RelativeEq,
+    A::Epsilon: Clone + num::Float,
 {
     impl_rel_eq!({hue, saturation, lightness});
 }
 impl<T, A> approx::UlpsEq for Hsl<T, A>
-    where T: PosNormalChannelScalar + approx::UlpsEq<Epsilon = A::Epsilon>,
-          A: AngularChannelScalar + approx::UlpsEq,
-          A::Epsilon: Clone + num::Float
+where
+    T: PosNormalChannelScalar + approx::UlpsEq<Epsilon = A::Epsilon>,
+    A: AngularChannelScalar + approx::UlpsEq,
+    A::Epsilon: Clone + num::Float,
 {
     impl_ulps_eq!({hue, saturation, lightness});
 }
 
 impl<T, A> Default for Hsl<T, A>
-    where T: PosNormalChannelScalar + num::Zero,
-          A: AngularChannelScalar + num::Zero
+where
+    T: PosNormalChannelScalar + num::Zero,
+    A: AngularChannelScalar + num::Zero,
 {
     impl_color_default!(Hsl {
-        hue:AngularChannel, saturation:PosNormalBoundedChannel, 
-        lightness:PosNormalBoundedChannel});
+        hue: AngularChannel,
+        saturation: PosNormalBoundedChannel,
+        lightness: PosNormalBoundedChannel
+    });
 }
 impl<T, A> fmt::Display for Hsl<T, A>
-    where T: PosNormalChannelScalar + fmt::Display,
-          A: AngularChannelScalar + fmt::Display
+where
+    T: PosNormalChannelScalar + fmt::Display,
+    A: AngularChannelScalar + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Hsl({}, {}, {})", self.hue, self.saturation, self.lightness)
+        write!(
+            f,
+            "Hsl({}, {}, {})",
+            self.hue, self.saturation, self.lightness
+        )
     }
 }
 
 impl<T, A> convert::GetChroma for Hsl<T, A>
-    where T: PosNormalChannelScalar + ops::Mul<T, Output = T> + num::Float,
-          A: AngularChannelScalar
+where
+    T: PosNormalChannelScalar + ops::Mul<T, Output = T> + num::Float,
+    A: AngularChannelScalar,
 {
     type ChromaType = T;
     fn get_chroma(&self) -> T {
@@ -189,15 +225,17 @@ impl<T, A> convert::GetChroma for Hsl<T, A>
     }
 }
 impl<T, A> convert::GetHue for Hsl<T, A>
-    where T: PosNormalChannelScalar,
-          A: AngularChannelScalar
+where
+    T: PosNormalChannelScalar,
+    A: AngularChannelScalar,
 {
     impl_color_get_hue_angular!(Hsl);
 }
 
 impl<T, A> convert::FromColor<Hsl<T, A>> for Rgb<T>
-    where T: PosNormalChannelScalar + num::Float,
-          A: AngularChannelScalar
+where
+    T: PosNormalChannelScalar + num::Float,
+    A: AngularChannelScalar,
 {
     fn from_color(from: &Hsl<T, A>) -> Self {
         let (hue_seg, hue_frac) = convert::decompose_hue_segment(from);
@@ -242,11 +280,11 @@ impl<T, A> convert::FromColor<Hsl<T, A>> for Rgb<T>
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::f32::consts;
     use angle::*;
     use color::*;
     use convert::*;
     use rgb::Rgb;
+    use std::f32::consts;
 
     use test;
 
@@ -272,7 +310,7 @@ mod test {
 
         for item in test_data.iter() {
             let chroma = item.hsl.get_chroma();
-            assert_relative_eq!(chroma, item.chroma, epsilon=1e-3);
+            assert_relative_eq!(chroma, item.chroma, epsilon = 1e-3);
         }
     }
 
@@ -302,18 +340,24 @@ mod test {
 
         for item in test_data.iter() {
             let rgb = Rgb::from_color(&item.hsl);
-            assert_relative_eq!(rgb, item.rgb, epsilon=1e-3);
+            assert_relative_eq!(rgb, item.rgb, epsilon = 1e-3);
             let hsl = Hsl::from_color(&rgb);
-            assert_relative_eq!(hsl, item.hsl, epsilon=1e-3);
+            assert_relative_eq!(hsl, item.hsl, epsilon = 1e-3);
         }
     }
 
     #[test]
     fn test_color_cast() {
         let c1 = Hsl::from_channels(Deg(90.0), 0.23, 0.45);
-        assert_relative_eq!(c1.color_cast(), 
-            Hsl::from_channels(Turns(0.25f32), 0.23f32, 0.45f32));
-        assert_relative_eq!(c1.color_cast(), c1, epsilon=1e-7);
-        assert_relative_eq!(c1.color_cast::<f32, Rad<f32>>().color_cast(), c1, epsilon=1e-7);
+        assert_relative_eq!(
+            c1.color_cast(),
+            Hsl::from_channels(Turns(0.25f32), 0.23f32, 0.45f32)
+        );
+        assert_relative_eq!(c1.color_cast(), c1, epsilon = 1e-7);
+        assert_relative_eq!(
+            c1.color_cast::<f32, Rad<f32>>().color_cast(),
+            c1,
+            epsilon = 1e-7
+        );
     }
 }

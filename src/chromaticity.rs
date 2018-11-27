@@ -1,6 +1,6 @@
-use num;
+use angle::{Angle, FromAngle, Rad};
 use convert::{GetChroma, GetHue};
-use angle::{Angle, Rad, FromAngle};
+use num;
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct ChromaticityCoordinates<T> {
@@ -9,7 +9,8 @@ pub struct ChromaticityCoordinates<T> {
 }
 
 impl<T> ChromaticityCoordinates<T>
-    where T: num::Float
+where
+    T: num::Float,
 {
     pub fn new(alpha: T, beta: T) -> Self {
         ChromaticityCoordinates {
@@ -20,7 +21,8 @@ impl<T> ChromaticityCoordinates<T>
 }
 
 impl<T> Default for ChromaticityCoordinates<T>
-    where T: num::Float
+where
+    T: num::Float,
 {
     fn default() -> Self {
         ChromaticityCoordinates {
@@ -31,7 +33,8 @@ impl<T> Default for ChromaticityCoordinates<T>
 }
 
 impl<T> GetChroma for ChromaticityCoordinates<T>
-    where T: num::Float
+where
+    T: num::Float,
 {
     type ChromaType = T;
 
@@ -41,13 +44,14 @@ impl<T> GetChroma for ChromaticityCoordinates<T>
 }
 
 impl<T> GetHue for ChromaticityCoordinates<T>
-    where T: num::Float
+where
+    T: num::Float,
 {
     type InternalAngle = Rad<T>;
 
     fn get_hue<U>(&self) -> U
-        where U: Angle<Scalar=<Self::InternalAngle as Angle>::Scalar>
-            + FromAngle<Self::InternalAngle>
+    where
+        U: Angle<Scalar = <Self::InternalAngle as Angle>::Scalar> + FromAngle<Self::InternalAngle>,
     {
         U::atan2(self.beta, self.alpha)
     }

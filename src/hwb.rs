@@ -1,18 +1,20 @@
+use alpha::Alpha;
+use angle;
+use angle::{Angle, Deg, FromAngle, IntoAngle};
+use approx;
+use channel::{
+    AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
+    PosNormalBoundedChannel, PosNormalChannelScalar,
+};
+use color;
+use color::{Color, FromTuple};
+use convert;
+use hsv;
+use num;
+use rgb;
 use std::fmt;
 use std::mem;
 use std::slice;
-use approx;
-use num;
-use channel::{PosNormalBoundedChannel, PosNormalChannelScalar, AngularChannel, ChannelFormatCast,
-              ChannelCast, AngularChannelScalar, ColorChannel};
-use angle::{Angle, FromAngle, IntoAngle, Deg};
-use angle;
-use alpha::Alpha;
-use color::{Color, FromTuple};
-use color;
-use convert;
-use rgb;
-use hsv;
 
 pub struct HwbTag;
 
@@ -31,8 +33,9 @@ impl<T> HwbBoundedChannelTraits for T where T: PosNormalChannelScalar + num::Flo
 pub type Hwba<T, A> = Alpha<T, Hwb<T, A>>;
 
 impl<T, A> Hwb<T, A>
-    where T: HwbBoundedChannelTraits,
-          A: AngularChannelScalar
+where
+    T: HwbBoundedChannelTraits,
+    A: AngularChannelScalar,
 {
     pub fn from_channels(hue: A, whiteness: T, blackness: T) -> Self {
         Hwb {
@@ -42,8 +45,14 @@ impl<T, A> Hwb<T, A>
         }
     }
 
-    impl_color_color_cast_angular!(Hwb {hue, whiteness, blackness}, 
-        chan_traits={PosNormalChannelScalar});
+    impl_color_color_cast_angular!(
+        Hwb {
+            hue,
+            whiteness,
+            blackness
+        },
+        chan_traits = { PosNormalChannelScalar }
+    );
 
     pub fn hue(&self) -> A {
         self.hue.0.clone()
@@ -75,8 +84,9 @@ impl<T, A> Hwb<T, A>
 }
 
 impl<T, A> Hwb<T, A>
-    where T: HwbBoundedChannelTraits,
-          A: AngularChannelScalar
+where
+    T: HwbBoundedChannelTraits,
+    A: AngularChannelScalar,
 {
     pub fn wb_needs_rescaled(&self) -> bool {
         (self.whiteness() + self.blackness()) > num::cast::<_, T>(1.0).unwrap()
@@ -99,8 +109,9 @@ impl<T, A> Hwb<T, A>
 }
 
 impl<T, A> Color for Hwb<T, A>
-    where T: HwbBoundedChannelTraits,
-          A: AngularChannelScalar
+where
+    T: HwbBoundedChannelTraits,
+    A: AngularChannelScalar,
 {
     type Tag = HwbTag;
     type ChannelsTuple = (A, T, T);
@@ -114,8 +125,9 @@ impl<T, A> Color for Hwb<T, A>
 }
 
 impl<T, A> FromTuple for Hwb<T, A>
-    where T: HwbBoundedChannelTraits,
-          A: AngularChannelScalar
+where
+    T: HwbBoundedChannelTraits,
+    A: AngularChannelScalar,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         Hwb::from_channels(values.0, values.1, values.2)
@@ -123,23 +135,30 @@ impl<T, A> FromTuple for Hwb<T, A>
 }
 
 impl<T, A> color::PolarColor for Hwb<T, A>
-    where T: HwbBoundedChannelTraits,
-          A: AngularChannelScalar
+where
+    T: HwbBoundedChannelTraits,
+    A: AngularChannelScalar,
 {
     type Angular = A;
     type Cartesian = T;
 }
 
 impl<T, A> color::Invert for Hwb<T, A>
-    where T: HwbBoundedChannelTraits,
-          A: AngularChannelScalar
+where
+    T: HwbBoundedChannelTraits,
+    A: AngularChannelScalar,
 {
-    impl_color_invert!(Hwb {hue, whiteness, blackness});
+    impl_color_invert!(Hwb {
+        hue,
+        whiteness,
+        blackness
+    });
 }
 
 impl<T, A> color::Lerp for Hwb<T, A>
-    where T: HwbBoundedChannelTraits + color::Lerp,
-          A: AngularChannelScalar + color::Lerp
+where
+    T: HwbBoundedChannelTraits + color::Lerp,
+    A: AngularChannelScalar + color::Lerp,
 {
     type Position = A::Position;
 
@@ -147,15 +166,21 @@ impl<T, A> color::Lerp for Hwb<T, A>
 }
 
 impl<T, A> color::Bounded for Hwb<T, A>
-    where T: HwbBoundedChannelTraits,
-          A: AngularChannelScalar
+where
+    T: HwbBoundedChannelTraits,
+    A: AngularChannelScalar,
 {
-    impl_color_bounded!(Hwb {hue, whiteness, blackness});
+    impl_color_bounded!(Hwb {
+        hue,
+        whiteness,
+        blackness
+    });
 }
 
 impl<T, A> color::Flatten for Hwb<T, A>
-    where T: HwbBoundedChannelTraits + num::Float,
-          A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>
+where
+    T: HwbBoundedChannelTraits + num::Float,
+    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
 {
     type ScalarFormat = T;
 
@@ -165,55 +190,68 @@ impl<T, A> color::Flatten for Hwb<T, A>
 }
 
 impl<T, A> approx::AbsDiffEq for Hwb<T, A>
-    where T: HwbBoundedChannelTraits + approx::AbsDiffEq<Epsilon = A::Epsilon>,
-          A: AngularChannelScalar + approx::AbsDiffEq,
-          A::Epsilon: Clone + num::Float
+where
+    T: HwbBoundedChannelTraits + approx::AbsDiffEq<Epsilon = A::Epsilon>,
+    A: AngularChannelScalar + approx::AbsDiffEq,
+    A::Epsilon: Clone + num::Float,
 {
     impl_abs_diff_eq!({hue, whiteness, blackness});
 }
 impl<T, A> approx::RelativeEq for Hwb<T, A>
-    where T: HwbBoundedChannelTraits + approx::RelativeEq<Epsilon = A::Epsilon>,
-          A: AngularChannelScalar + approx::RelativeEq,
-          A::Epsilon: Clone + num::Float
+where
+    T: HwbBoundedChannelTraits + approx::RelativeEq<Epsilon = A::Epsilon>,
+    A: AngularChannelScalar + approx::RelativeEq,
+    A::Epsilon: Clone + num::Float,
 {
     impl_rel_eq!({hue, whiteness, blackness});
 }
 impl<T, A> approx::UlpsEq for Hwb<T, A>
-    where T: HwbBoundedChannelTraits + approx::UlpsEq<Epsilon = A::Epsilon>,
-          A: AngularChannelScalar + approx::UlpsEq,
-          A::Epsilon: Clone + num::Float
+where
+    T: HwbBoundedChannelTraits + approx::UlpsEq<Epsilon = A::Epsilon>,
+    A: AngularChannelScalar + approx::UlpsEq,
+    A::Epsilon: Clone + num::Float,
 {
     impl_ulps_eq!({hue, whiteness, blackness});
 }
 
 impl<T, A> Default for Hwb<T, A>
-    where T: HwbBoundedChannelTraits + num::Zero,
-          A: AngularChannelScalar + num::Zero
+where
+    T: HwbBoundedChannelTraits + num::Zero,
+    A: AngularChannelScalar + num::Zero,
 {
     impl_color_default!(Hwb {
-        hue:AngularChannel, whiteness:PosNormalBoundedChannel, 
-        blackness:PosNormalBoundedChannel});
+        hue: AngularChannel,
+        whiteness: PosNormalBoundedChannel,
+        blackness: PosNormalBoundedChannel
+    });
 }
 
 impl<T, A> fmt::Display for Hwb<T, A>
-    where T: HwbBoundedChannelTraits + fmt::Display,
-          A: AngularChannelScalar + fmt::Display
+where
+    T: HwbBoundedChannelTraits + fmt::Display,
+    A: AngularChannelScalar + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Hwb({}, {}, {})", self.hue, self.whiteness, self.blackness)
+        write!(
+            f,
+            "Hwb({}, {}, {})",
+            self.hue, self.whiteness, self.blackness
+        )
     }
 }
 
 impl<T, A> convert::GetHue for Hwb<T, A>
-    where T: HwbBoundedChannelTraits,
-          A: AngularChannelScalar
+where
+    T: HwbBoundedChannelTraits,
+    A: AngularChannelScalar,
 {
     impl_color_get_hue_angular!(Hwb);
 }
 
 impl<T, A> convert::GetChroma for Hwb<T, A>
-    where T: HwbBoundedChannelTraits + num::Float,
-          A: AngularChannelScalar
+where
+    T: HwbBoundedChannelTraits + num::Float,
+    A: AngularChannelScalar,
 {
     type ChromaType = T;
     fn get_chroma(&self) -> T {
@@ -223,8 +261,9 @@ impl<T, A> convert::GetChroma for Hwb<T, A>
 }
 
 impl<T, A> convert::FromColor<Hwb<T, A>> for rgb::Rgb<T>
-    where T: HwbBoundedChannelTraits + num::Float,
-          A: AngularChannelScalar
+where
+    T: HwbBoundedChannelTraits + num::Float,
+    A: AngularChannelScalar,
 {
     fn from_color(from: &Hwb<T, A>) -> Self {
         let (hue_seg, hue_frac) = convert::decompose_hue_segment(from);
@@ -260,7 +299,6 @@ impl<T, A> convert::FromColor<Hwb<T, A>> for rgb::Rgb<T>
             5 => {
                 let b = channel_max - max_less_whiteness * hue_frac_t;
                 rgb::Rgb::from_channels(channel_max, channel_min, b)
-
             }
             _ => unreachable!(),
         }
@@ -268,8 +306,9 @@ impl<T, A> convert::FromColor<Hwb<T, A>> for rgb::Rgb<T>
 }
 
 impl<T, A> convert::FromColor<hsv::Hsv<T, A>> for Hwb<T, A>
-    where T: HwbBoundedChannelTraits + num::Float,
-          A: AngularChannelScalar
+where
+    T: HwbBoundedChannelTraits + num::Float,
+    A: AngularChannelScalar,
 {
     fn from_color(from: &hsv::Hsv<T, A>) -> Self {
         let one: T = num::cast(1.0).unwrap();
@@ -280,8 +319,9 @@ impl<T, A> convert::FromColor<hsv::Hsv<T, A>> for Hwb<T, A>
 }
 
 impl<T, A> convert::FromColor<Hwb<T, A>> for hsv::Hsv<T, A>
-    where T: HwbBoundedChannelTraits + num::Float,
-          A: AngularChannelScalar
+where
+    T: HwbBoundedChannelTraits + num::Float,
+    A: AngularChannelScalar,
 {
     fn from_color(from: &Hwb<T, A>) -> Self {
         let epsilon: T = num::cast(1e-10).unwrap();
@@ -299,11 +339,11 @@ impl<T, A> convert::FromColor<Hwb<T, A>> for hsv::Hsv<T, A>
 mod test {
     use super::*;
     use angle::*;
-    use test;
-    use rgb::Rgb;
-    use hsv::Hsv;
-    use convert::{FromColor, GetChroma};
     use color::*;
+    use convert::{FromColor, GetChroma};
+    use hsv::Hsv;
+    use rgb::Rgb;
+    use test;
 
     #[test]
     fn test_construct() {
@@ -338,13 +378,19 @@ mod test {
 
         let c2 = Hwb::from_channels(Deg(90.0), 1.0, 1.0);
         assert!(c2.wb_needs_rescaled());
-        assert_relative_eq!(c2.rescale_wb(), 
-            Hwb::from_channels(Deg(90.0), 0.5, 0.5), epsilon=1e-6);
+        assert_relative_eq!(
+            c2.rescale_wb(),
+            Hwb::from_channels(Deg(90.0), 0.5, 0.5),
+            epsilon = 1e-6
+        );
 
         let c3 = Hwb::from_channels(Rad(1.0), 0.75, 0.9);
         assert!(c3.wb_needs_rescaled());
-        assert_relative_eq!(c3.rescale_wb(),
-            Hwb::from_channels(Rad(1.0), 0.45454545, 0.54545454), epsilon=1e-6);
+        assert_relative_eq!(
+            c3.rescale_wb(),
+            Hwb::from_channels(Rad(1.0), 0.45454545, 0.54545454),
+            epsilon = 1e-6
+        );
     }
 
     #[test]
@@ -376,7 +422,6 @@ mod test {
         let c1 = Hwb::from_channels(Turns(0.55), 0.43, 0.11);
         assert_eq!(c1.as_slice(), &[0.55, 0.43, 0.11]);
         assert_eq!(c1, Hwb::from_slice(c1.as_slice()));
-
     }
 
     #[test]
@@ -387,9 +432,8 @@ mod test {
                 let hwb = Hwb::from_color(&item.hsv);
                 let chroma = hwb.get_chroma();
                 println!("{} -- {}", hwb, item.rgb);
-                assert_relative_eq!(chroma, item.chroma, epsilon=1e-3);
+                assert_relative_eq!(chroma, item.chroma, epsilon = 1e-3);
             }
-
         }
     }
 
@@ -400,11 +444,11 @@ mod test {
         for item in test_data.iter() {
             let hwb = Hwb::from_color(&item.hsv);
             let rgb = Rgb::from_color(&hwb);
-            assert_relative_eq!(rgb, item.rgb, epsilon=1e-3);
+            assert_relative_eq!(rgb, item.rgb, epsilon = 1e-3);
             let hsv = Hsv::from_color(&hwb);
             println!("{} {} {} {}", hsv, item.hsv, hwb, item.rgb);
             if hsv.value() > 0.005 {
-                assert_relative_eq!(hsv, item.hsv, epsilon=1e-3);
+                assert_relative_eq!(hsv, item.hsv, epsilon = 1e-3);
             }
         }
     }
@@ -416,7 +460,7 @@ mod test {
             let hwb = Hwb::from_color(&item.rgb);
             let hsv = Hsv::from_color(&hwb);
             if hsv.value() > 0.005 {
-                assert_relative_eq!(hsv, item.hsv, epsilon=1e-3);
+                assert_relative_eq!(hsv, item.hsv, epsilon = 1e-3);
             }
         }
     }
@@ -436,11 +480,11 @@ mod test {
                 let hwb: Hwb<f32> = Hwb::from_color(&item.rgb);
                 println!("result={}; expected={}; rgb={}", hwb, item.hwb, item.rgb);
 
-                assert_relative_eq!(hwb.whiteness(), item.hwb.whiteness(), epsilon=1e-3);
-                assert_relative_eq!(hwb.blackness(), item.hwb.blackness(), epsilon=1e-3);
-                assert_relative_eq!(hwb.hue(), item.hwb.hue(), epsilon=1.0);
+                assert_relative_eq!(hwb.whiteness(), item.hwb.whiteness(), epsilon = 1e-3);
+                assert_relative_eq!(hwb.blackness(), item.hwb.blackness(), epsilon = 1e-3);
+                assert_relative_eq!(hwb.hue(), item.hwb.hue(), epsilon = 1.0);
                 let rgb = Rgb::from_color(&hwb);
-                assert_relative_eq!(rgb, item.rgb, epsilon=1e-3);
+                assert_relative_eq!(rgb, item.rgb, epsilon = 1e-3);
             }
         }
     }
@@ -459,7 +503,7 @@ mod test {
             if !(d1 < min_distance && d2 < min_distance && d3 < min_distance) {
                 let rgb = Rgb::from_color(&item.hwb);
                 println!("result={}; expected={}; hwb={}", rgb, item.rgb, item.hwb);
-                assert_relative_eq!(rgb, item.rgb, epsilon=2.5e-3);
+                assert_relative_eq!(rgb, item.rgb, epsilon = 2.5e-3);
             }
         }
     }
@@ -468,7 +512,10 @@ mod test {
     fn test_cast() {
         let c1 = Hwb::from_channels(Deg(120.0_f32), 0.5_f32, 0.3);
         assert_relative_eq!(c1.color_cast::<f64, Rad<f64>>().color_cast(), c1);
-        assert_relative_eq!(c1.color_cast(), 
-            Hwb::from_channels(Turns(0.3333), 0.5, 0.3), epsilon=1e-3);
+        assert_relative_eq!(
+            c1.color_cast(),
+            Hwb::from_channels(Turns(0.3333), 0.5, 0.3),
+            epsilon = 1e-3
+        );
     }
 }

@@ -1,12 +1,13 @@
 #![allow(non_snake_case)]
-use std::slice;
-use std::mem;
-use std::fmt;
-use num;
 use approx;
-use channel::{PosFreeChannel, FreeChannel, FreeChannelScalar, ChannelFormatCast, ChannelCast,
-              ColorChannel};
-use color::{Color, Bounded, Lerp, Flatten, FromTuple};
+use channel::{
+    ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar, PosFreeChannel,
+};
+use color::{Bounded, Color, Flatten, FromTuple, Lerp};
+use num;
+use std::fmt;
+use std::mem;
+use std::slice;
 use xyz::Xyz;
 
 pub struct LabTag;
@@ -20,7 +21,8 @@ pub struct Lab<T> {
 }
 
 impl<T> Lab<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     pub fn from_channels(L: T, a: T, b: T) -> Self {
         Lab {
@@ -30,7 +32,7 @@ impl<T> Lab<T>
         }
     }
 
-    impl_color_color_cast_square!(Lab {L, a, b}, chan_traits={FreeChannelScalar});
+    impl_color_color_cast_square!(Lab { L, a, b }, chan_traits = { FreeChannelScalar });
 
     pub fn L(&self) -> T {
         self.L.0.clone()
@@ -62,7 +64,8 @@ impl<T> Lab<T>
 }
 
 impl<T> Color for Lab<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     type Tag = LabTag;
     type ChannelsTuple = (T, T, T);
@@ -77,7 +80,8 @@ impl<T> Color for Lab<T>
 }
 
 impl<T> FromTuple for Lab<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     fn from_tuple(values: (T, T, T)) -> Self {
         Lab::from_channels(values.0, values.1, values.2)
@@ -85,7 +89,8 @@ impl<T> FromTuple for Lab<T>
 }
 
 impl<T> Bounded for Lab<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     fn normalize(self) -> Self {
         Lab::from_channels(self.L.normalize().0, self.a(), self.b())
@@ -96,14 +101,16 @@ impl<T> Bounded for Lab<T>
 }
 
 impl<T> Lerp for Lab<T>
-    where T: FreeChannelScalar + Lerp
+where
+    T: FreeChannelScalar + Lerp,
 {
     type Position = <FreeChannel<T> as Lerp>::Position;
-    impl_color_lerp_square!(Lab {L, a, b});
+    impl_color_lerp_square!(Lab { L, a, b });
 }
 
 impl<T> Flatten for Lab<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     type ScalarFormat = T;
 
@@ -113,32 +120,41 @@ impl<T> Flatten for Lab<T>
 }
 
 impl<T> approx::AbsDiffEq for Lab<T>
-    where T: FreeChannelScalar + approx::AbsDiffEq,
-          T::Epsilon: Clone
+where
+    T: FreeChannelScalar + approx::AbsDiffEq,
+    T::Epsilon: Clone,
 {
     impl_abs_diff_eq!({L, a, b});
 }
 impl<T> approx::RelativeEq for Lab<T>
-    where T: FreeChannelScalar + approx::RelativeEq,
-          T::Epsilon: Clone
+where
+    T: FreeChannelScalar + approx::RelativeEq,
+    T::Epsilon: Clone,
 {
     impl_rel_eq!({L, a, b});
 }
 impl<T> approx::UlpsEq for Lab<T>
-    where T: FreeChannelScalar + approx::UlpsEq,
-          T::Epsilon: Clone
+where
+    T: FreeChannelScalar + approx::UlpsEq,
+    T::Epsilon: Clone,
 {
     impl_ulps_eq!({L, a, b});
 }
 
 impl<T> Default for Lab<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
-    impl_color_default!(Lab {L:PosFreeChannel, a:FreeChannel, b:FreeChannel});
+    impl_color_default!(Lab {
+        L: PosFreeChannel,
+        a: FreeChannel,
+        b: FreeChannel
+    });
 }
 
 impl<T> fmt::Display for Lab<T>
-    where T: FreeChannelScalar + fmt::Display
+where
+    T: FreeChannelScalar + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "L*a*b*({}, {}, {})", self.L, self.a, self.b)
@@ -146,7 +162,8 @@ impl<T> fmt::Display for Lab<T>
 }
 
 impl<T> Lab<T>
-    where T: FreeChannelScalar
+where
+    T: FreeChannelScalar,
 {
     pub fn from_xyz(from: &Xyz<T>, wp: &Xyz<T>) -> Lab<T> {
         let x = from.x() / wp.x();
@@ -157,7 +174,6 @@ impl<T> Lab<T>
         let b = num::cast::<_, T>(200.0).unwrap() * (Lab::lab_f(y) - Lab::lab_f(z));
 
         return Lab::from_channels(L, a, b);
-
     }
 
     pub fn to_xyz(&self, wp: &Xyz<T>) -> Xyz<T> {
@@ -184,8 +200,8 @@ impl<T> Lab<T>
         if f3 > Self::epsilon() {
             f3
         } else {
-            (num::cast::<_, T>(116.0).unwrap() * f - num::cast::<_, T>(16.00).unwrap()) /
-            Self::kappa()
+            (num::cast::<_, T>(116.0).unwrap() * f - num::cast::<_, T>(16.00).unwrap())
+                / Self::kappa()
         }
     }
     fn calc_y(L: T) -> T {
@@ -195,7 +211,6 @@ impl<T> Lab<T>
         } else {
             L / Self::kappa()
         }
-
     }
 
     fn inv_f_x(a: T, fy: T) -> T {
@@ -221,9 +236,9 @@ impl<T> Lab<T>
 #[cfg(test)]
 mod test {
     use super::*;
+    use color::*;
     use white_point::*;
     use xyz::Xyz;
-    use color::*;
 
     #[test]
     fn test_construct() {
@@ -276,31 +291,47 @@ mod test {
     fn test_from_xyz() {
         let c1 = Xyz::from_channels(0.3, 0.22, 0.5);
         let t1 = Lab::from_xyz(&c1, &D65::get_xyz());
-        assert_relative_eq!(t1, Lab::from_channels(54.0270, 38.5919, -33.5640), epsilon=1e-4);
-        assert_relative_eq!(t1.to_xyz(&D65::get_xyz()), c1, epsilon=1e-4);
+        assert_relative_eq!(
+            t1,
+            Lab::from_channels(54.0270, 38.5919, -33.5640),
+            epsilon = 1e-4
+        );
+        assert_relative_eq!(t1.to_xyz(&D65::get_xyz()), c1, epsilon = 1e-4);
 
         let c2 = Xyz::from_channels(0.0, 0.0, 0.0);
         let t2 = Lab::from_xyz(&c2, &D65::get_xyz());
-        assert_relative_eq!(t2, Lab::from_channels(0.0, 0.0, 0.0), epsilon=1e-4);
-        assert_relative_eq!(t2.to_xyz(&D65::get_xyz()), c2, epsilon=1e-4);
+        assert_relative_eq!(t2, Lab::from_channels(0.0, 0.0, 0.0), epsilon = 1e-4);
+        assert_relative_eq!(t2.to_xyz(&D65::get_xyz()), c2, epsilon = 1e-4);
 
         let c3 = Xyz::from_channels(1.0, 1.0, 1.0);
         let t3 = Lab::from_xyz(&c3, &D65::get_xyz());
-        assert_relative_eq!(t3, Lab::from_channels(100.0, 8.5385, 5.5939), epsilon=1e-4);
-        assert_relative_eq!(t3.to_xyz(&D65::get_xyz()), c3, epsilon=1e-4);
+        assert_relative_eq!(
+            t3,
+            Lab::from_channels(100.0, 8.5385, 5.5939),
+            epsilon = 1e-4
+        );
+        assert_relative_eq!(t3.to_xyz(&D65::get_xyz()), c3, epsilon = 1e-4);
 
         let c4 = Xyz::from_channels(0.6, 0.8, 0.1);
         let t4 = Lab::from_xyz(&c4, &D50::get_xyz());
         let t4_2 = Lab::from_xyz(&c4, &E::get_xyz());
-        assert_relative_eq!(t4, Lab::from_channels(91.6849, -37.2895, 86.6924), epsilon=1e-4);
-        assert_relative_eq!(t4.to_xyz(&D50::get_xyz()), c4, epsilon=1e-4);
+        assert_relative_eq!(
+            t4,
+            Lab::from_channels(91.6849, -37.2895, 86.6924),
+            epsilon = 1e-4
+        );
+        assert_relative_eq!(t4.to_xyz(&D50::get_xyz()), c4, epsilon = 1e-4);
         assert!(t4.to_xyz(&D65::get_xyz()) != c4);
-        assert_relative_eq!(t4_2, Lab::from_channels(91.6849, -42.4425, 92.8319), epsilon=1e-3);
-        assert_relative_eq!(t4_2.to_xyz(&E::get_xyz()), c4, epsilon=1e-4);
+        assert_relative_eq!(
+            t4_2,
+            Lab::from_channels(91.6849, -42.4425, 92.8319),
+            epsilon = 1e-3
+        );
+        assert_relative_eq!(t4_2.to_xyz(&E::get_xyz()), c4, epsilon = 1e-4);
 
         let c5 = D65::get_xyz();
         let t5 = Lab::from_xyz(&c5, &D65::get_xyz());
-        assert_relative_eq!(t5, Lab::from_channels(100.0, 0.0, 0.0), epsilon=1e-4);
+        assert_relative_eq!(t5, Lab::from_channels(100.0, 0.0, 0.0), epsilon = 1e-4);
         assert_relative_eq!(t5.to_xyz(&D65::get_xyz()), c5);
     }
 
@@ -308,18 +339,30 @@ mod test {
     fn test_to_xyz() {
         let c1 = Lab::from_channels(50.0, 33.0, -66.0);
         let t1 = c1.to_xyz(&D65::get_xyz());
-        assert_relative_eq!(t1, Xyz::from_channels(0.243326, 0.184187, 0.791023), epsilon=1e-4);
-        assert_relative_eq!(Lab::from_xyz(&t1, &D65::get_xyz()), c1, epsilon=1e-4);
+        assert_relative_eq!(
+            t1,
+            Xyz::from_channels(0.243326, 0.184187, 0.791023),
+            epsilon = 1e-4
+        );
+        assert_relative_eq!(Lab::from_xyz(&t1, &D65::get_xyz()), c1, epsilon = 1e-4);
 
         let c2 = Lab::from_channels(65.0, 47.5, 11.1);
         let t2 = c2.to_xyz(&D50::get_xyz());
-        assert_relative_eq!(t2, Xyz::from_channels(0.4811337, 0.340472, 0.219151), epsilon=1e-3);
-        assert_relative_eq!(Lab::from_xyz(&t2, &D50::get_xyz()), c2, epsilon=1e-3);
+        assert_relative_eq!(
+            t2,
+            Xyz::from_channels(0.4811337, 0.340472, 0.219151),
+            epsilon = 1e-3
+        );
+        assert_relative_eq!(Lab::from_xyz(&t2, &D50::get_xyz()), c2, epsilon = 1e-3);
 
         let c3 = Lab::from_channels(100.0, -100.0, -100.0);
         let t3 = c3.to_xyz(&D75::get_xyz());
-        assert_relative_eq!(t3, Xyz::from_channels(0.486257, 1.00, 4.139032), epsilon=1e-4);
-        assert_relative_eq!(Lab::from_xyz(&t3, &D75::get_xyz()), c3, epsilon=1e-4);
+        assert_relative_eq!(
+            t3,
+            Xyz::from_channels(0.486257, 1.00, 4.139032),
+            epsilon = 1e-4
+        );
+        assert_relative_eq!(Lab::from_xyz(&t3, &D75::get_xyz()), c3, epsilon = 1e-4);
     }
 
     #[test]

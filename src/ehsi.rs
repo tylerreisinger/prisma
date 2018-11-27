@@ -1,18 +1,20 @@
+use angle;
+use angle::{Angle, Deg, FromAngle, IntoAngle, Rad, Turns};
+use approx;
+use channel::{
+    AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
+    PosNormalBoundedChannel, PosNormalChannelScalar,
+};
+use color;
+use color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
+use convert::{decompose_hue_segment, FromColor, GetHue, TryFromColor};
+use hsi::Hsi;
+use num;
+use num::Float;
+use rgb::Rgb;
 use std::fmt;
 use std::mem;
 use std::slice;
-use num;
-use num::Float;
-use approx;
-use channel::{PosNormalBoundedChannel, AngularChannel, ChannelFormatCast, ChannelCast,
-              PosNormalChannelScalar, AngularChannelScalar, ColorChannel};
-use color::{Color, PolarColor, Invert, Lerp, Bounded, FromTuple};
-use angle::{Turns, FromAngle, Angle, Deg, Rad, IntoAngle};
-use angle;
-use color;
-use rgb::Rgb;
-use hsi::Hsi;
-use convert::{FromColor, GetHue, decompose_hue_segment, TryFromColor};
 
 pub struct EHsiTag;
 
@@ -25,8 +27,9 @@ pub struct eHsi<T, A = Deg<T>> {
 }
 
 impl<T, A> eHsi<T, A>
-    where T: PosNormalChannelScalar + Float,
-          A: AngularChannelScalar + Angle<Scalar = T>
+where
+    T: PosNormalChannelScalar + Float,
+    A: AngularChannelScalar + Angle<Scalar = T>,
 {
     pub fn from_channels(hue: A, saturation: T, intensity: T) -> Self {
         eHsi {
@@ -36,8 +39,14 @@ impl<T, A> eHsi<T, A>
         }
     }
 
-    impl_color_color_cast_angular!(eHsi {hue, saturation, intensity}, 
-        chan_traits={PosNormalChannelScalar});
+    impl_color_color_cast_angular!(
+        eHsi {
+            hue,
+            saturation,
+            intensity
+        },
+        chan_traits = { PosNormalChannelScalar }
+    );
 
     pub fn hue(&self) -> A {
         self.hue.0.clone()
@@ -68,25 +77,29 @@ impl<T, A> eHsi<T, A>
     }
     pub fn is_same_as_hsi(&self) -> bool {
         let deg_hue = Deg::from_angle(self.hue().clone()) % Deg(num::cast::<_, T>(120.0).unwrap());
-        let i_limit = num::cast::<_, T>(2.0 / 3.0).unwrap() -
-                      (deg_hue - Deg(num::cast::<_, T>(60.0).unwrap())).scalar().abs() /
-                      Deg(num::cast::<_, T>(180.0).unwrap()).scalar();
+        let i_limit = num::cast::<_, T>(2.0 / 3.0).unwrap()
+            - (deg_hue - Deg(num::cast::<_, T>(60.0).unwrap()))
+                .scalar()
+                .abs()
+                / Deg(num::cast::<_, T>(180.0).unwrap()).scalar();
 
         self.intensity() <= i_limit
     }
 }
 
 impl<T, A> PolarColor for eHsi<T, A>
-    where T: PosNormalChannelScalar,
-          A: AngularChannelScalar
+where
+    T: PosNormalChannelScalar,
+    A: AngularChannelScalar,
 {
     type Angular = A;
     type Cartesian = T;
 }
 
 impl<T, A> Color for eHsi<T, A>
-    where T: PosNormalChannelScalar,
-          A: AngularChannelScalar
+where
+    T: PosNormalChannelScalar,
+    A: AngularChannelScalar,
 {
     type Tag = EHsiTag;
     type ChannelsTuple = (A, T, T);
@@ -100,8 +113,9 @@ impl<T, A> Color for eHsi<T, A>
 }
 
 impl<T, A> FromTuple for eHsi<T, A>
-    where T: PosNormalChannelScalar + Float,
-          A: AngularChannelScalar + Angle<Scalar = T>
+where
+    T: PosNormalChannelScalar + Float,
+    A: AngularChannelScalar + Angle<Scalar = T>,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         eHsi::from_channels(values.0, values.1, values.2)
@@ -109,15 +123,21 @@ impl<T, A> FromTuple for eHsi<T, A>
 }
 
 impl<T, A> Invert for eHsi<T, A>
-    where T: PosNormalChannelScalar,
-          A: AngularChannelScalar
+where
+    T: PosNormalChannelScalar,
+    A: AngularChannelScalar,
 {
-    impl_color_invert!(eHsi {hue, saturation, intensity});
+    impl_color_invert!(eHsi {
+        hue,
+        saturation,
+        intensity
+    });
 }
 
 impl<T, A> Lerp for eHsi<T, A>
-    where T: PosNormalChannelScalar + color::Lerp,
-          A: AngularChannelScalar + color::Lerp
+where
+    T: PosNormalChannelScalar + color::Lerp,
+    A: AngularChannelScalar + color::Lerp,
 {
     type Position = A::Position;
 
@@ -125,15 +145,21 @@ impl<T, A> Lerp for eHsi<T, A>
 }
 
 impl<T, A> Bounded for eHsi<T, A>
-    where T: PosNormalChannelScalar,
-          A: AngularChannelScalar
+where
+    T: PosNormalChannelScalar,
+    A: AngularChannelScalar,
 {
-    impl_color_bounded!(eHsi {hue, saturation, intensity});
+    impl_color_bounded!(eHsi {
+        hue,
+        saturation,
+        intensity
+    });
 }
 
 impl<T, A> color::Flatten for eHsi<T, A>
-    where T: PosNormalChannelScalar + num::Float,
-          A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Turns<T>>
+where
+    T: PosNormalChannelScalar + num::Float,
+    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Turns<T>>,
 {
     type ScalarFormat = T;
 
@@ -143,54 +169,68 @@ impl<T, A> color::Flatten for eHsi<T, A>
 }
 
 impl<T, A> approx::AbsDiffEq for eHsi<T, A>
-    where T: PosNormalChannelScalar + approx::AbsDiffEq<Epsilon = A::Epsilon>,
-          A: AngularChannelScalar + approx::AbsDiffEq,
-          A::Epsilon: Clone + num::Float
+where
+    T: PosNormalChannelScalar + approx::AbsDiffEq<Epsilon = A::Epsilon>,
+    A: AngularChannelScalar + approx::AbsDiffEq,
+    A::Epsilon: Clone + num::Float,
 {
     impl_abs_diff_eq!({hue, saturation, intensity});
 }
 impl<T, A> approx::RelativeEq for eHsi<T, A>
-    where T: PosNormalChannelScalar + approx::RelativeEq<Epsilon = A::Epsilon>,
-          A: AngularChannelScalar + approx::RelativeEq,
-          A::Epsilon: Clone + num::Float
+where
+    T: PosNormalChannelScalar + approx::RelativeEq<Epsilon = A::Epsilon>,
+    A: AngularChannelScalar + approx::RelativeEq,
+    A::Epsilon: Clone + num::Float,
 {
     impl_rel_eq!({hue, saturation, intensity});
 }
 impl<T, A> approx::UlpsEq for eHsi<T, A>
-    where T: PosNormalChannelScalar + approx::UlpsEq<Epsilon = A::Epsilon>,
-          A: AngularChannelScalar + approx::UlpsEq,
-          A::Epsilon: Clone + num::Float
+where
+    T: PosNormalChannelScalar + approx::UlpsEq<Epsilon = A::Epsilon>,
+    A: AngularChannelScalar + approx::UlpsEq,
+    A::Epsilon: Clone + num::Float,
 {
     impl_ulps_eq!({hue, saturation, intensity});
 }
 
 impl<T, A> Default for eHsi<T, A>
-    where T: PosNormalChannelScalar + num::Zero,
-          A: AngularChannelScalar + num::Zero
+where
+    T: PosNormalChannelScalar + num::Zero,
+    A: AngularChannelScalar + num::Zero,
 {
-    impl_color_default!(eHsi {hue: AngularChannel, 
-        saturation: PosNormalBoundedChannel, intensity: PosNormalBoundedChannel});
+    impl_color_default!(eHsi {
+        hue: AngularChannel,
+        saturation: PosNormalBoundedChannel,
+        intensity: PosNormalBoundedChannel
+    });
 }
 
 impl<T, A> fmt::Display for eHsi<T, A>
-    where T: PosNormalChannelScalar + fmt::Display,
-          A: AngularChannelScalar + fmt::Display
+where
+    T: PosNormalChannelScalar + fmt::Display,
+    A: AngularChannelScalar + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "eHsi({}, {}, {})", self.hue, self.saturation, self.intensity)
+        write!(
+            f,
+            "eHsi({}, {}, {})",
+            self.hue, self.saturation, self.intensity
+        )
     }
 }
 
 impl<T, A> GetHue for eHsi<T, A>
-    where T: PosNormalChannelScalar,
-          A: AngularChannelScalar
+where
+    T: PosNormalChannelScalar,
+    A: AngularChannelScalar,
 {
     impl_color_get_hue_angular!(eHsi);
 }
 
 impl<T, A> TryFromColor<Hsi<T, A>> for eHsi<T, A>
-    where T: PosNormalChannelScalar + num::Float,
-          A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>>
+where
+    T: PosNormalChannelScalar + num::Float,
+    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>>,
 {
     fn try_from_color(from: &Hsi<T, A>) -> Option<eHsi<T, A>> {
         if from.is_same_as_ehsi() {
@@ -206,8 +246,9 @@ impl<T, A> TryFromColor<Hsi<T, A>> for eHsi<T, A>
 }
 
 impl<T, A> TryFromColor<eHsi<T, A>> for Hsi<T, A>
-    where T: PosNormalChannelScalar + num::Float,
-          A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>>
+where
+    T: PosNormalChannelScalar + num::Float,
+    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>>,
 {
     fn try_from_color(from: &eHsi<T, A>) -> Option<Hsi<T, A>> {
         if from.is_same_as_hsi() {
@@ -223,8 +264,9 @@ impl<T, A> TryFromColor<eHsi<T, A>> for Hsi<T, A>
 }
 
 impl<T, A> FromColor<Rgb<T>> for eHsi<T, A>
-    where T: PosNormalChannelScalar + num::Float,
-          A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>>
+where
+    T: PosNormalChannelScalar + num::Float,
+    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>>,
 {
     fn from_color(from: &Rgb<T>) -> Self {
         let epsilon: T = num::cast(1e-10).unwrap();
@@ -240,9 +282,11 @@ impl<T, A> FromColor<Rgb<T>> for eHsi<T, A>
         let sum = from.red() + from.green() + from.blue();
         let intensity = num::cast::<_, T>(1.0 / 3.0).unwrap() * sum;
 
-        let i_limit: T = num::cast::<_, T>(2.0 / 3.0).unwrap() -
-                         (deg_hue - Deg(num::cast::<_, T>(60.0).unwrap())).scalar().abs() /
-                         Deg(num::cast::<_, T>(180.0).unwrap()).scalar();
+        let i_limit: T = num::cast::<_, T>(2.0 / 3.0).unwrap()
+            - (deg_hue - Deg(num::cast::<_, T>(60.0).unwrap()))
+                .scalar()
+                .abs()
+                / Deg(num::cast::<_, T>(180.0).unwrap()).scalar();
 
         let one: T = num::cast(1.0).unwrap();
 
@@ -263,8 +307,9 @@ impl<T, A> FromColor<Rgb<T>> for eHsi<T, A>
 }
 
 impl<T, A> FromColor<eHsi<T, A>> for Rgb<T>
-    where T: PosNormalChannelScalar + num::Float,
-          A: AngularChannelScalar + Angle<Scalar = T>
+where
+    T: PosNormalChannelScalar + num::Float,
+    A: AngularChannelScalar + Angle<Scalar = T>,
 {
     fn from_color(from: &eHsi<T, A>) -> Rgb<T> {
         let one = num::cast::<_, T>(1.0).unwrap();
@@ -275,16 +320,16 @@ impl<T, A> FromColor<eHsi<T, A>> for Rgb<T>
 
         // I < i_threshold => Use standard Hsi -> Rgb method.
         // Otherwise, we use the eHsi method.
-        let i_threshold = num::cast::<_, T>(2.0 / 3.0).unwrap() -
-                          (scaled_frac.scalar() - num::cast(60.0).unwrap()).abs() / (one_eighty);
+        let i_threshold = num::cast::<_, T>(2.0 / 3.0).unwrap()
+            - (scaled_frac.scalar() - num::cast(60.0).unwrap()).abs() / (one_eighty);
 
         // Standard Hsi conversion
         if from.intensity() < i_threshold {
             let c1 = from.intensity() * (one - from.saturation());
-            let c2 = from.intensity() *
-                     (one +
-                      (from.saturation() * scaled_frac.cos()) /
-                      (Angle::cos(Deg(num::cast(60.0).unwrap()) - scaled_frac)));
+            let c2 = from.intensity()
+                * (one
+                    + (from.saturation() * scaled_frac.cos())
+                        / (Angle::cos(Deg(num::cast(60.0).unwrap()) - scaled_frac)));
 
             let c3 = num::cast::<_, T>(3.0).unwrap() * from.intensity() - (c1 + c2);
 
@@ -294,7 +339,7 @@ impl<T, A> FromColor<eHsi<T, A>> for Rgb<T>
                 4 | 5 => Rgb::from_channels(c3, c1, c2),
                 _ => unreachable!(),
             }
-            // eHsi conversion
+        // eHsi conversion
         } else {
             let deg_hue = Deg::from_angle(from.hue());
             let shifted_hue = match hue_seg {
@@ -305,11 +350,11 @@ impl<T, A> FromColor<eHsi<T, A>> for Rgb<T>
             };
 
             let c1 = from.intensity() * (one - from.saturation()) + from.saturation();
-            let c2 = one -
-                     (one - from.intensity()) *
-                     (one +
-                      (from.saturation() * shifted_hue.cos()) /
-                      (Deg(num::cast::<_, T>(60.0).unwrap()) - shifted_hue).cos());
+            let c2 = one
+                - (one - from.intensity())
+                    * (one
+                        + (from.saturation() * shifted_hue.cos())
+                            / (Deg(num::cast::<_, T>(60.0).unwrap()) - shifted_hue).cos());
 
             let c3 = num::cast::<_, T>(3.0).unwrap() * from.intensity() - (c1 + c2);
 
@@ -326,12 +371,12 @@ impl<T, A> FromColor<eHsi<T, A>> for Rgb<T>
 #[cfg(test)]
 mod test {
     use super::*;
-    use rgb::Rgb;
-    use hsi::Hsi;
-    use convert::*;
-    use test;
     use angle::*;
     use color::*;
+    use convert::*;
+    use hsi::Hsi;
+    use rgb::Rgb;
+    use test;
 
     #[test]
     fn test_construct() {
@@ -367,8 +412,14 @@ mod test {
         let c2 = eHsi::from_channels(Turns(0.3), 0.50, 0.50);
         assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
         assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
-        assert_relative_eq!(c1.lerp(&c2, 0.5), eHsi::from_channels(Turns(0.1), 0.48, 0.35));
-        assert_relative_eq!(c1.lerp(&c2, 0.25), eHsi::from_channels(Turns(0.0), 0.47, 0.275));
+        assert_relative_eq!(
+            c1.lerp(&c2, 0.5),
+            eHsi::from_channels(Turns(0.1), 0.48, 0.35)
+        );
+        assert_relative_eq!(
+            c1.lerp(&c2, 0.25),
+            eHsi::from_channels(Turns(0.0), 0.47, 0.275)
+        );
     }
 
     #[test]
@@ -381,7 +432,6 @@ mod test {
         let c2 = eHsi::from_channels(Deg(20.0), 0.35, 0.99);
         assert!(c2.is_normalized());
         assert_eq!(c2.normalize(), c2);
-
     }
 
     #[test]
@@ -411,7 +461,7 @@ mod test {
         for item in test_data.iter() {
             let hsi = eHsi::<_, Deg<_>>::from_color(&item.rgb);
             let rgb = Rgb::from_color(&hsi);
-            assert_relative_eq!(rgb, item.rgb, epsilon=2e-3);
+            assert_relative_eq!(rgb, item.rgb, epsilon = 2e-3);
         }
 
         let big_test_data = test::build_hwb_test_data();
@@ -419,7 +469,7 @@ mod test {
         for item in big_test_data.iter() {
             let hsi = eHsi::<_, Deg<_>>::from_color(&item.rgb);
             let rgb = Rgb::from_color(&hsi);
-            assert_relative_eq!(rgb, item.rgb, epsilon=2e-3);
+            assert_relative_eq!(rgb, item.rgb, epsilon = 2e-3);
         }
     }
 
@@ -431,9 +481,9 @@ mod test {
             let hsi = eHsi::from_color(&item.rgb);
             if hsi.is_same_as_hsi() {
                 println!("{}; {}; {}", hsi, item.hsi, item.rgb);
-                assert_relative_eq!(hsi.hue(), item.hsi.hue(), epsilon=1e-1);
-                assert_relative_eq!(hsi.saturation(), item.hsi.saturation(), epsilon=2e-3);
-                assert_relative_eq!(hsi.intensity(), item.hsi.intensity(), epsilon=2e-3);
+                assert_relative_eq!(hsi.hue(), item.hsi.hue(), epsilon = 1e-1);
+                assert_relative_eq!(hsi.saturation(), item.hsi.saturation(), epsilon = 2e-3);
+                assert_relative_eq!(hsi.intensity(), item.hsi.intensity(), epsilon = 2e-3);
             }
         }
 
@@ -443,7 +493,11 @@ mod test {
 
         let c2 = Rgb::from_channels(0.5, 1.0, 1.0);
         let h2 = eHsi::from_color(&c2);
-        assert_relative_eq!(h2, eHsi::from_channels(Deg(180.0), 1.0, 0.833333333), epsilon=1e-3);
+        assert_relative_eq!(
+            h2,
+            eHsi::from_channels(Deg(180.0), 1.0, 0.833333333),
+            epsilon = 1e-3
+        );
     }
 
     #[test]
@@ -451,7 +505,10 @@ mod test {
         let c1 = eHsi::from_channels(Deg(240.0f32), 0.22f32, 0.81f32);
         assert_relative_eq!(c1.color_cast::<f32, Turns<f32>>().color_cast(), c1);
         assert_relative_eq!(c1.color_cast(), c1);
-        assert_relative_eq!(c1.color_cast(), eHsi::from_channels(Turns(0.6666666), 0.22, 0.81),
-            epsilon=1e-5);
+        assert_relative_eq!(
+            c1.color_cast(),
+            eHsi::from_channels(Turns(0.6666666), 0.22, 0.81),
+            epsilon = 1e-5
+        );
     }
 }

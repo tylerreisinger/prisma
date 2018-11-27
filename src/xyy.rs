@@ -1,13 +1,15 @@
 #![allow(non_snake_case)]
-use std::fmt;
-use std::slice;
-use std::mem;
-use num;
 use approx;
-use channel::{FreeChannel, FreeChannelScalar, PosNormalChannelScalar, PosNormalBoundedChannel,
-              ColorChannel, ChannelFormatCast, ChannelCast};
-use color::{Color, Bounded, Lerp, Flatten, FromTuple};
+use channel::{
+    ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar,
+    PosNormalBoundedChannel, PosNormalChannelScalar,
+};
+use color::{Bounded, Color, Flatten, FromTuple, Lerp};
 use convert::FromColor;
+use num;
+use std::fmt;
+use std::mem;
+use std::slice;
 use xyz::Xyz;
 
 pub struct XyYTag;
@@ -21,7 +23,8 @@ pub struct XyY<T> {
 }
 
 impl<T> XyY<T>
-    where T: FreeChannelScalar + num::Float + PosNormalChannelScalar
+where
+    T: FreeChannelScalar + num::Float + PosNormalChannelScalar,
 {
     pub fn from_channels(x: T, y: T, Y: T) -> Self {
         let zero = num::cast(0.0).unwrap();
@@ -73,8 +76,9 @@ impl<T> XyY<T>
     }
 
     fn rescale_channels(primary: T, c2: T, c3: T) -> (T, T, T) {
-        if primary > PosNormalBoundedChannel::max_bound() ||
-           primary < PosNormalBoundedChannel::min_bound() {
+        if primary > PosNormalBoundedChannel::max_bound()
+            || primary < PosNormalBoundedChannel::min_bound()
+        {
             panic!("xyY chromaticity channels must be between 0.0 and 1.0")
         }
 
@@ -91,7 +95,8 @@ impl<T> XyY<T>
 }
 
 impl<T> Color for XyY<T>
-    where T: FreeChannelScalar + PosNormalChannelScalar + num::Float
+where
+    T: FreeChannelScalar + PosNormalChannelScalar + num::Float,
 {
     type Tag = XyYTag;
     type ChannelsTuple = (T, T, T);
@@ -106,7 +111,8 @@ impl<T> Color for XyY<T>
 }
 
 impl<T> FromTuple for XyY<T>
-    where T: FreeChannelScalar + num::Float + PosNormalChannelScalar
+where
+    T: FreeChannelScalar + num::Float + PosNormalChannelScalar,
 {
     fn from_tuple(values: (T, T, T)) -> Self {
         XyY::from_channels(values.0, values.1, values.2)
@@ -114,7 +120,8 @@ impl<T> FromTuple for XyY<T>
 }
 
 impl<T> Bounded for XyY<T>
-    where T: FreeChannelScalar + PosNormalChannelScalar + num::Float
+where
+    T: FreeChannelScalar + PosNormalChannelScalar + num::Float,
 {
     fn normalize(self) -> Self {
         self
@@ -125,16 +132,18 @@ impl<T> Bounded for XyY<T>
 }
 
 impl<T> Lerp for XyY<T>
-    where T: FreeChannelScalar + PosNormalChannelScalar + num::Float,
-          FreeChannel<T>: Lerp,
-          PosNormalBoundedChannel<T>: Lerp<Position=<FreeChannel<T> as Lerp>::Position>,
+where
+    T: FreeChannelScalar + PosNormalChannelScalar + num::Float,
+    FreeChannel<T>: Lerp,
+    PosNormalBoundedChannel<T>: Lerp<Position = <FreeChannel<T> as Lerp>::Position>,
 {
     type Position = <FreeChannel<T> as Lerp>::Position;
-    impl_color_lerp_square!(XyY {x, y, Y});
+    impl_color_lerp_square!(XyY { x, y, Y });
 }
 
 impl<T> Flatten for XyY<T>
-    where T: FreeChannelScalar + PosNormalChannelScalar + num::Float
+where
+    T: FreeChannelScalar + PosNormalChannelScalar + num::Float,
 {
     type ScalarFormat = T;
 
@@ -144,33 +153,41 @@ impl<T> Flatten for XyY<T>
 }
 
 impl<T> approx::AbsDiffEq for XyY<T>
-    where T: FreeChannelScalar + PosNormalChannelScalar + approx::AbsDiffEq,
-          T::Epsilon: Clone
+where
+    T: FreeChannelScalar + PosNormalChannelScalar + approx::AbsDiffEq,
+    T::Epsilon: Clone,
 {
     impl_abs_diff_eq!({x, y, Y});
 }
 impl<T> approx::RelativeEq for XyY<T>
-    where T: FreeChannelScalar + PosNormalChannelScalar + approx::RelativeEq,
-          T::Epsilon: Clone
+where
+    T: FreeChannelScalar + PosNormalChannelScalar + approx::RelativeEq,
+    T::Epsilon: Clone,
 {
     impl_rel_eq!({x, y, Y});
 }
 impl<T> approx::UlpsEq for XyY<T>
-    where T: FreeChannelScalar + PosNormalChannelScalar + approx::UlpsEq,
-          T::Epsilon: Clone
+where
+    T: FreeChannelScalar + PosNormalChannelScalar + approx::UlpsEq,
+    T::Epsilon: Clone,
 {
     impl_ulps_eq!({x, y, Y});
 }
 
 impl<T> Default for XyY<T>
-    where T: FreeChannelScalar + PosNormalChannelScalar + num::Float
+where
+    T: FreeChannelScalar + PosNormalChannelScalar + num::Float,
 {
-    impl_color_default!(XyY {x:PosNormalBoundedChannel, y:PosNormalBoundedChannel,
-        Y:FreeChannel});
+    impl_color_default!(XyY {
+        x: PosNormalBoundedChannel,
+        y: PosNormalBoundedChannel,
+        Y: FreeChannel
+    });
 }
 
 impl<T> fmt::Display for XyY<T>
-    where T: FreeChannelScalar + PosNormalChannelScalar + num::Float + fmt::Display
+where
+    T: FreeChannelScalar + PosNormalChannelScalar + num::Float + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "xyY({}, {}, {})", self.x, self.y, self.Y)
@@ -178,7 +195,8 @@ impl<T> fmt::Display for XyY<T>
 }
 
 impl<T> FromColor<Xyz<T>> for XyY<T>
-    where T: FreeChannelScalar + PosNormalChannelScalar + num::Float
+where
+    T: FreeChannelScalar + PosNormalChannelScalar + num::Float,
 {
     fn from_color(from: &Xyz<T>) -> Self {
         let zero = num::cast(0.0).unwrap();
@@ -200,7 +218,8 @@ impl<T> FromColor<Xyz<T>> for XyY<T>
 }
 
 impl<T> FromColor<XyY<T>> for Xyz<T>
-    where T: FreeChannelScalar + PosNormalChannelScalar + num::Float
+where
+    T: FreeChannelScalar + PosNormalChannelScalar + num::Float,
 {
     fn from_color(from: &XyY<T>) -> Self {
         let zero = num::cast(0.0).unwrap();
@@ -218,9 +237,9 @@ impl<T> FromColor<XyY<T>> for Xyz<T>
 #[cfg(test)]
 mod test {
     use super::*;
-    use xyz::Xyz;
-    use convert::*;
     use color::*;
+    use convert::*;
+    use xyz::Xyz;
 
     #[test]
     fn test_construct() {
@@ -282,7 +301,7 @@ mod test {
         assert_relative_eq!(c1.z(), 0.20);
         assert_relative_eq!(c1.Y(), 0.4);
         c1.set_z(0.5);
-        assert_relative_eq!(c1, XyY::from_channels(0.375, 0.125, 0.4), epsilon=1e-6);
+        assert_relative_eq!(c1, XyY::from_channels(0.375, 0.125, 0.4), epsilon = 1e-6);
 
         let mut c2 = XyY::from_channels(0.3, 0.3, 1.0);
         c2.set_y(0.8);
@@ -352,58 +371,78 @@ mod test {
     fn test_from_xyz() {
         let c1 = Xyz::from_channels(0.3, 0.2, 0.5);
         let t1 = XyY::from_color(&c1);
-        assert_relative_eq!(t1, XyY::from_channels(0.3, 0.2, 0.2), epsilon=1e-6);
-        assert_relative_eq!(Xyz::from_color(&t1), c1, epsilon=1e-6);
+        assert_relative_eq!(t1, XyY::from_channels(0.3, 0.2, 0.2), epsilon = 1e-6);
+        assert_relative_eq!(Xyz::from_color(&t1), c1, epsilon = 1e-6);
 
         let c2 = Xyz::from_channels(0.8, 0.1, 0.5);
         let t2 = XyY::from_color(&c2);
-        assert_relative_eq!(t2, XyY::from_channels(0.571429, 0.071429, 0.1), epsilon=1e-6);
-        assert_relative_eq!(Xyz::from_color(&t2), c2, epsilon=1e-6);
+        assert_relative_eq!(
+            t2,
+            XyY::from_channels(0.571429, 0.071429, 0.1),
+            epsilon = 1e-6
+        );
+        assert_relative_eq!(Xyz::from_color(&t2), c2, epsilon = 1e-6);
 
         let c3 = Xyz::from_channels(0.0, 0.0, 0.0);
         let t3 = XyY::from_color(&c3);
-        assert_relative_eq!(t3, XyY::from_channels(0.0, 0.0, 0.0), epsilon=1e-6);
-        assert_relative_eq!(Xyz::from_color(&t3), c3, epsilon=1e-6);
+        assert_relative_eq!(t3, XyY::from_channels(0.0, 0.0, 0.0), epsilon = 1e-6);
+        assert_relative_eq!(Xyz::from_color(&t3), c3, epsilon = 1e-6);
 
         let c4 = Xyz::from_channels(0.5, 0.5, 0.5);
         let t4 = XyY::from_color(&c4);
-        assert_relative_eq!(t4, XyY::from_channels(1.0/3.0, 1.0/3.0, 0.5), epsilon=1e-6);
-        assert_relative_eq!(Xyz::from_color(&t4), c4, epsilon=1e-6);
+        assert_relative_eq!(
+            t4,
+            XyY::from_channels(1.0 / 3.0, 1.0 / 3.0, 0.5),
+            epsilon = 1e-6
+        );
+        assert_relative_eq!(Xyz::from_color(&t4), c4, epsilon = 1e-6);
 
         let c5 = Xyz::from_channels(1.2, 0.3, 0.8);
         let t5 = XyY::from_color(&c5);
-        assert_relative_eq!(t5, XyY::from_channels(0.521739, 0.130435, 0.3000), epsilon=1e-6);
-        assert_relative_eq!(Xyz::from_color(&t5), c5, epsilon=1e-6);
+        assert_relative_eq!(
+            t5,
+            XyY::from_channels(0.521739, 0.130435, 0.3000),
+            epsilon = 1e-6
+        );
+        assert_relative_eq!(Xyz::from_color(&t5), c5, epsilon = 1e-6);
     }
 
     #[test]
     fn test_to_xyz() {
         let c1 = XyY::from_channels(0.5, 0.2, 0.5);
         let t1 = Xyz::from_color(&c1);
-        assert_relative_eq!(t1, Xyz::from_channels(1.25, 0.5, 0.75), epsilon=1e-6);
-        assert_relative_eq!(XyY::from_color(&t1), c1, epsilon=1e-6);
+        assert_relative_eq!(t1, Xyz::from_channels(1.25, 0.5, 0.75), epsilon = 1e-6);
+        assert_relative_eq!(XyY::from_color(&t1), c1, epsilon = 1e-6);
 
         let c2 = XyY::from_channels(1.0 / 3.0, 1.0 / 3.0, 1.0);
         let t2 = Xyz::from_color(&c2);
-        assert_relative_eq!(t2, Xyz::from_channels(1.0, 1.0, 1.0), epsilon=1e-6);
-        assert_relative_eq!(XyY::from_color(&t2), c2, epsilon=1e-6);
+        assert_relative_eq!(t2, Xyz::from_channels(1.0, 1.0, 1.0), epsilon = 1e-6);
+        assert_relative_eq!(XyY::from_color(&t2), c2, epsilon = 1e-6);
 
         let c3 = XyY::from_channels(0.3, 0.5, 0.3);
         let t3 = Xyz::from_color(&c3);
-        assert_relative_eq!(t3, Xyz::from_channels(0.18, 0.3, 0.12), epsilon=1e-6);
-        assert_relative_eq!(XyY::from_color(&t3), c3, epsilon=1e-6);
+        assert_relative_eq!(t3, Xyz::from_channels(0.18, 0.3, 0.12), epsilon = 1e-6);
+        assert_relative_eq!(XyY::from_color(&t3), c3, epsilon = 1e-6);
 
         let c4 = XyY::from_channels(0.285, 0.4194, 0.583);
         let t4 = Xyz::from_color(&c4);
-        assert_relative_eq!(t4, Xyz::from_channels(0.396173, 0.5830, 0.410908), epsilon=1e-6);
-        assert_relative_eq!(XyY::from_color(&t4), c4, epsilon=1e-6);
+        assert_relative_eq!(
+            t4,
+            Xyz::from_channels(0.396173, 0.5830, 0.410908),
+            epsilon = 1e-6
+        );
+        assert_relative_eq!(XyY::from_color(&t4), c4, epsilon = 1e-6);
     }
 
     #[test]
     fn test_color_cast() {
         let c1 = XyY::from_channels(0.5, 0.2, 1.0);
         assert_relative_eq!(c1.color_cast(), c1);
-        assert_relative_eq!(c1.color_cast::<f32>().color_cast(), c1, epsilon=1e-6);
-        assert_relative_eq!(c1.color_cast(), XyY::from_channels(0.5f32, 0.2, 1.0), epsilon=1e-6);
+        assert_relative_eq!(c1.color_cast::<f32>().color_cast(), c1, epsilon = 1e-6);
+        assert_relative_eq!(
+            c1.color_cast(),
+            XyY::from_channels(0.5f32, 0.2, 1.0),
+            epsilon = 1e-6
+        );
     }
 }

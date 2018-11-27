@@ -1,20 +1,22 @@
+use alpha::Alpha;
+use angle;
+use approx;
+use channel::{
+    AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel, PosNormalBoundedChannel,
+    PosNormalChannelScalar,
+};
+use chromaticity::ChromaticityCoordinates;
+use color;
+use color::{Color, FromTuple, HomogeneousColor};
+use convert;
+use hsl;
+use hsv;
+use hwb;
+use num;
+use num::cast;
 use std::fmt;
 use std::mem;
 use std::slice;
-use num;
-use num::cast;
-use approx;
-use channel::{PosNormalBoundedChannel, ColorChannel, PosNormalChannelScalar, AngularChannelScalar,
-              ChannelFormatCast, ChannelCast};
-use color;
-use color::{Color, HomogeneousColor, FromTuple};
-use convert;
-use angle;
-use hsv;
-use hsl;
-use hwb;
-use alpha::Alpha;
-use chromaticity::ChromaticityCoordinates;
 
 pub struct RgbTag;
 
@@ -29,7 +31,8 @@ pub struct Rgb<T> {
 pub type Rgba<T> = Alpha<T, Rgb<T>>;
 
 impl<T> Rgb<T>
-    where T: PosNormalChannelScalar
+where
+    T: PosNormalChannelScalar,
 {
     pub fn from_channels(red: T, green: T, blue: T) -> Self {
         Rgb {
@@ -39,8 +42,10 @@ impl<T> Rgb<T>
         }
     }
 
-    impl_color_color_cast_square!(Rgb {red, green, blue}, 
-        chan_traits={PosNormalChannelScalar});
+    impl_color_color_cast_square!(
+        Rgb { red, green, blue },
+        chan_traits = { PosNormalChannelScalar }
+    );
 
     pub fn red(&self) -> T {
         self.red.0.clone()
@@ -72,14 +77,16 @@ impl<T> Rgb<T>
 }
 
 impl<T> Rgb<T>
-    where T: PosNormalChannelScalar + num::Float
+where
+    T: PosNormalChannelScalar + num::Float,
 {
     pub fn get_chromaticity_coordinates(&self) -> ChromaticityCoordinates<T> {
-        let alpha = cast::<_, T>(0.5).unwrap() *
-                    (cast::<_, T>(2.0).unwrap() * self.red() - self.green() - self.blue());
+        let alpha = cast::<_, T>(0.5).unwrap()
+            * (cast::<_, T>(2.0).unwrap() * self.red() - self.green() - self.blue());
 
-        let beta = cast::<_, T>(3.0).unwrap().sqrt() * cast::<_, T>(0.5).unwrap() *
-                   (self.green() - self.blue());
+        let beta = cast::<_, T>(3.0).unwrap().sqrt()
+            * cast::<_, T>(0.5).unwrap()
+            * (self.green() - self.blue());
 
         ChromaticityCoordinates {
             alpha: alpha,
@@ -89,7 +96,8 @@ impl<T> Rgb<T>
 }
 
 impl<T> Color for Rgb<T>
-    where T: PosNormalChannelScalar
+where
+    T: PosNormalChannelScalar,
 {
     type Tag = RgbTag;
     type ChannelsTuple = (T, T, T);
@@ -105,7 +113,8 @@ impl<T> Color for Rgb<T>
 }
 
 impl<T> FromTuple for Rgb<T>
-    where T: PosNormalChannelScalar
+where
+    T: PosNormalChannelScalar,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         Rgb::from_channels(values.0, values.1, values.2)
@@ -113,7 +122,8 @@ impl<T> FromTuple for Rgb<T>
 }
 
 impl<T> HomogeneousColor for Rgb<T>
-    where T: PosNormalChannelScalar
+where
+    T: PosNormalChannelScalar,
 {
     type ChannelFormat = T;
 
@@ -124,26 +134,30 @@ impl<T> HomogeneousColor for Rgb<T>
 impl<T> color::Color3 for Rgb<T> where T: PosNormalChannelScalar {}
 
 impl<T> color::Invert for Rgb<T>
-    where T: PosNormalChannelScalar
+where
+    T: PosNormalChannelScalar,
 {
-    impl_color_invert!(Rgb {red, green, blue});
+    impl_color_invert!(Rgb { red, green, blue });
 }
 
 impl<T> color::Bounded for Rgb<T>
-    where T: PosNormalChannelScalar
+where
+    T: PosNormalChannelScalar,
 {
-    impl_color_bounded!(Rgb {red, green, blue});
+    impl_color_bounded!(Rgb { red, green, blue });
 }
 
 impl<T> color::Lerp for Rgb<T>
-    where T: PosNormalChannelScalar + color::Lerp
+where
+    T: PosNormalChannelScalar + color::Lerp,
 {
     type Position = <T as color::Lerp>::Position;
-    impl_color_lerp_square!(Rgb {red, green, blue});
+    impl_color_lerp_square!(Rgb { red, green, blue });
 }
 
 impl<T> color::Flatten for Rgb<T>
-    where T: PosNormalChannelScalar
+where
+    T: PosNormalChannelScalar,
 {
     type ScalarFormat = T;
 
@@ -153,34 +167,41 @@ impl<T> color::Flatten for Rgb<T>
 }
 
 impl<T> approx::AbsDiffEq for Rgb<T>
-    where T: PosNormalChannelScalar + approx::AbsDiffEq,
-          T::Epsilon: Clone
+where
+    T: PosNormalChannelScalar + approx::AbsDiffEq,
+    T::Epsilon: Clone,
 {
     impl_abs_diff_eq!({red, green, blue});
 }
 impl<T> approx::RelativeEq for Rgb<T>
-    where T: PosNormalChannelScalar + approx::RelativeEq,
-          T::Epsilon: Clone
+where
+    T: PosNormalChannelScalar + approx::RelativeEq,
+    T::Epsilon: Clone,
 {
     impl_rel_eq!({red, green, blue});
 }
 impl<T> approx::UlpsEq for Rgb<T>
-    where T: PosNormalChannelScalar + approx::UlpsEq,
-          T::Epsilon: Clone
+where
+    T: PosNormalChannelScalar + approx::UlpsEq,
+    T::Epsilon: Clone,
 {
     impl_ulps_eq!({red, green, blue});
 }
 
 impl<T> Default for Rgb<T>
-    where T: PosNormalChannelScalar + num::Zero
+where
+    T: PosNormalChannelScalar + num::Zero,
 {
-    impl_color_default!(Rgb {red:PosNormalBoundedChannel, 
-        green:PosNormalBoundedChannel, 
-        blue:PosNormalBoundedChannel});
+    impl_color_default!(Rgb {
+        red: PosNormalBoundedChannel,
+        green: PosNormalBoundedChannel,
+        blue: PosNormalBoundedChannel
+    });
 }
 
 impl<T> fmt::Display for Rgb<T>
-    where T: PosNormalChannelScalar + fmt::Display
+where
+    T: PosNormalChannelScalar + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Rgb({}, {}, {})", self.red, self.green, self.blue)
@@ -188,7 +209,8 @@ impl<T> fmt::Display for Rgb<T>
 }
 
 fn get_hue_factor_and_ordered_chans<T>(color: &Rgb<T>) -> (T, T, T, T, T)
-    where T: PosNormalChannelScalar + num::Float
+where
+    T: PosNormalChannelScalar + num::Float,
 {
     let mut scaling_factor = T::zero();
     let (mut c1, mut c2, mut c3) = color.clone().to_tuple();
@@ -207,23 +229,26 @@ fn get_hue_factor_and_ordered_chans<T>(color: &Rgb<T>) -> (T, T, T, T, T)
     return (scaling_factor, c1, c2, c3, min_chan);
 }
 
-fn make_hue_from_factor_and_ordered_chans<T>(c1: &T,
-                                             c2: &T,
-                                             c3: &T,
-                                             min_chan: &T,
-                                             scale_factor: &T)
-                                             -> T
-    where T: PosNormalChannelScalar + num::Float
+fn make_hue_from_factor_and_ordered_chans<T>(
+    c1: &T,
+    c2: &T,
+    c3: &T,
+    min_chan: &T,
+    scale_factor: &T,
+) -> T
+where
+    T: PosNormalChannelScalar + num::Float,
 {
     let epsilon = cast(1e-10).unwrap();
-    let hue_scalar = *scale_factor +
-                     (*c2 - *c3) / (cast::<_, T>(6.0).unwrap() * (*c1 - *min_chan) + epsilon);
+    let hue_scalar =
+        *scale_factor + (*c2 - *c3) / (cast::<_, T>(6.0).unwrap() * (*c1 - *min_chan) + epsilon);
 
     hue_scalar.abs()
 }
 
 impl<T> convert::GetChroma for Rgb<T>
-    where T: PosNormalChannelScalar
+where
+    T: PosNormalChannelScalar,
 {
     type ChromaType = T;
     fn get_chroma(&self) -> T {
@@ -242,12 +267,14 @@ impl<T> convert::GetChroma for Rgb<T>
 }
 
 impl<T> convert::GetHue for Rgb<T>
-    where T: PosNormalChannelScalar + num::Float
+where
+    T: PosNormalChannelScalar + num::Float,
 {
     type InternalAngle = angle::Turns<T>;
     fn get_hue<U>(&self) -> U
-        where U: angle::Angle<Scalar=<Self::InternalAngle as angle::Angle>::Scalar>
-              + angle::FromAngle<angle::Turns<T>>
+    where
+        U: angle::Angle<Scalar = <Self::InternalAngle as angle::Angle>::Scalar>
+            + angle::FromAngle<angle::Turns<T>>,
     {
         let (scale_factor, c1, c2, c3, min_chan) = get_hue_factor_and_ordered_chans(self);
         let hue_scalar =
@@ -258,8 +285,9 @@ impl<T> convert::GetHue for Rgb<T>
 }
 
 impl<T, A> convert::FromColor<Rgb<T>> for hsv::Hsv<T, A>
-    where T: PosNormalChannelScalar + num::Float,
-          A: AngularChannelScalar + angle::FromAngle<angle::Turns<T>>
+where
+    T: PosNormalChannelScalar + num::Float,
+    A: AngularChannelScalar + angle::FromAngle<angle::Turns<T>>,
 {
     fn from_color(from: &Rgb<T>) -> Self {
         let epsilon = cast(1e-10).unwrap();
@@ -275,8 +303,9 @@ impl<T, A> convert::FromColor<Rgb<T>> for hsv::Hsv<T, A>
 }
 
 impl<T, A> convert::FromColor<Rgb<T>> for hsl::Hsl<T, A>
-    where T: PosNormalChannelScalar + num::Float,
-          A: AngularChannelScalar + angle::FromAngle<angle::Turns<T>>
+where
+    T: PosNormalChannelScalar + num::Float,
+    A: AngularChannelScalar + angle::FromAngle<angle::Turns<T>>,
 {
     fn from_color(from: &Rgb<T>) -> Self {
         let epsilon = cast(1e-10).unwrap();
@@ -296,8 +325,9 @@ impl<T, A> convert::FromColor<Rgb<T>> for hsl::Hsl<T, A>
 }
 
 impl<T, A> convert::FromColor<Rgb<T>> for hwb::Hwb<T, A>
-    where T: PosNormalChannelScalar + num::Float,
-          A: AngularChannelScalar + angle::FromAngle<angle::Turns<T>>
+where
+    T: PosNormalChannelScalar + num::Float,
+    A: AngularChannelScalar + angle::FromAngle<angle::Turns<T>>,
 {
     fn from_color(from: &Rgb<T>) -> Self {
         let (scaling_factor, c1, c2, c3, min_channel) = get_hue_factor_and_ordered_chans(from);
@@ -316,11 +346,11 @@ impl<T, A> convert::FromColor<Rgb<T>> for hwb::Hwb<T, A>
 #[cfg(test)]
 mod test {
     use super::*;
-    use ::color::*;
-    use ::convert::*;
-    use ::angle::*;
-    use hsv::Hsv;
+    use angle::*;
+    use color::*;
+    use convert::*;
     use hsl::Hsl;
+    use hsv::Hsv;
     use test;
 
     #[test]
@@ -376,8 +406,10 @@ mod test {
         let c1 = Rgb::from_channels(0.2_f32, 0.5, 1.0);
         let c2 = Rgb::from_channels(0.8_f32, 0.5, 0.1);
 
-        assert_ulps_eq!(c1.lerp(&c2, 0.5_f32),
-                        Rgb::from_channels(0.5_f32, 0.5, 0.55));
+        assert_ulps_eq!(
+            c1.lerp(&c2, 0.5_f32),
+            Rgb::from_channels(0.5_f32, 0.5, 0.55)
+        );
         assert_ulps_eq!(c1.lerp(&c2, 0.0_f32), Rgb::from_channels(0.2_f32, 0.5, 1.0));
         assert_ulps_eq!(c1.lerp(&c2, 1.0_f32), Rgb::from_channels(0.8_f32, 0.5, 0.1));
     }
@@ -409,12 +441,16 @@ mod test {
         assert_ulps_eq!(c1.get_hue(), Deg(0.0));
         assert_ulps_eq!(Rgb::from_channels(0.0, 1.0_f32, 0.0).get_hue(), Deg(120.0));
         assert_ulps_eq!(Rgb::from_channels(0.0, 0.0_f32, 1.0).get_hue(), Deg(240.0));
-        assert_relative_eq!(Rgb::from_channels(0.5, 0.5, 0.0).get_hue(),
-                            Deg(60.0),
-                            epsilon = 1e-6);
-        assert_relative_eq!(Rgb::from_channels(0.5, 0.0, 0.5).get_hue(),
-                            Deg(300.0),
-                            epsilon = 1e-6);
+        assert_relative_eq!(
+            Rgb::from_channels(0.5, 0.5, 0.0).get_hue(),
+            Deg(60.0),
+            epsilon = 1e-6
+        );
+        assert_relative_eq!(
+            Rgb::from_channels(0.5, 0.0, 0.5).get_hue(),
+            Deg(300.0),
+            epsilon = 1e-6
+        );
     }
 
     #[test]
@@ -451,15 +487,19 @@ mod test {
 
         let c2 = Rgb::from_channels(255u8, 127, 255);
         assert_eq!(c2.color_cast(), c2);
-        assert_relative_eq!(c2.color_cast(),
-                            Rgb::from_channels(1.0f32, 0.4980392, 1.0),
-                            epsilon = 1e-6);
+        assert_relative_eq!(
+            c2.color_cast(),
+            Rgb::from_channels(1.0f32, 0.4980392, 1.0),
+            epsilon = 1e-6
+        );
 
         let c3 = Rgb::from_channels(65535u16, 0, 20000);
         assert_eq!(c3.color_cast(), c3);
-        assert_relative_eq!(c3.color_cast(),
-                            Rgb::from_channels(1.0f64, 0.0, 0.3051804),
-                            epsilon = 1e-6);
+        assert_relative_eq!(
+            c3.color_cast(),
+            Rgb::from_channels(1.0f64, 0.0, 0.3051804),
+            epsilon = 1e-6
+        );
         assert_eq!(c3.color_cast::<f32>().color_cast(), c3);
 
         let c4 = Rgb::from_channels(1.0f32, 0.25, 0.0);
@@ -469,19 +509,23 @@ mod test {
 
         let c5 = Rgb::from_channels(0.33f64, 0.50, 0.80);
         assert_eq!(c5.color_cast(), c5);
-        assert_relative_eq!(c5.color_cast(),
-                            Rgb::from_channels(0.33f32, 0.50, 0.80),
-                            epsilon = 1e-6);
+        assert_relative_eq!(
+            c5.color_cast(),
+            Rgb::from_channels(0.33f32, 0.50, 0.80),
+            epsilon = 1e-6
+        );
         assert_relative_eq!(c5.color_cast::<f64>().color_cast(), c5, epsilon = 1e-6);
 
         let c6 = Rgb::from_channels(0.60f32, 0.01, 0.99);
         assert_eq!(c6.color_cast(), c6);
         assert_eq!(c6.color_cast(), Rgb::from_channels(153u8, 2, 253));
-        assert_relative_eq!(c6.color_cast::<u16>()
-                                .color_cast::<u32>()
-                                .color_cast::<f32>()
-                                .color_cast::<f64>(),
-                            Rgb::from_channels(0.60f64, 0.01, 0.99),
-                            epsilon = 1e-4);
+        assert_relative_eq!(
+            c6.color_cast::<u16>()
+                .color_cast::<u32>()
+                .color_cast::<f32>()
+                .color_cast::<f64>(),
+            Rgb::from_channels(0.60f64, 0.01, 0.99),
+            epsilon = 1e-4
+        );
     }
 }

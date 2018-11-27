@@ -1,24 +1,33 @@
-use std::fmt;
-use num;
+use channel::{ChannelFormatCast, PosNormalChannelScalar};
 use color::Color;
-use rgb::Rgb;
-use channel::{PosNormalChannelScalar, ChannelFormatCast};
 use encoding::EncodedColor;
+use num;
+use rgb::Rgb;
+use std::fmt;
 
 pub trait ChannelEncoder {
-    fn encode_channel<T>(&self, val: T) -> T where T: num::Float;
+    fn encode_channel<T>(&self, val: T) -> T
+    where
+        T: num::Float;
 }
 pub trait ChannelDecoder {
-    fn decode_channel<T>(&self, val: T) -> T where T: num::Float;
+    fn decode_channel<T>(&self, val: T) -> T
+    where
+        T: num::Float;
 }
 
 pub trait EncodableColor: Color {
     type IntermediateColor;
-    fn encode_color<Encoder>(self, enc: &Encoder) -> Self where Encoder: ChannelEncoder;
-    fn decode_color<Decoder>(self, dec: &Decoder) -> Self where Decoder: ChannelDecoder;
+    fn encode_color<Encoder>(self, enc: &Encoder) -> Self
+    where
+        Encoder: ChannelEncoder;
+    fn decode_color<Decoder>(self, dec: &Decoder) -> Self
+    where
+        Decoder: ChannelDecoder;
 
     fn with_encoding<Encoding>(self, enc: Encoding) -> EncodedColor<Self, Encoding>
-        where Encoding: ColorEncoding
+    where
+        Encoding: ColorEncoding,
     {
         EncodedColor::new(self, enc)
     }
@@ -41,7 +50,8 @@ impl SrgbEncoding {
 
 impl ChannelDecoder for SrgbEncoding {
     fn decode_channel<T>(&self, val: T) -> T
-        where T: num::Float
+    where
+        T: num::Float,
     {
         let one: T = num::cast(1.0).unwrap();
         let a: T = num::cast(0.055).unwrap();
@@ -60,7 +70,8 @@ impl ChannelDecoder for SrgbEncoding {
 
 impl ChannelEncoder for SrgbEncoding {
     fn encode_channel<T>(&self, val: T) -> T
-        where T: num::Float
+    where
+        T: num::Float,
     {
         let one: T = num::cast(1.0).unwrap();
         let a: T = num::cast(0.055).unwrap();
@@ -98,7 +109,8 @@ impl LinearEncoding {
 
 impl ChannelDecoder for LinearEncoding {
     fn decode_channel<T>(&self, val: T) -> T
-        where T: num::Float
+    where
+        T: num::Float,
     {
         val
     }
@@ -106,7 +118,8 @@ impl ChannelDecoder for LinearEncoding {
 
 impl ChannelEncoder for LinearEncoding {
     fn encode_channel<T>(&self, val: T) -> T
-        where T: num::Float
+    where
+        T: num::Float,
     {
         val
     }
@@ -127,7 +140,8 @@ impl fmt::Display for LinearEncoding {
 }
 
 impl<T> GammaEncoding<T>
-    where T: num::Float
+where
+    T: num::Float,
 {
     pub fn new(val: T) -> Self {
         GammaEncoding(val)
@@ -139,19 +153,23 @@ impl<T> GammaEncoding<T>
 }
 
 impl<T> ChannelDecoder for GammaEncoding<T>
-    where T: num::Float
+where
+    T: num::Float,
 {
     fn decode_channel<U>(&self, val: U) -> U
-        where U: num::Float
+    where
+        U: num::Float,
     {
         val.signum() * val.abs().powf(num::cast(self.0).unwrap())
     }
 }
 impl<T> ChannelEncoder for GammaEncoding<T>
-    where T: num::Float
+where
+    T: num::Float,
 {
     fn encode_channel<U>(&self, val: U) -> U
-        where U: num::Float
+    where
+        U: num::Float,
     {
         let one: T = num::cast(1.0).unwrap();
         val.signum() * val.abs().powf(num::cast(one / self.0).unwrap())
@@ -167,7 +185,8 @@ impl<T: num::Float> Default for GammaEncoding<T> {
 }
 
 impl<T> fmt::Display for GammaEncoding<T>
-    where T: num::Float + fmt::Display
+where
+    T: num::Float + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "γ={}", self.0)
@@ -175,12 +194,14 @@ impl<T> fmt::Display for GammaEncoding<T>
 }
 
 impl<T> EncodableColor for Rgb<T>
-    where T: PosNormalChannelScalar + ChannelFormatCast<f64>,
-          f64: ChannelFormatCast<T>
+where
+    T: PosNormalChannelScalar + ChannelFormatCast<f64>,
+    f64: ChannelFormatCast<T>,
 {
     type IntermediateColor = Rgb<f64>;
     fn encode_color<Encoder>(self, enc: &Encoder) -> Self
-        where Encoder: ChannelEncoder
+    where
+        Encoder: ChannelEncoder,
     {
         let flt_color: Self::IntermediateColor = self.color_cast();
 
@@ -194,7 +215,8 @@ impl<T> EncodableColor for Rgb<T>
     }
 
     fn decode_color<Decoder>(self, dec: &Decoder) -> Self
-        where Decoder: ChannelDecoder
+    where
+        Decoder: ChannelDecoder,
     {
         let flt_color: Self::IntermediateColor = self.color_cast();
 
@@ -211,8 +233,8 @@ impl<T> EncodableColor for Rgb<T>
 #[cfg(test)]
 mod test {
     use super::*;
-    use rgb::Rgb;
     use color::*;
+    use rgb::Rgb;
 
     #[test]
     fn test_gamma_encoding() {
@@ -231,9 +253,11 @@ mod test {
 
         let c4 = Rgb::from_channels(0.2, 0.8, 0.66).with_encoding(LinearEncoding::new());
         let t4 = c4.clone().encode(GammaEncoding::new(1.8));
-        assert_relative_eq!(*t4.color(),
-                            Rgb::from_channels(0.4089623, 0.88340754, 0.793864955),
-                            epsilon = 1e-6);
+        assert_relative_eq!(
+            *t4.color(),
+            Rgb::from_channels(0.4089623, 0.88340754, 0.793864955),
+            epsilon = 1e-6
+        );
         assert_relative_eq!(t4.decode(), c4, epsilon = 1e-6);
 
         let c5 = Rgb::from_channels(0.5, 0.5, 0.5).with_encoding(GammaEncoding::new(2.4));
@@ -242,9 +266,11 @@ mod test {
 
         let c6 = Rgb::from_channels(-0.3, 0.0, -1.0).with_encoding(GammaEncoding::new(2.2));
         let t6 = c6.clone().decode();
-        assert_relative_eq!(*t6.color(),
-                            Rgb::from_channels(-0.0707403, 0.0, -1.0),
-                            epsilon = 1e-6);
+        assert_relative_eq!(
+            *t6.color(),
+            Rgb::from_channels(-0.0707403, 0.0, -1.0),
+            epsilon = 1e-6
+        );
         assert_relative_eq!(t6.encode(GammaEncoding::new(2.2)), c6, epsilon = 1e-6);
     }
 
@@ -265,9 +291,11 @@ mod test {
 
         let c4 = Rgb::from_channels(0.2, 0.8, 0.66).with_encoding(LinearEncoding::new());
         let t4 = c4.clone().encode(SrgbEncoding::new());
-        assert_relative_eq!(*t4.color(),
-                            Rgb::from_channels(0.4845292044, 0.90633175, 0.83228355590),
-                            epsilon = 1e-6);
+        assert_relative_eq!(
+            *t4.color(),
+            Rgb::from_channels(0.4845292044, 0.90633175, 0.83228355590),
+            epsilon = 1e-6
+        );
         assert_relative_eq!(t4.decode(), c4, epsilon = 1e-6);
 
         let c5 = Rgb::from_channels(0.5, 0.5, 0.5).with_encoding(SrgbEncoding::new());
@@ -276,9 +304,11 @@ mod test {
 
         let c6 = Rgb::from_channels(-0.25, -0.74, -1.00).with_encoding(LinearEncoding::new());
         let t6 = c6.clone().encode(SrgbEncoding::new());
-        assert_relative_eq!(*t6.color(),
-                            Rgb::from_channels(-0.5370987, -0.8756056, -1.00),
-                            epsilon = 1e-6);
+        assert_relative_eq!(
+            *t6.color(),
+            Rgb::from_channels(-0.5370987, -0.8756056, -1.00),
+            epsilon = 1e-6
+        );
         assert_relative_eq!(t6.decode(), c6, epsilon = 1e-6);
     }
 }

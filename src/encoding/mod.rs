@@ -1,7 +1,7 @@
-
-pub mod encoded_color;
 pub mod encode;
+pub mod encoded_color;
 
-pub use self::encode::{ColorEncoding, EncodableColor, LinearEncoding, SrgbEncoding,
-                       ChannelDecoder, ChannelEncoder};
-pub use self::encoded_color::{LinearColor, EncodedColor};
+pub use self::encode::{
+    ChannelDecoder, ChannelEncoder, ColorEncoding, EncodableColor, LinearEncoding, SrgbEncoding,
+};
+pub use self::encoded_color::{EncodedColor, LinearColor};

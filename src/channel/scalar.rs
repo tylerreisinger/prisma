@@ -1,16 +1,22 @@
-use std::ops;
-use num::{Integer, Float, NumCast, cast, Zero};
 use angle;
 use angle::*;
 use color;
+use num::{cast, Float, Integer, NumCast, Zero};
+use std::ops;
 
 pub trait FreeChannelScalar: Clone + Float + Default {}
 
 impl FreeChannelScalar for f32 {}
 impl FreeChannelScalar for f64 {}
 
-pub trait BoundedChannelScalar: Clone + PartialEq + PartialOrd + Default
-        + ops::Add<Self, Output=Self> + ops::Sub<Self, Output=Self> + ops::Mul<Self, Output=Self>
+pub trait BoundedChannelScalar:
+    Clone
+    + PartialEq
+    + PartialOrd
+    + Default
+    + ops::Add<Self, Output = Self>
+    + ops::Sub<Self, Output = Self>
+    + ops::Mul<Self, Output = Self>
 {
 }
 
@@ -20,10 +26,17 @@ impl BoundedChannelScalar for u32 {}
 impl BoundedChannelScalar for f32 {}
 impl BoundedChannelScalar for f64 {}
 
-pub trait AngularChannelScalar: Clone + PartialEq + PartialOrd + Default
-        + Zero + ops::Add<Self, Output=Self> + ops::Sub<Self, Output=Self>
-        + angle::Angle
-    where Self::Scalar: Float
+pub trait AngularChannelScalar:
+    Clone
+    + PartialEq
+    + PartialOrd
+    + Default
+    + Zero
+    + ops::Add<Self, Output = Self>
+    + ops::Sub<Self, Output = Self>
+    + angle::Angle
+where
+    Self::Scalar: Float,
 {
     fn min_bound() -> Self;
     fn max_bound() -> Self;
@@ -33,8 +46,9 @@ pub trait AngularChannelScalar: Clone + PartialEq + PartialOrd + Default
 
 macro_rules! impl_traits_for_angle {
     ($Struct: ident) => {
-        impl<T> AngularChannelScalar for $Struct<T> 
-            where T: Float
+        impl<T> AngularChannelScalar for $Struct<T>
+        where
+            T: Float,
         {
             #[inline]
             fn min_bound() -> Self {
@@ -55,7 +69,8 @@ macro_rules! impl_traits_for_angle {
         }
 
         impl<T> color::Lerp for $Struct<T>
-            where T: Float,
+        where
+            T: Float,
         {
             type Position = T;
             #[inline]
@@ -63,7 +78,7 @@ macro_rules! impl_traits_for_angle {
                 self.interpolate(right, pos)
             }
         }
-    }
+    };
 }
 
 impl_traits_for_angle!(Deg);
@@ -85,19 +100,20 @@ pub trait NormalChannelScalar: BoundedChannelScalar {
     fn normalize(self) -> Self;
 }
 
-
 fn lerp_flat_int<T, P>(left: &T, right: &T, pos: P) -> T
-    where T: Integer + Clone + NumCast,
-          P: Float + NumCast
+where
+    T: Integer + Clone + NumCast,
+    P: Float + NumCast,
 {
     let inv_pos = P::one() - pos;
-    let val_p: P = cast::<_, P>(left.clone()).unwrap() * inv_pos +
-                   cast::<_, P>(right.clone()).unwrap() * pos;
+    let val_p: P =
+        cast::<_, P>(left.clone()).unwrap() * inv_pos + cast::<_, P>(right.clone()).unwrap() * pos;
     cast(val_p).unwrap()
 }
 
 fn lerp_flat<T>(left: &T, right: &T, pos: T) -> T
-    where T: Float
+where
+    T: Float,
 {
     let inv_pos = T::one() - pos;
 
@@ -131,7 +147,7 @@ macro_rules! impl_bounded_channel_traits_int {
                 lerp_flat_int(self, right, pos)
             }
         }
-    }
+    };
 }
 
 macro_rules! impl_bounded_channel_traits_float {
@@ -139,7 +155,7 @@ macro_rules! impl_bounded_channel_traits_float {
         impl PosNormalChannelScalar for $name {
             #[inline]
             fn min_bound() -> Self {
-                cast(0.0).unwrap()                
+                cast(0.0).unwrap()
             }
             #[inline]
             fn max_bound() -> Self {
@@ -167,7 +183,7 @@ macro_rules! impl_bounded_channel_traits_float {
                 lerp_flat(self, right, pos)
             }
         }
-    }
+    };
 }
 
 macro_rules! impl_normal_bounded_channel_traits_int {
@@ -190,7 +206,7 @@ macro_rules! impl_normal_bounded_channel_traits_int {
                 self
             }
         }
-    }
+    };
 }
 
 macro_rules! impl_normal_bounded_channel_traits_float {
@@ -198,7 +214,7 @@ macro_rules! impl_normal_bounded_channel_traits_float {
         impl NormalChannelScalar for $name {
             #[inline]
             fn min_bound() -> Self {
-                cast(-1.0).unwrap()                
+                cast(-1.0).unwrap()
             }
             #[inline]
             fn max_bound() -> Self {
@@ -219,7 +235,7 @@ macro_rules! impl_normal_bounded_channel_traits_float {
                 }
             }
         }
-    }
+    };
 }
 
 impl_bounded_channel_traits_int!(u8);

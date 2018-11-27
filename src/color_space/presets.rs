@@ -1,9 +1,9 @@
 #![allow(non_camel_case_types)]
 
-use num;
 use channel::{FreeChannelScalar, PosNormalChannelScalar};
 use color_space::{EncodedColorSpace, RgbPrimary};
-use encoding::{SrgbEncoding, ColorEncoding};
+use encoding::{ColorEncoding, SrgbEncoding};
+use num;
 use white_point::{NamedWhitePoint, D65};
 
 pub trait NamedColorSpace<T> {
@@ -15,18 +15,18 @@ pub trait NamedColorSpace<T> {
 pub struct sRgb;
 
 impl<T> NamedColorSpace<T> for sRgb
-    where T: num::Float + FreeChannelScalar + PosNormalChannelScalar
+where
+    T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
 {
     type Encoding = SrgbEncoding;
 
     fn get_color_space() -> EncodedColorSpace<T, SrgbEncoding> {
-        EncodedColorSpace::new(RgbPrimary::new(num::cast(0.6400).unwrap(),
-                                               num::cast(0.3300).unwrap()),
-                               RgbPrimary::new(num::cast(0.300).unwrap(),
-                                               num::cast(0.600).unwrap()),
-                               RgbPrimary::new(num::cast(0.150).unwrap(),
-                                               num::cast(0.060).unwrap()),
-                               D65::get_xyz(),
-                               SrgbEncoding::new())
+        EncodedColorSpace::new(
+            RgbPrimary::new(num::cast(0.6400).unwrap(), num::cast(0.3300).unwrap()),
+            RgbPrimary::new(num::cast(0.300).unwrap(), num::cast(0.600).unwrap()),
+            RgbPrimary::new(num::cast(0.150).unwrap(), num::cast(0.060).unwrap()),
+            D65::get_xyz(),
+            SrgbEncoding::new(),
+        )
     }
 }

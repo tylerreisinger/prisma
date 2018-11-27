@@ -1,6 +1,5 @@
+use channel::{ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar};
 use num;
-use channel::{PosNormalBoundedChannel, PosNormalChannelScalar, ColorChannel};
-
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct RgbPrimary<T> {
@@ -9,7 +8,8 @@ pub struct RgbPrimary<T> {
 }
 
 impl<T> RgbPrimary<T>
-    where T: PosNormalChannelScalar + num::Float
+where
+    T: PosNormalChannelScalar + num::Float,
 {
     pub fn new(x: T, y: T) -> Self {
         RgbPrimary {

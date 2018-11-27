@@ -1,4 +1,3 @@
-
 macro_rules! impl_channel_clamp {
     ($name: ident, $param: ty) => {
         fn clamp(&self, min: T, max: T) -> Self {
@@ -85,7 +84,7 @@ macro_rules! impl_color_from_slice_angular {
 }
 
 macro_rules! impl_color_transform_body_channel_forward {
-    ($name: ident {$($fields: ident),*} $f: ident, $s: ident, 
+    ($name: ident {$($fields: ident),*} $f: ident, $s: ident,
         phantom={$($phantom:ident),*}) =>
     {
         $name {
@@ -113,7 +112,7 @@ macro_rules! impl_color_invert {
 macro_rules! impl_color_bounded {
     ($name: ident {$($fields: ident),*}, phantom={$($phantom:ident),*}) => {
         fn normalize(self) -> Self {
-            impl_color_transform_body_channel_forward!($name {$($fields),*} normalize, 
+            impl_color_transform_body_channel_forward!($name {$($fields),*} normalize,
                 self, phantom={$($phantom),*})
         }
 
@@ -149,7 +148,7 @@ macro_rules! impl_color_lerp_square {
 
 macro_rules! impl_color_lerp_angular {
     ($name: ident<$T: ident> {$ang_field: ident, $($fields: ident),*}) => {
-        
+
         fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
             let tpos: $T::Position = num::cast(pos).unwrap();
             $name {
@@ -177,7 +176,7 @@ macro_rules! impl_color_default {
 macro_rules! impl_color_color_cast_square {
     ($name:ident {$($fields:ident),*}, chan_traits={$($chan_traits:ident),*},
      phantom={$($phantom:ident),*},
-        types={$($ts:ident),*}) => 
+        types={$($ts:ident),*}) =>
     {
         pub fn color_cast<TOut>(&self) -> $name<TOut, $($ts),*>
             where T: ChannelFormatCast<TOut>,
@@ -191,7 +190,7 @@ macro_rules! impl_color_color_cast_square {
     };
 
     ($name:ident {$($fields:ident),*}, chan_traits={$($chan_traits:ident),*}) => {
-        impl_color_color_cast_square!($name {$($fields),*}, chan_traits={$($chan_traits),*}, 
+        impl_color_color_cast_square!($name {$($fields),*}, chan_traits={$($chan_traits),*},
             phantom={}, types={});
     };
 }
@@ -239,7 +238,7 @@ macro_rules! impl_color_homogeneous_color_square {
         }
     };
     ($name:ident<$T:ident> {$($fields:ident),*}, chan=$chan:ident) => {
-        impl_color_homogeneous_color_square!($name<$T> {$($fields),*}, 
+        impl_color_homogeneous_color_square!($name<$T> {$($fields),*},
         chan=$chan, phantom={});
     };
 }
