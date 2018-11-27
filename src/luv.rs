@@ -113,13 +113,24 @@ impl<T> Flatten for Luv<T>
         v:FreeChannel - 2});
 }
 
-impl<T> approx::ApproxEq for Luv<T>
-    where T: FreeChannelScalar + approx::ApproxEq,
+impl<T> approx::AbsDiffEq for Luv<T>
+    where T: FreeChannelScalar + approx::AbsDiffEq,
           T::Epsilon: Clone
 {
-    impl_approx_eq!({L, u, v});
+    impl_abs_diff_eq!({L, u, v});
 }
-
+impl<T> approx::RelativeEq for Luv<T>
+    where T: FreeChannelScalar + approx::RelativeEq,
+          T::Epsilon: Clone
+{
+    impl_rel_eq!({L, u, v});
+}
+impl<T> approx::UlpsEq for Luv<T>
+    where T: FreeChannelScalar + approx::UlpsEq,
+          T::Epsilon: Clone
+{
+    impl_ulps_eq!({L, u, v});
+}
 impl<T> Default for Luv<T>
     where T: FreeChannelScalar
 {

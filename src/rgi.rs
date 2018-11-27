@@ -139,11 +139,23 @@ impl<T> Bounded for Rgi<T>
     impl_color_bounded!(Rgi {red, green, intensity});
 }
 
-impl<T> approx::ApproxEq for Rgi<T>
-    where T: PosNormalChannelScalar + approx::ApproxEq + Float,
+impl<T> approx::AbsDiffEq for Rgi<T>
+    where T: PosNormalChannelScalar + approx::AbsDiffEq + Float,
           T::Epsilon: Clone
 {
-    impl_approx_eq!({red, green, intensity});
+    impl_abs_diff_eq!({red, green, intensity});
+}
+impl<T> approx::RelativeEq for Rgi<T>
+    where T: PosNormalChannelScalar + approx::RelativeEq + Float,
+          T::Epsilon: Clone
+{
+    impl_rel_eq!({red, green, intensity});
+}
+impl<T> approx::UlpsEq for Rgi<T>
+    where T: PosNormalChannelScalar + approx::UlpsEq + Float,
+          T::Epsilon: Clone
+{
+    impl_ulps_eq!({red, green, intensity});
 }
 
 impl<T> Default for Rgi<T>

@@ -267,21 +267,29 @@ impl<T, M> Flatten for YCbCr<T, M>
     }
 }
 
-impl<T, M> approx::ApproxEq for YCbCr<T, M>
-    where T: NormalChannelScalar + PosNormalChannelScalar + approx::ApproxEq,
-          T::Epsilon: Clone,
-          M: YCbCrModel<T>
+impl<T, M> approx::AbsDiffEq for YCbCr<T, M>
+    where T: NormalChannelScalar + PosNormalChannelScalar + approx::AbsDiffEq,
+    T::Epsilon: Clone,
+    M: YCbCrModel<T>
 {
-    type Epsilon = <BareYCbCr<T> as approx::ApproxEq>::Epsilon;
-
+    type Epsilon = <BareYCbCr<T> as approx::AbsDiffEq>::Epsilon;
     fn default_epsilon() -> Self::Epsilon {
         BareYCbCr::<T>::default_epsilon()
     }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        self.ycbcr.abs_diff_eq(self, other, epsilon.clone())
+        && self.model == other.model
+    }
+}
+
+impl<T, M> approx::RelativeEq for YCbCr<T, M>
+    where T: NormalChannelScalar + PosNormalChannelScalar + approx::RelativeEq,
+    T::Epsilon: Clone,
+    M: YCbCrModel<T>
+{
     fn default_max_relative() -> Self::Epsilon {
         BareYCbCr::<T>::default_max_relative()
-    }
-    fn default_max_ulps() -> u32 {
-        BareYCbCr::<T>::default_max_ulps()
     }
     fn relative_eq(&self,
                    other: &Self,
@@ -289,6 +297,17 @@ impl<T, M> approx::ApproxEq for YCbCr<T, M>
                    max_relative: Self::Epsilon)
                    -> bool {
         self.ycbcr.relative_eq(&other.ycbcr, epsilon, max_relative)
+        && self.model == other.model
+    }
+}
+
+impl<T, M> approx::UlpsEq for YCbCr<T, M>
+    where T: NormalChannelScalar + PosNormalChannelScalar + approx::UlpsEq,
+          T::Epsilon: Clone,
+          M: YCbCrModel<T>
+{
+    fn default_max_ulps() -> u32 {
+        BareYCbCr::<T>::default_max_ulps()
     }
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
         self.ycbcr.ulps_eq(&other.ycbcr, epsilon, max_ulps)

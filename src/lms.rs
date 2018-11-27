@@ -152,12 +152,26 @@ impl<T, Model> Flatten for Lms<T, Model>
         s:FreeChannel - 2});
 }
 
-impl<T, Model> approx::ApproxEq for Lms<T, Model>
-    where T: FreeChannelScalar + approx::ApproxEq,
+impl<T, Model> approx::AbsDiffEq for Lms<T, Model>
+    where T: FreeChannelScalar + approx::AbsDiffEq,
           T::Epsilon: Clone,
           Model: LmsModel<T>
 {
-    impl_approx_eq!({l, m, s});
+    impl_abs_diff_eq!({l, m, s});
+}
+impl<T, Model> approx::RelativeEq for Lms<T, Model>
+    where T: FreeChannelScalar + approx::RelativeEq,
+          T::Epsilon: Clone,
+          Model: LmsModel<T>
+{
+    impl_rel_eq!({l, m, s});
+}
+impl<T, Model> approx::UlpsEq for Lms<T, Model>
+    where T: FreeChannelScalar + approx::UlpsEq,
+          T::Epsilon: Clone,
+          Model: LmsModel<T>
+{
+    impl_ulps_eq!({l, m, s});
 }
 
 impl<T, Model> Default for Lms<T, Model>

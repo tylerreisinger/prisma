@@ -130,12 +130,26 @@ impl<T, A> Flatten for Lchab<T, A>
     }
 }
 
-impl<T, A> approx::ApproxEq for Lchab<T, A>
-    where T: FreeChannelScalar + approx::ApproxEq<Epsilon = A::Epsilon>,
-          A: AngularChannelScalar + approx::ApproxEq,
+impl<T, A> approx::AbsDiffEq for Lchab<T, A>
+    where T: FreeChannelScalar + approx::AbsDiffEq<Epsilon = A::Epsilon>,
+          A: AngularChannelScalar + approx::AbsDiffEq,
           A::Epsilon: Clone + num::Float
 {
-    impl_approx_eq!({L, chroma, hue});
+    impl_abs_diff_eq!({L, chroma, hue});
+}
+impl<T, A> approx::RelativeEq for Lchab<T, A>
+    where T: FreeChannelScalar + approx::RelativeEq<Epsilon = A::Epsilon>,
+          A: AngularChannelScalar + approx::RelativeEq,
+          A::Epsilon: Clone + num::Float
+{
+    impl_rel_eq!({L, chroma, hue});
+}
+impl<T, A> approx::UlpsEq for Lchab<T, A>
+    where T: FreeChannelScalar + approx::UlpsEq<Epsilon = A::Epsilon>,
+          A: AngularChannelScalar + approx::UlpsEq,
+          A::Epsilon: Clone + num::Float
+{
+    impl_ulps_eq!({L, chroma, hue});
 }
 
 impl<T, A> Default for Lchab<T, A>

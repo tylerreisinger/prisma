@@ -152,11 +152,23 @@ impl<T> color::Flatten for Rgb<T>
         green:PosNormalBoundedChannel - 1, blue:PosNormalBoundedChannel - 2});
 }
 
-impl<T> approx::ApproxEq for Rgb<T>
-    where T: PosNormalChannelScalar + approx::ApproxEq,
+impl<T> approx::AbsDiffEq for Rgb<T>
+    where T: PosNormalChannelScalar + approx::AbsDiffEq,
           T::Epsilon: Clone
 {
-    impl_approx_eq!({red, green, blue});
+    impl_abs_diff_eq!({red, green, blue});
+}
+impl<T> approx::RelativeEq for Rgb<T>
+    where T: PosNormalChannelScalar + approx::RelativeEq,
+          T::Epsilon: Clone
+{
+    impl_rel_eq!({red, green, blue});
+}
+impl<T> approx::UlpsEq for Rgb<T>
+    where T: PosNormalChannelScalar + approx::UlpsEq,
+          T::Epsilon: Clone
+{
+    impl_ulps_eq!({red, green, blue});
 }
 
 impl<T> Default for Rgb<T>

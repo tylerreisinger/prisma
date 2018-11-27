@@ -136,8 +136,8 @@ impl<C, E> Bounded for EncodedColor<C, E>
     }
 }
 
-impl<C, E> approx::ApproxEq for EncodedColor<C, E>
-    where C: Color + EncodableColor + approx::ApproxEq,
+impl<C, E> approx::AbsDiffEq for EncodedColor<C, E>
+    where C: Color + EncodableColor + approx::AbsDiffEq,
           E: ColorEncoding + PartialEq
 {
     type Epsilon = C::Epsilon;
@@ -145,11 +145,16 @@ impl<C, E> approx::ApproxEq for EncodedColor<C, E>
     fn default_epsilon() -> Self::Epsilon {
         C::default_epsilon()
     }
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        (self.encoding == other.encoding) && self.color.abs_diff_eq(&other.color, epsilon)
+    }
+}
+impl<C, E> approx::RelativeEq for EncodedColor<C, E>
+    where C: Color + EncodableColor + approx::RelativeEq,
+          E: ColorEncoding + PartialEq
+{
     fn default_max_relative() -> Self::Epsilon {
         C::default_max_relative()
-    }
-    fn default_max_ulps() -> u32 {
-        C::default_max_ulps()
     }
     fn relative_eq(&self,
                    other: &Self,
@@ -157,7 +162,16 @@ impl<C, E> approx::ApproxEq for EncodedColor<C, E>
                    max_relative: Self::Epsilon)
                    -> bool {
         (self.encoding == other.encoding) &&
-        self.color.relative_eq(&other.color, epsilon, max_relative)
+            self.color.relative_eq(&other.color, epsilon, max_relative)
+    }
+}
+
+impl<C, E> approx::UlpsEq for EncodedColor<C, E>
+    where C: Color + EncodableColor + approx::UlpsEq,
+          E: ColorEncoding + PartialEq
+{
+    fn default_max_ulps() -> u32 {
+        C::default_max_ulps()
     }
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
         (self.encoding == other.encoding) && self.color.ulps_eq(&other.color, epsilon, max_ulps)

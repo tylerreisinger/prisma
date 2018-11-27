@@ -111,21 +111,25 @@ macro_rules! impl_bounded_channel_type {
             }
         }
 
-        impl<T> approx::ApproxEq for $name<T>
-            where T: $scalar_type + approx::ApproxEq
+        impl<T> approx::AbsDiffEq for $name<T>
+            where T: $scalar_type + approx::AbsDiffEq
         {
             type Epsilon = T::Epsilon;
 
             fn default_epsilon() -> Self::Epsilon {
                 T::default_epsilon()
             }
-
-            fn default_max_relative() -> Self::Epsilon {
-                T::default_max_relative()
+            fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+                self.0.abs_diff_eq(&other.0, epsilon)
             }
 
-            fn default_max_ulps() -> u32 {
-                T::default_max_ulps()
+        }
+
+        impl<T> approx::RelativeEq for $name<T>
+            where T: $scalar_type + approx::RelativeEq
+        {
+            fn default_max_relative() -> Self::Epsilon {
+                T::default_max_relative()
             }
 
             fn relative_eq(&self,
@@ -134,6 +138,14 @@ macro_rules! impl_bounded_channel_type {
                            max_relative: Self::Epsilon)
                            -> bool {
                 self.0.relative_eq(&other.0, epsilon, max_relative)
+            }
+        }
+
+        impl<T> approx::UlpsEq for $name<T>
+            where T: $scalar_type + approx::UlpsEq
+        {
+            fn default_max_ulps() -> u32 {
+                T::default_max_ulps()
             }
 
             fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {

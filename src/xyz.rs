@@ -112,11 +112,25 @@ impl<T> Flatten for Xyz<T>
         z:PosFreeChannel - 2});
 }
 
-impl<T> approx::ApproxEq for Xyz<T>
-    where T: FreeChannelScalar + approx::ApproxEq,
+impl<T> approx::AbsDiffEq for Xyz<T>
+    where T: FreeChannelScalar + approx::AbsDiffEq,
           T::Epsilon: Clone
 {
-    impl_approx_eq!({x, y, z});
+    impl_abs_diff_eq!({x, y, z});
+}
+
+impl<T> approx::RelativeEq for Xyz<T>
+    where T: FreeChannelScalar + approx::RelativeEq,
+          T::Epsilon: Clone
+{
+    impl_rel_eq!({x, y, z});
+}
+
+impl<T> approx::UlpsEq for Xyz<T>
+    where T: FreeChannelScalar + approx::UlpsEq,
+          T::Epsilon: Clone
+{
+    impl_ulps_eq!({x, y, z});
 }
 
 impl<T> Default for Xyz<T>

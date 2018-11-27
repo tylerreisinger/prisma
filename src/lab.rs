@@ -112,11 +112,23 @@ impl<T> Flatten for Lab<T>
         b:FreeChannel - 2});
 }
 
-impl<T> approx::ApproxEq for Lab<T>
-    where T: FreeChannelScalar + approx::ApproxEq,
+impl<T> approx::AbsDiffEq for Lab<T>
+    where T: FreeChannelScalar + approx::AbsDiffEq,
           T::Epsilon: Clone
 {
-    impl_approx_eq!({L, a, b});
+    impl_abs_diff_eq!({L, a, b});
+}
+impl<T> approx::RelativeEq for Lab<T>
+    where T: FreeChannelScalar + approx::RelativeEq,
+          T::Epsilon: Clone
+{
+    impl_rel_eq!({L, a, b});
+}
+impl<T> approx::UlpsEq for Lab<T>
+    where T: FreeChannelScalar + approx::UlpsEq,
+          T::Epsilon: Clone
+{
+    impl_ulps_eq!({L, a, b});
 }
 
 impl<T> Default for Lab<T>

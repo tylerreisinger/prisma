@@ -5,7 +5,7 @@ authors = ["Tyler Reisinger <reisinger.tyler@gmail.com>"]
 
 [dependencies]
 num = "0.1"
-approx = "0.1"
+approx = "0.3"
 angular-units = "0.2.1"
 
 [dev.dependencies]

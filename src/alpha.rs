@@ -159,14 +159,26 @@ impl<T, InnerColor> PolarColor for Alpha<T, InnerColor>
     type Cartesian = InnerColor::Cartesian;
 }
 
-
-
-impl<T, InnerColor> approx::ApproxEq for Alpha<T, InnerColor>
-    where T: PosNormalChannelScalar + approx::ApproxEq<Epsilon = InnerColor::Epsilon>,
-          InnerColor: Color + approx::ApproxEq,
+impl<T, InnerColor> approx::AbsDiffEq for Alpha<T, InnerColor>
+    where T: PosNormalChannelScalar + approx::AbsDiffEq<Epsilon = InnerColor::Epsilon>,
+          InnerColor: Color + approx::AbsDiffEq,
           InnerColor::Epsilon: Clone + num::Float
 {
-    impl_approx_eq!({color, alpha});
+    impl_abs_diff_eq!({color, alpha});
+}
+impl<T, InnerColor> approx::RelativeEq for Alpha<T, InnerColor>
+    where T: PosNormalChannelScalar + approx::RelativeEq<Epsilon = InnerColor::Epsilon>,
+          InnerColor: Color + approx::RelativeEq,
+          InnerColor::Epsilon: Clone + num::Float
+{
+    impl_rel_eq!({color, alpha});
+}
+impl<T, InnerColor> approx::UlpsEq for Alpha<T, InnerColor>
+    where T: PosNormalChannelScalar + approx::UlpsEq<Epsilon = InnerColor::Epsilon>,
+          InnerColor: Color + approx::UlpsEq,
+          InnerColor::Epsilon: Clone + num::Float
+{
+    impl_ulps_eq!({color, alpha});
 }
 
 impl<T, InnerColor> Default for Alpha<T, InnerColor>

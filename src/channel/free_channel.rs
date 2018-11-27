@@ -106,8 +106,8 @@ impl<T> fmt::Display for PosFreeChannel<T>
     }
 }
 
-impl<T> approx::ApproxEq for PosFreeChannel<T>
-    where T: FreeChannelScalar + approx::ApproxEq
+impl<T> approx::AbsDiffEq for PosFreeChannel<T>
+    where T: FreeChannelScalar + approx::AbsDiffEq
 {
     type Epsilon = T::Epsilon;
 
@@ -115,14 +115,16 @@ impl<T> approx::ApproxEq for PosFreeChannel<T>
         T::default_epsilon()
     }
 
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        self.0.abs_diff_eq(&other.0, epsilon)
+    }
+}
+impl<T> approx::RelativeEq for PosFreeChannel<T>
+    where T: FreeChannelScalar + approx::RelativeEq
+{
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
     }
-
-    fn default_max_ulps() -> u32 {
-        T::default_max_ulps()
-    }
-
     fn relative_eq(&self,
                    other: &Self,
                    epsilon: Self::Epsilon,
@@ -130,7 +132,14 @@ impl<T> approx::ApproxEq for PosFreeChannel<T>
                    -> bool {
         self.0.relative_eq(&other.0, epsilon, max_relative)
     }
+}
 
+impl<T> approx::UlpsEq for PosFreeChannel<T>
+    where T: FreeChannelScalar + approx::UlpsEq
+{
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
         self.0.ulps_eq(&other.0, epsilon, max_ulps)
     }
@@ -222,23 +231,24 @@ impl<T> fmt::Display for FreeChannel<T>
     }
 }
 
-impl<T> approx::ApproxEq for FreeChannel<T>
-    where T: FreeChannelScalar + approx::ApproxEq
+impl<T> approx::AbsDiffEq for FreeChannel<T>
+    where T: FreeChannelScalar + approx::AbsDiffEq
 {
     type Epsilon = T::Epsilon;
 
     fn default_epsilon() -> Self::Epsilon {
         T::default_epsilon()
     }
-
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        self.0.abs_diff_eq(&other.0, epsilon)
+    }
+}
+impl<T> approx::RelativeEq for FreeChannel<T>
+    where T: FreeChannelScalar + approx::RelativeEq
+{
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
     }
-
-    fn default_max_ulps() -> u32 {
-        T::default_max_ulps()
-    }
-
     fn relative_eq(&self,
                    other: &Self,
                    epsilon: Self::Epsilon,
@@ -246,7 +256,14 @@ impl<T> approx::ApproxEq for FreeChannel<T>
                    -> bool {
         self.0.relative_eq(&other.0, epsilon, max_relative)
     }
+}
 
+impl<T> approx::UlpsEq for FreeChannel<T>
+    where T: FreeChannelScalar + approx::UlpsEq
+{
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
         self.0.ulps_eq(&other.0, epsilon, max_ulps)
     }

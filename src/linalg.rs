@@ -139,8 +139,8 @@ impl<T> Default for Matrix3<T>
     }
 }
 
-impl<T> approx::ApproxEq for Matrix3<T>
-    where T: num::Num + Copy + approx::ApproxEq,
+impl<T> approx::AbsDiffEq for Matrix3<T>
+    where T: num::Num + Copy + approx::AbsDiffEq,
           T::Epsilon: Clone
 {
     type Epsilon = T::Epsilon;
@@ -148,11 +148,20 @@ impl<T> approx::ApproxEq for Matrix3<T>
     fn default_epsilon() -> Self::Epsilon {
         T::default_epsilon()
     }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        self.m.iter().zip(other.m.iter()).fold(true, move |st, (lhs, rhs)| {
+            st && lhs.abs_diff_eq(&rhs, epsilon.clone())
+        })
+    }
+}
+impl<T> approx::RelativeEq for Matrix3<T>
+
+    where T: num::Num + Copy + approx::RelativeEq,
+          T::Epsilon: Clone
+{
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
-    }
-    fn default_max_ulps() -> u32 {
-        T::default_max_ulps()
     }
     fn relative_eq(&self,
                    other: &Self,
@@ -163,6 +172,14 @@ impl<T> approx::ApproxEq for Matrix3<T>
             st && lhs.relative_eq(&rhs, epsilon.clone(), max_relative.clone())
         })
 
+    }
+}
+impl<T> approx::UlpsEq for Matrix3<T>
+    where T: num::Num + Copy + approx::UlpsEq,
+          T::Epsilon: Clone
+{
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
     }
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
         self.m.iter().zip(other.m.iter()).fold(true, move |st, (lhs, rhs)| {

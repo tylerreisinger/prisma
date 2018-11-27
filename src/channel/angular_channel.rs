@@ -119,8 +119,8 @@ impl<T> fmt::Display for AngularChannel<T>
     }
 }
 
-impl<T> approx::ApproxEq for AngularChannel<T>
-    where T: Angle + approx::ApproxEq,
+impl<T> approx::AbsDiffEq for AngularChannel<T>
+    where T: Angle + approx::AbsDiffEq,
           T::Epsilon: num::Float
 {
     type Epsilon = T::Epsilon;
@@ -128,23 +128,35 @@ impl<T> approx::ApproxEq for AngularChannel<T>
     fn default_epsilon() -> Self::Epsilon {
         T::default_epsilon()
     }
-
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        self.0.abs_diff_eq(&other.0,
+                       epsilon * num::cast(T::period()).unwrap())
+    }
+}
+impl<T> approx::RelativeEq for AngularChannel<T>
+    where T: Angle + approx::RelativeEq,
+          T::Epsilon: num::Float
+{
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
     }
-
-    fn default_max_ulps() -> u32 {
-        T::default_max_ulps()
-    }
-
     fn relative_eq(&self,
                    other: &Self,
                    epsilon: Self::Epsilon,
                    max_relative: Self::Epsilon)
                    -> bool {
-        self.0.relative_eq(&other.0,
+        self.0.normalize().relative_eq(&other.0.normalize(),
                            epsilon * num::cast(T::period()).unwrap(),
                            max_relative)
+    }
+}
+
+impl<T> approx::UlpsEq for AngularChannel<T>
+    where T: Angle + approx::UlpsEq,
+          T::Epsilon: num::Float
+{
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
     }
 
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {

@@ -164,12 +164,26 @@ impl<T, A> color::Flatten for Hwb<T, A>
         whiteness:PosNormalBoundedChannel - 1, blackness:PosNormalBoundedChannel - 2});
 }
 
-impl<T, A> approx::ApproxEq for Hwb<T, A>
-    where T: HwbBoundedChannelTraits + approx::ApproxEq<Epsilon = A::Epsilon>,
-          A: AngularChannelScalar + approx::ApproxEq,
+impl<T, A> approx::AbsDiffEq for Hwb<T, A>
+    where T: HwbBoundedChannelTraits + approx::AbsDiffEq<Epsilon = A::Epsilon>,
+          A: AngularChannelScalar + approx::AbsDiffEq,
           A::Epsilon: Clone + num::Float
 {
-    impl_approx_eq!({hue, whiteness, blackness});
+    impl_abs_diff_eq!({hue, whiteness, blackness});
+}
+impl<T, A> approx::RelativeEq for Hwb<T, A>
+    where T: HwbBoundedChannelTraits + approx::RelativeEq<Epsilon = A::Epsilon>,
+          A: AngularChannelScalar + approx::RelativeEq,
+          A::Epsilon: Clone + num::Float
+{
+    impl_rel_eq!({hue, whiteness, blackness});
+}
+impl<T, A> approx::UlpsEq for Hwb<T, A>
+    where T: HwbBoundedChannelTraits + approx::UlpsEq<Epsilon = A::Epsilon>,
+          A: AngularChannelScalar + approx::UlpsEq,
+          A::Epsilon: Clone + num::Float
+{
+    impl_ulps_eq!({hue, whiteness, blackness});
 }
 
 impl<T, A> Default for Hwb<T, A>

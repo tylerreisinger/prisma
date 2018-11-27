@@ -174,11 +174,23 @@ impl<T> Flatten for BareYCbCr<T>
         cb:NormalBoundedChannel - 1, cr:NormalBoundedChannel - 2});
 }
 
-impl<T> approx::ApproxEq for BareYCbCr<T>
-    where T: PosNormalChannelScalar + NormalChannelScalar + approx::ApproxEq,
+impl<T> approx::AbsDiffEq for BareYCbCr<T>
+    where T: PosNormalChannelScalar + NormalChannelScalar + approx::AbsDiffEq,
           T::Epsilon: Clone
 {
-    impl_approx_eq!({luma, cb, cr});
+    impl_abs_diff_eq!({luma, cb, cr});
+}
+impl<T> approx::RelativeEq for BareYCbCr<T>
+    where T: PosNormalChannelScalar + NormalChannelScalar + approx::RelativeEq,
+          T::Epsilon: Clone
+{
+    impl_rel_eq!({luma, cb, cr});
+}
+impl<T> approx::UlpsEq for BareYCbCr<T>
+    where T: PosNormalChannelScalar + NormalChannelScalar + approx::UlpsEq,
+          T::Epsilon: Clone
+{
+    impl_ulps_eq!({luma, cb, cr});
 }
 
 impl<T> Default for BareYCbCr<T>

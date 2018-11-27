@@ -138,12 +138,26 @@ impl<T, A> color::Flatten for Hsv<T, A>
         saturation:PosNormalBoundedChannel - 1, value:PosNormalBoundedChannel - 2});
 }
 
-impl<T, A> approx::ApproxEq for Hsv<T, A>
-    where T: PosNormalChannelScalar + approx::ApproxEq<Epsilon = A::Epsilon>,
-          A: AngularChannelScalar + approx::ApproxEq,
+impl<T, A> approx::AbsDiffEq for Hsv<T, A>
+    where T: PosNormalChannelScalar + approx::AbsDiffEq<Epsilon = A::Epsilon>,
+          A: AngularChannelScalar + approx::AbsDiffEq,
           A::Epsilon: Clone + num::Float
 {
-    impl_approx_eq!({hue, saturation, value});
+    impl_abs_diff_eq!({hue, saturation, value});
+}
+impl<T, A> approx::RelativeEq for Hsv<T, A>
+    where T: PosNormalChannelScalar + approx::RelativeEq<Epsilon = A::Epsilon>,
+          A: AngularChannelScalar + approx::RelativeEq,
+          A::Epsilon: Clone + num::Float
+{
+    impl_rel_eq!({hue, saturation, value});
+}
+impl<T, A> approx::UlpsEq for Hsv<T, A>
+    where T: PosNormalChannelScalar + approx::UlpsEq<Epsilon = A::Epsilon>,
+          A: AngularChannelScalar + approx::UlpsEq,
+          A::Epsilon: Clone + num::Float
+{
+    impl_ulps_eq!({hue, saturation, value});
 }
 
 impl<T, A> Default for Hsv<T, A>
