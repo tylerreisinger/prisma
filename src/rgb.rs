@@ -89,8 +89,8 @@ where
             * (self.green() - self.blue());
 
         ChromaticityCoordinates {
-            alpha: alpha,
-            beta: beta,
+            alpha,
+            beta,
         }
     }
 }
@@ -226,7 +226,7 @@ where
         min_chan = c2.min(c3);
     }
 
-    return (scaling_factor, c1, c2, c3, min_chan);
+    (scaling_factor, c1, c2, c3, min_chan)
 }
 
 fn make_hue_from_factor_and_ordered_chans<T>(
@@ -262,7 +262,7 @@ where
         if c2 < c3 {
             mem::swap(&mut c2, &mut c3);
         }
-        return c1 - c3;
+        c1 - c3
     }
 }
 

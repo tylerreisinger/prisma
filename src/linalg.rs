@@ -1,3 +1,5 @@
+#![allow(clippy::many_single_char_names)]
+
 use approx;
 use num;
 use std::fmt;

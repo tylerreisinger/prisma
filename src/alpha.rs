@@ -23,7 +23,7 @@ where
 {
     pub fn from_color_and_alpha(color: InnerColor, alpha: T) -> Self {
         Alpha {
-            color: color,
+            color,
             alpha: PosNormalBoundedChannel::new(alpha),
         }
     }

@@ -216,7 +216,7 @@ where
 {
     type ChromaType = T;
     fn get_chroma(&self) -> T {
-        return self.saturation.0.clone() * self.value.0.clone();
+        self.saturation.0.clone() * self.value.0.clone()
     }
 }
 impl<T, A> convert::GetHue for Hsv<T, A>

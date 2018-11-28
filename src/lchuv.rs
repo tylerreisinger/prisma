@@ -197,7 +197,7 @@ where
 {
     type ChromaType = T;
     fn get_chroma(&self) -> T {
-        return self.chroma();
+        self.chroma()
     }
 }
 
@@ -240,9 +240,6 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use angle::*;
-    use color::*;
-    use convert::*;
     use luv::Luv;
 
     #[test]

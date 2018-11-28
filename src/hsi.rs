@@ -350,14 +350,12 @@ fn to_rgb_out_of_gamut<T, A>(
                     *c3 = color.intensity()
                         * (one + (rescaled_sat * (cos_pi3_sub_hue - cos_hue) / cos_pi3_sub_hue));
                 }
-            } else {
-                if *c3 > one {
-                    let rescaled_sat = ((one - color.intensity()) * cos_pi3_sub_hue)
-                        / (color.intensity() * (cos_pi3_sub_hue - cos_hue));
-                    *c1 = color.intensity() * (one - rescaled_sat);
-                    *c2 = color.intensity() * (one + (rescaled_sat * cos_hue) / (cos_pi3_sub_hue));
-                    *c3 = one;
-                }
+            } else if *c3 > one {
+                let rescaled_sat = ((one - color.intensity()) * cos_pi3_sub_hue)
+                    / (color.intensity() * (cos_pi3_sub_hue - cos_hue));
+                *c1 = color.intensity() * (one - rescaled_sat);
+                *c2 = color.intensity() * (one + (rescaled_sat * cos_hue) / (cos_pi3_sub_hue));
+                *c3 = one;
             }
         }
     }
@@ -366,10 +364,8 @@ fn to_rgb_out_of_gamut<T, A>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use angle::*;
-    use color::*;
-    use convert::*;
     use rgb::Rgb;
+    use color::Flatten;
     use test;
 
     #[test]

@@ -241,8 +241,6 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use color::*;
-    use convert::*;
     use rgb::Rgb;
     use test;
 

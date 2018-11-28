@@ -18,8 +18,8 @@ where
 {
     pub fn new(color: C, encoding: E) -> Self {
         EncodedColor {
-            color: color,
-            encoding: encoding,
+            color,
+            encoding,
         }
     }
 

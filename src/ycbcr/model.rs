@@ -42,7 +42,7 @@ pub trait Canonicalize<T>: YCbCrModel<T> {
     /// YUV and YIQ both define their chromaticity channels in a range other than
     /// `[-1, 1]`. This function will convert from the normalized representation
     /// to that defined by the standard being used.
-    fn to_canonical_representation(from: YCbCr<T, Self>) -> (T, T, T);
+    fn to_canonical_representation(from: &YCbCr<T, Self>) -> (T, T, T);
 }
 
 /// A YCbCrModel that stores no data and thus can be used without an object.
@@ -146,8 +146,8 @@ impl CustomYCbCrModel {
     /// colors will not behave as expected.
     pub fn new(forward_transform: Matrix3<f64>, inverse_transform: Matrix3<f64>) -> Self {
         CustomYCbCrModel {
-            forward_transform: forward_transform,
-            inverse_transform: inverse_transform,
+            forward_transform,
+            inverse_transform,
         }
     }
 
@@ -189,7 +189,7 @@ where
     T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
     StandardShift<T>: YCbCrShift<T>,
 {
-    fn to_canonical_representation(from: YCbCr<T, Self>) -> (T, T, T) {
+    fn to_canonical_representation(from: &YCbCr<T, Self>) -> (T, T, T) {
         (
             from.luma(),
             from.cb() * num::cast(0.436).unwrap(),
@@ -223,7 +223,7 @@ where
     T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
     StandardShift<T>: YCbCrShift<T>,
 {
-    fn to_canonical_representation(from: YCbCr<T, Self>) -> (T, T, T) {
+    fn to_canonical_representation(from: &YCbCr<T, Self>) -> (T, T, T) {
         (
             from.luma(),
             from.cb() * num::cast(0.436).unwrap(),
@@ -284,7 +284,7 @@ where
     T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
     StandardShift<T>: YCbCrShift<T>,
 {
-    fn to_canonical_representation(from: YCbCr<T, Self>) -> (T, T, T) {
+    fn to_canonical_representation(from: &YCbCr<T, Self>) -> (T, T, T) {
         (
             from.luma(),
             from.cb() * num::cast(0.436).unwrap(),
@@ -330,7 +330,7 @@ where
     T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
     StandardShift<T>: YCbCrShift<T>,
 {
-    fn to_canonical_representation(from: YCbCr<T, Self>) -> (T, T, T) {
+    fn to_canonical_representation(from: &YCbCr<T, Self>) -> (T, T, T) {
         (
             from.luma(),
             from.cb() * num::cast(0.5957).unwrap(),
@@ -375,7 +375,7 @@ where
     T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
     StandardShift<T>: YCbCrShift<T>,
 {
-    fn to_canonical_representation(from: YCbCr<T, Self>) -> (T, T, T) {
+    fn to_canonical_representation(from: &YCbCr<T, Self>) -> (T, T, T) {
         (
             from.luma(),
             from.cb() * num::cast(0.436).unwrap(),

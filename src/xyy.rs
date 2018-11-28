@@ -237,8 +237,6 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use color::*;
-    use convert::*;
     use xyz::Xyz;
 
     #[test]

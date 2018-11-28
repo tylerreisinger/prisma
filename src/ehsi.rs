@@ -371,9 +371,6 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use angle::*;
-    use color::*;
-    use convert::*;
     use hsi::Hsi;
     use rgb::Rgb;
     use test;

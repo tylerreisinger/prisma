@@ -14,8 +14,8 @@ where
 {
     pub fn new(alpha: T, beta: T) -> Self {
         ChromaticityCoordinates {
-            alpha: alpha,
-            beta: beta,
+            alpha,
+            beta,
         }
     }
 }

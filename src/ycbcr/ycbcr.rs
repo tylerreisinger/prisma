@@ -68,8 +68,8 @@ where
     /// Construct a `YCbCr` from a `BareYCbCr` and model.
     pub fn from_color_and_model(ycbcr: BareYCbCr<T>, model: M) -> Self {
         YCbCr {
-            ycbcr: ycbcr,
-            model: model,
+            ycbcr,
+            model,
         }
     }
 
@@ -77,7 +77,7 @@ where
     pub fn from_channels_and_model(y: T, cb: T, cr: T, model: M) -> Self {
         YCbCr {
             ycbcr: BareYCbCr::from_channels(y, cb, cr),
-            model: model,
+            model,
         }
     }
 
@@ -157,7 +157,7 @@ where
     /// Most YUV and YIQ standards define the channel range to be different than the
     /// `[-1, 1]` used by this library. This function returns the values for the same
     /// color rescaled to the defined range.
-    pub fn to_canonical_representation(self) -> (T, T, T) {
+    pub fn to_canonical_representation(&self) -> (T, T, T) {
         M::to_canonical_representation(self)
     }
 }
@@ -411,8 +411,6 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use color::*;
-    use convert::*;
     use linalg::Matrix3;
     use rgb::Rgb;
     use test;

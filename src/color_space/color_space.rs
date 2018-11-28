@@ -89,10 +89,10 @@ where
             red_primary: red,
             green_primary: green,
             blue_primary: blue,
-            white_point: white_point,
-            encoding: encoding,
+            white_point,
+            encoding,
             xyz_transform: forward_transform,
-            inv_transform: inv_transform,
+            inv_transform,
         }
     }
 
@@ -109,10 +109,10 @@ where
             red_primary: red,
             green_primary: green,
             blue_primary: blue,
-            white_point: white_point,
-            encoding: encoding,
-            xyz_transform: xyz_transform,
-            inv_transform: inv_transform,
+            white_point,
+            encoding,
+            xyz_transform,
+            inv_transform,
         }
     }
 

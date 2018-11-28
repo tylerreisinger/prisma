@@ -1,3 +1,7 @@
+// There is lots of automatically generated code using tables of numbers
+#![allow(clippy::unreadable_literal)]
+#![allow(clippy::module_inception)]
+
 extern crate num;
 #[macro_use]
 extern crate approx;

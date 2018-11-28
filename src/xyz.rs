@@ -166,7 +166,6 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use color::*;
 
     #[test]
     fn test_construction() {

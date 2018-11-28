@@ -256,7 +256,6 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use color::*;
     use white_point::*;
     use xyz::Xyz;
 

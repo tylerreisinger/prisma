@@ -165,6 +165,7 @@ impl<T> Lab<T>
 where
     T: FreeChannelScalar,
 {
+    #[allow(clippy::many_single_char_names)]
     pub fn from_xyz(from: &Xyz<T>, wp: &Xyz<T>) -> Lab<T> {
         let x = from.x() / wp.x();
         let y = from.y() / wp.y();
@@ -173,7 +174,7 @@ where
         let a = num::cast::<_, T>(500.0).unwrap() * (Lab::lab_f(x) - Lab::lab_f(y));
         let b = num::cast::<_, T>(200.0).unwrap() * (Lab::lab_f(y) - Lab::lab_f(z));
 
-        return Lab::from_channels(L, a, b);
+        Lab::from_channels(L, a, b)
     }
 
     pub fn to_xyz(&self, wp: &Xyz<T>) -> Xyz<T> {
@@ -236,7 +237,6 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use color::*;
     use white_point::*;
     use xyz::Xyz;
 
