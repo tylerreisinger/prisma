@@ -1,3 +1,4 @@
+#[cfg(feature = "approx")]
 use approx;
 use channel::{ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar};
 use color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor};
@@ -168,6 +169,7 @@ where
     type Cartesian = InnerColor::Cartesian;
 }
 
+#[cfg(feature = "approx")]
 impl<T, InnerColor> approx::AbsDiffEq for Alpha<T, InnerColor>
 where
     T: PosNormalChannelScalar + approx::AbsDiffEq<Epsilon = InnerColor::Epsilon>,
@@ -176,6 +178,7 @@ where
 {
     impl_abs_diff_eq!({color, alpha});
 }
+#[cfg(feature = "approx")]
 impl<T, InnerColor> approx::RelativeEq for Alpha<T, InnerColor>
 where
     T: PosNormalChannelScalar + approx::RelativeEq<Epsilon = InnerColor::Epsilon>,
@@ -184,6 +187,7 @@ where
 {
     impl_rel_eq!({color, alpha});
 }
+#[cfg(feature = "approx")]
 impl<T, InnerColor> approx::UlpsEq for Alpha<T, InnerColor>
 where
     T: PosNormalChannelScalar + approx::UlpsEq<Epsilon = InnerColor::Epsilon>,

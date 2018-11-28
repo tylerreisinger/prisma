@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+#[cfg(feature = "approx")]
 use approx;
 use channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar, PosFreeChannel,
@@ -120,6 +121,7 @@ where
         v:FreeChannel - 2});
 }
 
+#[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for Luv<T>
 where
     T: FreeChannelScalar + approx::AbsDiffEq,
@@ -127,6 +129,7 @@ where
 {
     impl_abs_diff_eq!({L, u, v});
 }
+#[cfg(feature = "approx")]
 impl<T> approx::RelativeEq for Luv<T>
 where
     T: FreeChannelScalar + approx::RelativeEq,
@@ -134,6 +137,7 @@ where
 {
     impl_rel_eq!({L, u, v});
 }
+#[cfg(feature = "approx")]
 impl<T> approx::UlpsEq for Luv<T>
 where
     T: FreeChannelScalar + approx::UlpsEq,

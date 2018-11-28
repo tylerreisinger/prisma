@@ -2,6 +2,7 @@
 
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle, Rad, Turns};
+#[cfg(feature = "approx")]
 use approx;
 use channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
@@ -143,6 +144,7 @@ where
     }
 }
 
+#[cfg(feature = "approx")]
 impl<T, A> approx::AbsDiffEq for Lchab<T, A>
 where
     T: FreeChannelScalar + approx::AbsDiffEq<Epsilon = A::Epsilon>,
@@ -151,6 +153,7 @@ where
 {
     impl_abs_diff_eq!({L, chroma, hue});
 }
+#[cfg(feature = "approx")]
 impl<T, A> approx::RelativeEq for Lchab<T, A>
 where
     T: FreeChannelScalar + approx::RelativeEq<Epsilon = A::Epsilon>,
@@ -159,6 +162,7 @@ where
 {
     impl_rel_eq!({L, chroma, hue});
 }
+#[cfg(feature = "approx")]
 impl<T, A> approx::UlpsEq for Lchab<T, A>
 where
     T: FreeChannelScalar + approx::UlpsEq<Epsilon = A::Epsilon>,

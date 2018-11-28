@@ -1,6 +1,7 @@
 use alpha::Alpha;
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle};
+#[cfg(feature = "approx")]
 use approx;
 use channel::cast::ChannelFormatCast;
 use channel::{
@@ -162,6 +163,7 @@ where
         saturation:PosNormalBoundedChannel - 1, value:PosNormalBoundedChannel - 2});
 }
 
+#[cfg(feature = "approx")]
 impl<T, A> approx::AbsDiffEq for Hsv<T, A>
 where
     T: PosNormalChannelScalar + approx::AbsDiffEq<Epsilon = A::Epsilon>,
@@ -170,6 +172,7 @@ where
 {
     impl_abs_diff_eq!({hue, saturation, value});
 }
+#[cfg(feature = "approx")]
 impl<T, A> approx::RelativeEq for Hsv<T, A>
 where
     T: PosNormalChannelScalar + approx::RelativeEq<Epsilon = A::Epsilon>,
@@ -178,6 +181,7 @@ where
 {
     impl_rel_eq!({hue, saturation, value});
 }
+#[cfg(feature = "approx")]
 impl<T, A> approx::UlpsEq for Hsv<T, A>
 where
     T: PosNormalChannelScalar + approx::UlpsEq<Epsilon = A::Epsilon>,

@@ -1,3 +1,4 @@
+#[cfg(feature = "approx")]
 use approx;
 use color::{Bounded, Color, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor};
 use encoding::encode::{ColorEncoding, EncodableColor, LinearEncoding};
@@ -146,6 +147,7 @@ where
     }
 }
 
+#[cfg(feature = "approx")]
 impl<C, E> approx::AbsDiffEq for EncodedColor<C, E>
 where
     C: Color + EncodableColor + approx::AbsDiffEq,
@@ -160,6 +162,7 @@ where
         (self.encoding == other.encoding) && self.color.abs_diff_eq(&other.color, epsilon)
     }
 }
+#[cfg(feature = "approx")]
 impl<C, E> approx::RelativeEq for EncodedColor<C, E>
 where
     C: Color + EncodableColor + approx::RelativeEq,
@@ -179,6 +182,7 @@ where
     }
 }
 
+#[cfg(feature = "approx")]
 impl<C, E> approx::UlpsEq for EncodedColor<C, E>
 where
     C: Color + EncodableColor + approx::UlpsEq,

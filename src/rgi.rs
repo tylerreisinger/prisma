@@ -1,3 +1,4 @@
+#[cfg(feature = "approx")]
 use approx;
 use channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar,
@@ -161,6 +162,7 @@ where
     });
 }
 
+#[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for Rgi<T>
 where
     T: PosNormalChannelScalar + approx::AbsDiffEq + Float,
@@ -168,6 +170,7 @@ where
 {
     impl_abs_diff_eq!({red, green, intensity});
 }
+#[cfg(feature = "approx")]
 impl<T> approx::RelativeEq for Rgi<T>
 where
     T: PosNormalChannelScalar + approx::RelativeEq + Float,
@@ -175,6 +178,7 @@ where
 {
     impl_rel_eq!({red, green, intensity});
 }
+#[cfg(feature = "approx")]
 impl<T> approx::UlpsEq for Rgi<T>
 where
     T: PosNormalChannelScalar + approx::UlpsEq + Float,

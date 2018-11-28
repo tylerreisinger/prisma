@@ -1,5 +1,6 @@
 #![allow(clippy::many_single_char_names)]
 
+#[cfg(feature = "approx")]
 use approx;
 use num;
 use std::fmt;
@@ -151,6 +152,7 @@ where
     }
 }
 
+#[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for Matrix3<T>
 where
     T: num::Num + Copy + approx::AbsDiffEq,
@@ -171,6 +173,7 @@ where
             })
     }
 }
+#[cfg(feature = "approx")]
 impl<T> approx::RelativeEq for Matrix3<T>
 where
     T: num::Num + Copy + approx::RelativeEq,
@@ -193,6 +196,7 @@ where
             })
     }
 }
+#[cfg(feature = "approx")]
 impl<T> approx::UlpsEq for Matrix3<T>
 where
     T: num::Num + Copy + approx::UlpsEq,

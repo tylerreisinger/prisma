@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#[cfg(feature = "approx")]
 use approx;
 use channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar,
@@ -152,6 +153,7 @@ where
         y:PosNormalBoundedChannel - 1, Y:FreeChannel - 2});
 }
 
+#[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for XyY<T>
 where
     T: FreeChannelScalar + PosNormalChannelScalar + approx::AbsDiffEq,
@@ -159,6 +161,7 @@ where
 {
     impl_abs_diff_eq!({x, y, Y});
 }
+#[cfg(feature = "approx")]
 impl<T> approx::RelativeEq for XyY<T>
 where
     T: FreeChannelScalar + PosNormalChannelScalar + approx::RelativeEq,
@@ -166,6 +169,7 @@ where
 {
     impl_rel_eq!({x, y, Y});
 }
+#[cfg(feature = "approx")]
 impl<T> approx::UlpsEq for XyY<T>
 where
     T: FreeChannelScalar + PosNormalChannelScalar + approx::UlpsEq,

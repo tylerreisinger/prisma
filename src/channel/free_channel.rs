@@ -1,3 +1,4 @@
+#[cfg(feature = "approx")]
 use approx;
 use channel::{ChannelCast, ChannelFormatCast, ColorChannel, FreeChannelScalar};
 use color::{Bounded, Lerp};
@@ -114,6 +115,7 @@ where
     }
 }
 
+#[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for PosFreeChannel<T>
 where
     T: FreeChannelScalar + approx::AbsDiffEq,
@@ -128,6 +130,7 @@ where
         self.0.abs_diff_eq(&other.0, epsilon)
     }
 }
+#[cfg(feature = "approx")]
 impl<T> approx::RelativeEq for PosFreeChannel<T>
 where
     T: FreeChannelScalar + approx::RelativeEq,
@@ -145,6 +148,7 @@ where
     }
 }
 
+#[cfg(feature = "approx")]
 impl<T> approx::UlpsEq for PosFreeChannel<T>
 where
     T: FreeChannelScalar + approx::UlpsEq,
@@ -251,6 +255,7 @@ where
     }
 }
 
+#[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for FreeChannel<T>
 where
     T: FreeChannelScalar + approx::AbsDiffEq,
@@ -264,6 +269,7 @@ where
         self.0.abs_diff_eq(&other.0, epsilon)
     }
 }
+#[cfg(feature = "approx")]
 impl<T> approx::RelativeEq for FreeChannel<T>
 where
     T: FreeChannelScalar + approx::RelativeEq,
@@ -281,6 +287,7 @@ where
     }
 }
 
+#[cfg(feature = "approx")]
 impl<T> approx::UlpsEq for FreeChannel<T>
 where
     T: FreeChannelScalar + approx::UlpsEq,

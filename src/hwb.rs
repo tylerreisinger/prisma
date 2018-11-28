@@ -1,6 +1,7 @@
 use alpha::Alpha;
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle};
+#[cfg(feature = "approx")]
 use approx;
 use channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
@@ -189,6 +190,7 @@ where
         whiteness:PosNormalBoundedChannel - 1, blackness:PosNormalBoundedChannel - 2});
 }
 
+#[cfg(feature = "approx")]
 impl<T, A> approx::AbsDiffEq for Hwb<T, A>
 where
     T: HwbBoundedChannelTraits + approx::AbsDiffEq<Epsilon = A::Epsilon>,
@@ -197,6 +199,7 @@ where
 {
     impl_abs_diff_eq!({hue, whiteness, blackness});
 }
+#[cfg(feature = "approx")]
 impl<T, A> approx::RelativeEq for Hwb<T, A>
 where
     T: HwbBoundedChannelTraits + approx::RelativeEq<Epsilon = A::Epsilon>,
@@ -205,6 +208,7 @@ where
 {
     impl_rel_eq!({hue, whiteness, blackness});
 }
+#[cfg(feature = "approx")]
 impl<T, A> approx::UlpsEq for Hwb<T, A>
 where
     T: HwbBoundedChannelTraits + approx::UlpsEq<Epsilon = A::Epsilon>,

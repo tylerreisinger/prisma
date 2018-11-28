@@ -1,5 +1,6 @@
 use alpha::Alpha;
 use angle;
+#[cfg(feature = "approx")]
 use approx;
 use channel::{
     AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel, PosNormalBoundedChannel,
@@ -166,6 +167,7 @@ where
         green:PosNormalBoundedChannel - 1, blue:PosNormalBoundedChannel - 2});
 }
 
+#[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for Rgb<T>
 where
     T: PosNormalChannelScalar + approx::AbsDiffEq,
@@ -173,6 +175,7 @@ where
 {
     impl_abs_diff_eq!({red, green, blue});
 }
+#[cfg(feature = "approx")]
 impl<T> approx::RelativeEq for Rgb<T>
 where
     T: PosNormalChannelScalar + approx::RelativeEq,
@@ -180,6 +183,7 @@ where
 {
     impl_rel_eq!({red, green, blue});
 }
+#[cfg(feature = "approx")]
 impl<T> approx::UlpsEq for Rgb<T>
 where
     T: PosNormalChannelScalar + approx::UlpsEq,

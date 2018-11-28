@@ -3,6 +3,7 @@
 #![allow(clippy::module_inception)]
 
 extern crate num;
+#[cfg(any(feature = "approx", test))]
 #[macro_use]
 extern crate approx;
 extern crate angular_units as angle;

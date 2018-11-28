@@ -1,3 +1,4 @@
+#[cfg(feature = "approx")]
 use approx;
 use channel::{ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar};
 use color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Lerp};
@@ -160,6 +161,7 @@ where
         s:FreeChannel - 2});
 }
 
+#[cfg(feature = "approx")]
 impl<T, Model> approx::AbsDiffEq for Lms<T, Model>
 where
     T: FreeChannelScalar + approx::AbsDiffEq,
@@ -168,6 +170,7 @@ where
 {
     impl_abs_diff_eq!({l, m, s});
 }
+#[cfg(feature = "approx")]
 impl<T, Model> approx::RelativeEq for Lms<T, Model>
 where
     T: FreeChannelScalar + approx::RelativeEq,
@@ -176,6 +179,7 @@ where
 {
     impl_rel_eq!({l, m, s});
 }
+#[cfg(feature = "approx")]
 impl<T, Model> approx::UlpsEq for Lms<T, Model>
 where
     T: FreeChannelScalar + approx::UlpsEq,

@@ -1,5 +1,6 @@
 //! Implements the core `YCbCr` struct and some convenience types.
 
+#[cfg(feature = "approx")]
 use approx;
 use channel::{ChannelFormatCast, NormalChannelScalar, PosNormalChannelScalar};
 use color::{Bounded, Color, Flatten, FromTuple, Invert, Lerp};
@@ -278,6 +279,7 @@ where
     }
 }
 
+#[cfg(feature = "approx")]
 impl<T, M> approx::AbsDiffEq for YCbCr<T, M>
 where
     T: NormalChannelScalar + PosNormalChannelScalar + approx::AbsDiffEq,
@@ -294,6 +296,7 @@ where
     }
 }
 
+#[cfg(feature = "approx")]
 impl<T, M> approx::RelativeEq for YCbCr<T, M>
 where
     T: NormalChannelScalar + PosNormalChannelScalar + approx::RelativeEq,
@@ -313,6 +316,7 @@ where
     }
 }
 
+#[cfg(feature = "approx")]
 impl<T, M> approx::UlpsEq for YCbCr<T, M>
 where
     T: NormalChannelScalar + PosNormalChannelScalar + approx::UlpsEq,

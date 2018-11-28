@@ -1,5 +1,6 @@
 //! Defines `BareYCbCr` for YCbCr colors that don't store their model.
 
+#[cfg(feature = "approx")]
 use approx;
 use channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, NormalBoundedChannel, NormalChannelScalar,
@@ -184,6 +185,7 @@ where
         cb:NormalBoundedChannel - 1, cr:NormalBoundedChannel - 2});
 }
 
+#[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for BareYCbCr<T>
 where
     T: PosNormalChannelScalar + NormalChannelScalar + approx::AbsDiffEq,
@@ -191,6 +193,7 @@ where
 {
     impl_abs_diff_eq!({luma, cb, cr});
 }
+#[cfg(feature = "approx")]
 impl<T> approx::RelativeEq for BareYCbCr<T>
 where
     T: PosNormalChannelScalar + NormalChannelScalar + approx::RelativeEq,
@@ -198,6 +201,7 @@ where
 {
     impl_rel_eq!({luma, cb, cr});
 }
+#[cfg(feature = "approx")]
 impl<T> approx::UlpsEq for BareYCbCr<T>
 where
     T: PosNormalChannelScalar + NormalChannelScalar + approx::UlpsEq,

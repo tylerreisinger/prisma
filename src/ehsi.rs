@@ -1,5 +1,6 @@
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle, Rad, Turns};
+#[cfg(feature = "approx")]
 use approx;
 use channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
@@ -168,6 +169,7 @@ where
         saturation:PosNormalBoundedChannel - 1, intensity:PosNormalBoundedChannel - 2});
 }
 
+#[cfg(feature = "approx")]
 impl<T, A> approx::AbsDiffEq for eHsi<T, A>
 where
     T: PosNormalChannelScalar + approx::AbsDiffEq<Epsilon = A::Epsilon>,
@@ -176,6 +178,7 @@ where
 {
     impl_abs_diff_eq!({hue, saturation, intensity});
 }
+#[cfg(feature = "approx")]
 impl<T, A> approx::RelativeEq for eHsi<T, A>
 where
     T: PosNormalChannelScalar + approx::RelativeEq<Epsilon = A::Epsilon>,
@@ -184,6 +187,7 @@ where
 {
     impl_rel_eq!({hue, saturation, intensity});
 }
+#[cfg(feature = "approx")]
 impl<T, A> approx::UlpsEq for eHsi<T, A>
 where
     T: PosNormalChannelScalar + approx::UlpsEq<Epsilon = A::Epsilon>,

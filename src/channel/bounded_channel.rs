@@ -1,5 +1,6 @@
 use super::scalar::{NormalChannelScalar, PosNormalChannelScalar};
 use super::traits::ColorChannel;
+#[cfg(feature = "approx")]
 use approx;
 use channel::cast::ChannelFormatCast;
 use channel::ChannelCast;
@@ -120,6 +121,7 @@ macro_rules! impl_bounded_channel_type {
             }
         }
 
+        #[cfg(feature = "approx")]
         impl<T> approx::AbsDiffEq for $name<T>
         where
             T: $scalar_type + approx::AbsDiffEq,
@@ -134,6 +136,7 @@ macro_rules! impl_bounded_channel_type {
             }
         }
 
+        #[cfg(feature = "approx")]
         impl<T> approx::RelativeEq for $name<T>
         where
             T: $scalar_type + approx::RelativeEq,
@@ -152,6 +155,7 @@ macro_rules! impl_bounded_channel_type {
             }
         }
 
+        #[cfg(feature = "approx")]
         impl<T> approx::UlpsEq for $name<T>
         where
             T: $scalar_type + approx::UlpsEq,

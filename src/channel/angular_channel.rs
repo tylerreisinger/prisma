@@ -1,4 +1,5 @@
 use angle::Angle;
+#[cfg(feature = "approx")]
 use approx;
 use channel::{ChannelCast, ChannelFormatCast, ColorChannel};
 use color;
@@ -129,6 +130,7 @@ where
     }
 }
 
+#[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for AngularChannel<T>
 where
     T: Angle + approx::AbsDiffEq,
@@ -144,6 +146,7 @@ where
             .abs_diff_eq(&other.0, epsilon * num::cast(T::period()).unwrap())
     }
 }
+#[cfg(feature = "approx")]
 impl<T> approx::RelativeEq for AngularChannel<T>
 where
     T: Angle + approx::RelativeEq,
@@ -166,6 +169,7 @@ where
     }
 }
 
+#[cfg(feature = "approx")]
 impl<T> approx::UlpsEq for AngularChannel<T>
 where
     T: Angle + approx::UlpsEq,

@@ -1,3 +1,4 @@
+#[cfg(feature = "approx")]
 use approx;
 use channel::{ChannelCast, ChannelFormatCast, ColorChannel, FreeChannelScalar, PosFreeChannel};
 use color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Lerp};
@@ -118,7 +119,7 @@ where
     impl_color_from_slice_square!(Xyz<T> {x:PosFreeChannel - 0, y:PosFreeChannel - 1,
         z:PosFreeChannel - 2});
 }
-
+#[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for Xyz<T>
 where
     T: FreeChannelScalar + approx::AbsDiffEq,
@@ -126,7 +127,7 @@ where
 {
     impl_abs_diff_eq!({x, y, z});
 }
-
+#[cfg(feature = "approx")]
 impl<T> approx::RelativeEq for Xyz<T>
 where
     T: FreeChannelScalar + approx::RelativeEq,
@@ -134,7 +135,7 @@ where
 {
     impl_rel_eq!({x, y, z});
 }
-
+#[cfg(feature = "approx")]
 impl<T> approx::UlpsEq for Xyz<T>
 where
     T: FreeChannelScalar + approx::UlpsEq,
