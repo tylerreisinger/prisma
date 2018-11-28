@@ -2,7 +2,7 @@
 use approx;
 use channel::{ChannelCast, ChannelFormatCast, ColorChannel, FreeChannelScalar};
 use color::{Bounded, Lerp};
-use num;
+use num_traits;
 use std::fmt;
 
 pub struct FreeChannelTag;
@@ -22,7 +22,7 @@ where
     type Tag = PosFreeChannelTag;
 
     fn min_bound() -> T {
-        num::cast(0).unwrap()
+        num_traits::cast(0).unwrap()
     }
 
     fn max_bound() -> T {
@@ -53,14 +53,14 @@ where
     T: FreeChannelScalar,
 {
     fn normalize(self) -> Self {
-        if self.0 < num::cast(0.0).unwrap() {
-            PosFreeChannel::new(num::cast(0.0).unwrap())
+        if self.0 < num_traits::cast(0.0).unwrap() {
+            PosFreeChannel::new(num_traits::cast(0.0).unwrap())
         } else {
             self
         }
     }
     fn is_normalized(&self) -> bool {
-        if self.0 < num::cast(0.0).unwrap() {
+        if self.0 < num_traits::cast(0.0).unwrap() {
             false
         } else {
             true

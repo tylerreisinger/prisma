@@ -13,8 +13,8 @@ use convert;
 use hsl;
 use hsv;
 use hwb;
-use num;
-use num::cast;
+use num_traits;
+use num_traits::cast;
 use std::fmt;
 use std::mem;
 use std::slice;
@@ -79,7 +79,7 @@ where
 
 impl<T> Rgb<T>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
 {
     pub fn get_chromaticity_coordinates(&self) -> ChromaticityCoordinates<T> {
         let alpha = cast::<_, T>(0.5).unwrap()
@@ -194,7 +194,7 @@ where
 
 impl<T> Default for Rgb<T>
 where
-    T: PosNormalChannelScalar + num::Zero,
+    T: PosNormalChannelScalar + num_traits::Zero,
 {
     impl_color_default!(Rgb {
         red: PosNormalBoundedChannel,
@@ -214,7 +214,7 @@ where
 
 fn get_hue_factor_and_ordered_chans<T>(color: &Rgb<T>) -> (T, T, T, T, T)
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
 {
     let mut scaling_factor = T::zero();
     let (mut c1, mut c2, mut c3) = color.clone().to_tuple();
@@ -241,7 +241,7 @@ fn make_hue_from_factor_and_ordered_chans<T>(
     scale_factor: &T,
 ) -> T
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
 {
     let epsilon = cast(1e-10).unwrap();
     let hue_scalar =
@@ -272,7 +272,7 @@ where
 
 impl<T> convert::GetHue for Rgb<T>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
 {
     type InternalAngle = angle::Turns<T>;
     fn get_hue<U>(&self) -> U
@@ -290,7 +290,7 @@ where
 
 impl<T, A> convert::FromColor<Rgb<T>> for hsv::Hsv<T, A>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + angle::FromAngle<angle::Turns<T>>,
 {
     fn from_color(from: &Rgb<T>) -> Self {
@@ -308,7 +308,7 @@ where
 
 impl<T, A> convert::FromColor<Rgb<T>> for hsl::Hsl<T, A>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + angle::FromAngle<angle::Turns<T>>,
 {
     fn from_color(from: &Rgb<T>) -> Self {
@@ -330,7 +330,7 @@ where
 
 impl<T, A> convert::FromColor<Rgb<T>> for hwb::Hwb<T, A>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + angle::FromAngle<angle::Turns<T>>,
 {
     fn from_color(from: &Rgb<T>) -> Self {

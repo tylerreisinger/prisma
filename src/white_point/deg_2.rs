@@ -1,5 +1,5 @@
 use channel::{FreeChannelScalar, PosNormalChannelScalar};
-use num::{cast, Float};
+use num_traits::{cast, Float};
 use white_point::NamedWhitePoint;
 use xyy::XyY;
 use xyz::Xyz;

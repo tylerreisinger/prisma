@@ -1,6 +1,6 @@
 use angle;
 use angle::Angle;
-use num;
+use num_traits;
 
 pub trait ChannelFormatCast<Out>: Sized {
     fn cast(self) -> Out;
@@ -240,11 +240,11 @@ macro_rules! impl_channel_format_cast_for_angle {
         impl<T, A, U> ChannelFormatCast<A> for angle::$angle<T>
         where
             A: Angle<Scalar = U>,
-            T: num::Float + ChannelFormatCast<U>,
-            U: num::Float,
+            T: num_traits::Float + ChannelFormatCast<U>,
+            U: num_traits::Float,
         {
             fn cast(self) -> A {
-                let scalar: U = self.0.cast() * (A::period() / num::cast(Self::period()).unwrap());
+                let scalar: U = self.0.cast() * (A::period() / num_traits::cast(Self::period()).unwrap());
                 A::new(scalar)
             }
         }

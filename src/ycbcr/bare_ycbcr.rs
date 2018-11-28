@@ -7,7 +7,7 @@ use channel::{
     PosNormalBoundedChannel, PosNormalChannelScalar,
 };
 use color::{Bounded, Color, Flatten, FromTuple, Invert, Lerp};
-use num;
+use num_traits;
 use std::fmt;
 use std::mem;
 use std::slice;
@@ -212,7 +212,7 @@ where
 
 impl<T> Default for BareYCbCr<T>
 where
-    T: PosNormalChannelScalar + NormalChannelScalar + num::Zero,
+    T: PosNormalChannelScalar + NormalChannelScalar + num_traits::Zero,
 {
     impl_color_default!(BareYCbCr {
         luma: PosNormalBoundedChannel,
@@ -232,7 +232,7 @@ where
 
 impl<T> BareYCbCr<T>
 where
-    T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
+    T: NormalChannelScalar + PosNormalChannelScalar + num_traits::NumCast,
 {
     /// Construct a `BareYCbCr` by converting from an Rgb `value`.
     ///
@@ -262,17 +262,17 @@ where
 
         let (i1, i2, i3) = self.clone().to_tuple();
         let shifted_color = (
-            num::cast::<_, f64>(i1).unwrap() - num::cast::<_, f64>(shift.0).unwrap(),
-            num::cast::<_, f64>(i2).unwrap() - num::cast::<_, f64>(shift.1).unwrap(),
-            num::cast::<_, f64>(i3).unwrap() - num::cast::<_, f64>(shift.2).unwrap(),
+            num_traits::cast::<_, f64>(i1).unwrap() - num_traits::cast::<_, f64>(shift.0).unwrap(),
+            num_traits::cast::<_, f64>(i2).unwrap() - num_traits::cast::<_, f64>(shift.1).unwrap(),
+            num_traits::cast::<_, f64>(i3).unwrap() - num_traits::cast::<_, f64>(shift.2).unwrap(),
         );
 
         let (r, g, b) = transform.transform_vector(shifted_color);
 
         let out = Rgb::from_channels(
-            num::cast(r).unwrap(),
-            num::cast(g).unwrap(),
-            num::cast(b).unwrap(),
+            num_traits::cast(r).unwrap(),
+            num_traits::cast(g).unwrap(),
+            num_traits::cast(b).unwrap(),
         );
 
         match out_of_gamut_mode {

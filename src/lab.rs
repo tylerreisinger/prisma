@@ -5,7 +5,7 @@ use channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar, PosFreeChannel,
 };
 use color::{Bounded, Color, Flatten, FromTuple, Lerp};
-use num;
+use num_traits;
 use std::fmt;
 use std::mem;
 use std::slice;
@@ -174,9 +174,9 @@ where
         let x = from.x() / wp.x();
         let y = from.y() / wp.y();
         let z = from.z() / wp.z();
-        let L = num::cast::<_, T>(116.0).unwrap() * Lab::lab_f(y) - num::cast(16.0).unwrap();
-        let a = num::cast::<_, T>(500.0).unwrap() * (Lab::lab_f(x) - Lab::lab_f(y));
-        let b = num::cast::<_, T>(200.0).unwrap() * (Lab::lab_f(y) - Lab::lab_f(z));
+        let L = num_traits::cast::<_, T>(116.0).unwrap() * Lab::lab_f(y) - num_traits::cast(16.0).unwrap();
+        let a = num_traits::cast::<_, T>(500.0).unwrap() * (Lab::lab_f(x) - Lab::lab_f(y));
+        let b = num_traits::cast::<_, T>(200.0).unwrap() * (Lab::lab_f(y) - Lab::lab_f(z));
 
         Lab::from_channels(L, a, b)
     }
@@ -196,7 +196,7 @@ where
         if channel > Self::epsilon() {
             channel.cbrt()
         } else {
-            (Self::kappa() * channel + num::cast(16.0).unwrap()) / num::cast(116.0).unwrap()
+            (Self::kappa() * channel + num_traits::cast(16.0).unwrap()) / num_traits::cast(116.0).unwrap()
         }
     }
 
@@ -205,13 +205,13 @@ where
         if f3 > Self::epsilon() {
             f3
         } else {
-            (num::cast::<_, T>(116.0).unwrap() * f - num::cast::<_, T>(16.00).unwrap())
+            (num_traits::cast::<_, T>(116.0).unwrap() * f - num_traits::cast::<_, T>(16.00).unwrap())
                 / Self::kappa()
         }
     }
     fn calc_y(L: T) -> T {
         if L > Self::kappa() * Self::epsilon() {
-            let num = (L + num::cast::<_, T>(16.0).unwrap()) / num::cast::<_, T>(116.0).unwrap();
+            let num = (L + num_traits::cast::<_, T>(16.0).unwrap()) / num_traits::cast::<_, T>(116.0).unwrap();
             num * num * num
         } else {
             L / Self::kappa()
@@ -219,22 +219,22 @@ where
     }
 
     fn inv_f_x(a: T, fy: T) -> T {
-        a / num::cast::<_, T>(500.0).unwrap() + fy
+        a / num_traits::cast::<_, T>(500.0).unwrap() + fy
     }
     fn inv_f_y(L: T) -> T {
-        (L + num::cast::<_, T>(16.0).unwrap()) / num::cast::<_, T>(116.0).unwrap()
+        (L + num_traits::cast::<_, T>(16.0).unwrap()) / num_traits::cast::<_, T>(116.0).unwrap()
     }
     fn inv_f_z(b: T, fy: T) -> T {
-        fy - b / num::cast::<_, T>(200.0).unwrap()
+        fy - b / num_traits::cast::<_, T>(200.0).unwrap()
     }
 
     #[inline]
     pub fn epsilon() -> T {
-        num::cast(0.008856451679035631).unwrap()
+        num_traits::cast(0.008856451679035631).unwrap()
     }
     #[inline]
     pub fn kappa() -> T {
-        num::cast(903.2962962963).unwrap()
+        num_traits::cast(903.2962962963).unwrap()
     }
 }
 

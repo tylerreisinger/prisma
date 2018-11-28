@@ -10,8 +10,8 @@ use color;
 use color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
 use convert::{decompose_hue_segment, FromColor, GetHue, TryFromColor};
 use hsi::Hsi;
-use num;
-use num::Float;
+use num_traits;
+use num_traits::Float;
 use rgb::Rgb;
 use std::fmt;
 use std::mem;
@@ -77,12 +77,12 @@ where
         self.intensity.0 = val;
     }
     pub fn is_same_as_hsi(&self) -> bool {
-        let deg_hue = Deg::from_angle(self.hue().clone()) % Deg(num::cast::<_, T>(120.0).unwrap());
-        let i_limit = num::cast::<_, T>(2.0 / 3.0).unwrap()
-            - (deg_hue - Deg(num::cast::<_, T>(60.0).unwrap()))
+        let deg_hue = Deg::from_angle(self.hue().clone()) % Deg(num_traits::cast::<_, T>(120.0).unwrap());
+        let i_limit = num_traits::cast::<_, T>(2.0 / 3.0).unwrap()
+            - (deg_hue - Deg(num_traits::cast::<_, T>(60.0).unwrap()))
                 .scalar()
                 .abs()
-                / Deg(num::cast::<_, T>(180.0).unwrap()).scalar();
+                / Deg(num_traits::cast::<_, T>(180.0).unwrap()).scalar();
 
         self.intensity() <= i_limit
     }
@@ -159,7 +159,7 @@ where
 
 impl<T, A> color::Flatten for eHsi<T, A>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Turns<T>>,
 {
     type ScalarFormat = T;
@@ -174,7 +174,7 @@ impl<T, A> approx::AbsDiffEq for eHsi<T, A>
 where
     T: PosNormalChannelScalar + approx::AbsDiffEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::AbsDiffEq,
-    A::Epsilon: Clone + num::Float,
+    A::Epsilon: Clone + num_traits::Float,
 {
     impl_abs_diff_eq!({hue, saturation, intensity});
 }
@@ -183,7 +183,7 @@ impl<T, A> approx::RelativeEq for eHsi<T, A>
 where
     T: PosNormalChannelScalar + approx::RelativeEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::RelativeEq,
-    A::Epsilon: Clone + num::Float,
+    A::Epsilon: Clone + num_traits::Float,
 {
     impl_rel_eq!({hue, saturation, intensity});
 }
@@ -192,15 +192,15 @@ impl<T, A> approx::UlpsEq for eHsi<T, A>
 where
     T: PosNormalChannelScalar + approx::UlpsEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::UlpsEq,
-    A::Epsilon: Clone + num::Float,
+    A::Epsilon: Clone + num_traits::Float,
 {
     impl_ulps_eq!({hue, saturation, intensity});
 }
 
 impl<T, A> Default for eHsi<T, A>
 where
-    T: PosNormalChannelScalar + num::Zero,
-    A: AngularChannelScalar + num::Zero,
+    T: PosNormalChannelScalar + num_traits::Zero,
+    A: AngularChannelScalar + num_traits::Zero,
 {
     impl_color_default!(eHsi {
         hue: AngularChannel,
@@ -233,7 +233,7 @@ where
 
 impl<T, A> TryFromColor<Hsi<T, A>> for eHsi<T, A>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>>,
 {
     fn try_from_color(from: &Hsi<T, A>) -> Option<eHsi<T, A>> {
@@ -251,7 +251,7 @@ where
 
 impl<T, A> TryFromColor<eHsi<T, A>> for Hsi<T, A>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>>,
 {
     fn try_from_color(from: &eHsi<T, A>) -> Option<Hsi<T, A>> {
@@ -269,40 +269,40 @@ where
 
 impl<T, A> FromColor<Rgb<T>> for eHsi<T, A>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>>,
 {
     fn from_color(from: &Rgb<T>) -> Self {
-        let epsilon: T = num::cast(1e-10).unwrap();
+        let epsilon: T = num_traits::cast(1e-10).unwrap();
         let coords = from.get_chromaticity_coordinates();
 
         let hue_unnormal: A = coords.get_hue::<A>();
         let hue = Angle::normalize(hue_unnormal);
-        let deg_hue = Deg::from_angle(hue.clone()) % Deg(num::cast::<_, T>(120.0).unwrap());
+        let deg_hue = Deg::from_angle(hue.clone()) % Deg(num_traits::cast::<_, T>(120.0).unwrap());
 
         let min = from.red().min(from.green().min(from.blue()));
         let max = from.red().max(from.green().max(from.blue()));
 
         let sum = from.red() + from.green() + from.blue();
-        let intensity = num::cast::<_, T>(1.0 / 3.0).unwrap() * sum;
+        let intensity = num_traits::cast::<_, T>(1.0 / 3.0).unwrap() * sum;
 
-        let i_limit: T = num::cast::<_, T>(2.0 / 3.0).unwrap()
-            - (deg_hue - Deg(num::cast::<_, T>(60.0).unwrap()))
+        let i_limit: T = num_traits::cast::<_, T>(2.0 / 3.0).unwrap()
+            - (deg_hue - Deg(num_traits::cast::<_, T>(60.0).unwrap()))
                 .scalar()
                 .abs()
-                / Deg(num::cast::<_, T>(180.0).unwrap()).scalar();
+                / Deg(num_traits::cast::<_, T>(180.0).unwrap()).scalar();
 
-        let one: T = num::cast(1.0).unwrap();
+        let one: T = num_traits::cast(1.0).unwrap();
 
         let saturation;
         if intensity <= i_limit {
-            saturation = if intensity != num::cast::<_, T>(0.0).unwrap() {
+            saturation = if intensity != num_traits::cast::<_, T>(0.0).unwrap() {
                 one - min / intensity
             } else {
-                num::cast(0.0).unwrap()
+                num_traits::cast(0.0).unwrap()
             };
         } else {
-            let three: T = num::cast(3.0).unwrap();
+            let three: T = num_traits::cast(3.0).unwrap();
             saturation = one - ((three * (one - max)) / (three - sum + epsilon));
         }
 
@@ -312,20 +312,20 @@ where
 
 impl<T, A> FromColor<eHsi<T, A>> for Rgb<T>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T>,
 {
     fn from_color(from: &eHsi<T, A>) -> Rgb<T> {
-        let one = num::cast::<_, T>(1.0).unwrap();
-        let one_eighty = num::cast::<_, T>(180.0).unwrap();
+        let one = num_traits::cast::<_, T>(1.0).unwrap();
+        let one_eighty = num_traits::cast::<_, T>(180.0).unwrap();
 
         let (hue_seg, _) = decompose_hue_segment(from);
-        let scaled_frac = Deg::from_angle(from.hue()) % Deg(num::cast(120.0).unwrap());
+        let scaled_frac = Deg::from_angle(from.hue()) % Deg(num_traits::cast(120.0).unwrap());
 
         // I < i_threshold => Use standard Hsi -> Rgb method.
         // Otherwise, we use the eHsi method.
-        let i_threshold = num::cast::<_, T>(2.0 / 3.0).unwrap()
-            - (scaled_frac.scalar() - num::cast(60.0).unwrap()).abs() / (one_eighty);
+        let i_threshold = num_traits::cast::<_, T>(2.0 / 3.0).unwrap()
+            - (scaled_frac.scalar() - num_traits::cast(60.0).unwrap()).abs() / (one_eighty);
 
         // Standard Hsi conversion
         if from.intensity() < i_threshold {
@@ -333,9 +333,9 @@ where
             let c2 = from.intensity()
                 * (one
                     + (from.saturation() * scaled_frac.cos())
-                        / (Angle::cos(Deg(num::cast(60.0).unwrap()) - scaled_frac)));
+                        / (Angle::cos(Deg(num_traits::cast(60.0).unwrap()) - scaled_frac)));
 
-            let c3 = num::cast::<_, T>(3.0).unwrap() * from.intensity() - (c1 + c2);
+            let c3 = num_traits::cast::<_, T>(3.0).unwrap() * from.intensity() - (c1 + c2);
 
             match hue_seg {
                 0 | 1 => Rgb::from_channels(c2, c3, c1),
@@ -347,9 +347,9 @@ where
         } else {
             let deg_hue = Deg::from_angle(from.hue());
             let shifted_hue = match hue_seg {
-                1 | 2 => deg_hue - Deg(num::cast(240.0).unwrap()),
+                1 | 2 => deg_hue - Deg(num_traits::cast(240.0).unwrap()),
                 3 | 4 => deg_hue,
-                5 | 0 => deg_hue - Deg(num::cast(120.0).unwrap()),
+                5 | 0 => deg_hue - Deg(num_traits::cast(120.0).unwrap()),
                 _ => unreachable!(),
             };
 
@@ -358,9 +358,9 @@ where
                 - (one - from.intensity())
                     * (one
                         + (from.saturation() * shifted_hue.cos())
-                            / (Deg(num::cast::<_, T>(60.0).unwrap()) - shifted_hue).cos());
+                            / (Deg(num_traits::cast::<_, T>(60.0).unwrap()) - shifted_hue).cos());
 
-            let c3 = num::cast::<_, T>(3.0).unwrap() * from.intensity() - (c1 + c2);
+            let c3 = num_traits::cast::<_, T>(3.0).unwrap() * from.intensity() - (c1 + c2);
 
             match hue_seg {
                 1 | 2 => Rgb::from_channels(c3, c1, c2),

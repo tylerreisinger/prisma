@@ -1,7 +1,7 @@
 use angle;
 use angle::*;
 use color;
-use num::{cast, Float, Integer, NumCast, Zero};
+use num_traits::{cast, Float, PrimInt, NumCast, Zero};
 use std::ops;
 
 pub trait FreeChannelScalar: Clone + Float + Default {}
@@ -102,7 +102,7 @@ pub trait NormalChannelScalar: BoundedChannelScalar {
 
 fn lerp_flat_int<T, P>(left: &T, right: &T, pos: P) -> T
 where
-    T: Integer + Clone + NumCast,
+    T: PrimInt + Clone + NumCast,
     P: Float + NumCast,
 {
     let inv_pos = P::one() - pos;

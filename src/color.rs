@@ -1,4 +1,4 @@
-use num;
+use num_traits;
 
 pub trait Color: Clone + PartialEq {
     type Tag;
@@ -34,7 +34,7 @@ pub trait Color3: Color {}
 pub trait Color4: Color {}
 
 pub trait Lerp {
-    type Position: num::Float;
+    type Position: num_traits::Float;
     fn lerp(&self, right: &Self, pos: Self::Position) -> Self;
 }
 

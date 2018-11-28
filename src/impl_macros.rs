@@ -150,7 +150,7 @@ macro_rules! impl_color_lerp_angular {
     ($name: ident<$T: ident> {$ang_field: ident, $($fields: ident),*}) => {
 
         fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
-            let tpos: $T::Position = num::cast(pos).unwrap();
+            let tpos: $T::Position = num_traits::cast(pos).unwrap();
             $name {
                 $ang_field: self.$ang_field.lerp(&right.$ang_field, pos),
                 $($fields: self.$fields.lerp(&right.$fields, tpos.clone())),*

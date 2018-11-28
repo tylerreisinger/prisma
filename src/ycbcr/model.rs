@@ -7,12 +7,12 @@
 
 use channel::{NormalChannelScalar, PosNormalChannelScalar};
 use linalg::Matrix3;
-use num;
+use num_traits;
 use ycbcr::YCbCr;
 
 /// A coordinate shift for the components of a `YCbCr` model.
 ///
-/// This is mostly used to shift integer components of a `YCbCr` color.
+/// This is mostly used to shift PrimInt components of a `YCbCr` color.
 /// There are some YCbCr standards that place "footroom" and "headroom"
 /// padding onto the components of a color. The shift allows for such
 /// ranges to be modeled generically.
@@ -115,14 +115,14 @@ pub struct JpegModel;
 /// Panics if either `kr` or `kb` are negative, or if the sum of them is greater than 1.0
 pub fn build_transform<T>(kr: T, kb: T) -> Matrix3<T>
 where
-    T: num::Float,
+    T: num_traits::Float,
 {
-    assert!(kr + kb < num::cast(1.0).unwrap());
-    assert!(kr >= num::cast(0.0).unwrap());
-    assert!(kb >= num::cast(0.0).unwrap());
+    assert!(kr + kb < num_traits::cast(1.0).unwrap());
+    assert!(kr >= num_traits::cast(0.0).unwrap());
+    assert!(kb >= num_traits::cast(0.0).unwrap());
 
-    let half = num::cast::<_, T>(0.5).unwrap();
-    let one = num::cast::<_, T>(1.0).unwrap();
+    let half = num_traits::cast::<_, T>(0.5).unwrap();
+    let one = num_traits::cast::<_, T>(1.0).unwrap();
 
     let kg = one - kr - kb;
 
@@ -186,14 +186,14 @@ where
 
 impl<T> Canonicalize<T> for CustomYCbCrModel
 where
-    T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
+    T: PosNormalChannelScalar + NormalChannelScalar + num_traits::NumCast,
     StandardShift<T>: YCbCrShift<T>,
 {
     fn to_canonical_representation(from: &YCbCr<T, Self>) -> (T, T, T) {
         (
             from.luma(),
-            from.cb() * num::cast(0.436).unwrap(),
-            from.cr() * num::cast(0.615).unwrap(),
+            from.cb() * num_traits::cast(0.436).unwrap(),
+            from.cr() * num_traits::cast(0.615).unwrap(),
         )
     }
 }
@@ -220,14 +220,14 @@ impl<'a> YCbCrTransform for &'a CustomYCbCrModel {
 
 impl<'a, T> Canonicalize<T> for &'a CustomYCbCrModel
 where
-    T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
+    T: PosNormalChannelScalar + NormalChannelScalar + num_traits::NumCast,
     StandardShift<T>: YCbCrShift<T>,
 {
     fn to_canonical_representation(from: &YCbCr<T, Self>) -> (T, T, T) {
         (
             from.luma(),
-            from.cb() * num::cast(0.436).unwrap(),
-            from.cr() * num::cast(0.615).unwrap(),
+            from.cb() * num_traits::cast(0.436).unwrap(),
+            from.cr() * num_traits::cast(0.615).unwrap(),
         )
     }
 }
@@ -281,14 +281,14 @@ where
 }
 impl<T> Canonicalize<T> for Bt709Model
 where
-    T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
+    T: PosNormalChannelScalar + NormalChannelScalar + num_traits::NumCast,
     StandardShift<T>: YCbCrShift<T>,
 {
     fn to_canonical_representation(from: &YCbCr<T, Self>) -> (T, T, T) {
         (
             from.luma(),
-            from.cb() * num::cast(0.436).unwrap(),
-            from.cr() * num::cast(0.615).unwrap(),
+            from.cb() * num_traits::cast(0.436).unwrap(),
+            from.cr() * num_traits::cast(0.615).unwrap(),
         )
     }
 }
@@ -327,14 +327,14 @@ where
 }
 impl<T> Canonicalize<T> for YiqModel
 where
-    T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
+    T: PosNormalChannelScalar + NormalChannelScalar + num_traits::NumCast,
     StandardShift<T>: YCbCrShift<T>,
 {
     fn to_canonical_representation(from: &YCbCr<T, Self>) -> (T, T, T) {
         (
             from.luma(),
-            from.cb() * num::cast(0.5957).unwrap(),
-            from.cr() * num::cast(0.5226).unwrap(),
+            from.cb() * num_traits::cast(0.5957).unwrap(),
+            from.cr() * num_traits::cast(0.5226).unwrap(),
         )
     }
 }
@@ -372,14 +372,14 @@ where
 }
 impl<T> Canonicalize<T> for JpegModel
 where
-    T: PosNormalChannelScalar + NormalChannelScalar + num::NumCast,
+    T: PosNormalChannelScalar + NormalChannelScalar + num_traits::NumCast,
     StandardShift<T>: YCbCrShift<T>,
 {
     fn to_canonical_representation(from: &YCbCr<T, Self>) -> (T, T, T) {
         (
             from.luma(),
-            from.cb() * num::cast(0.436).unwrap(),
-            from.cr() * num::cast(0.615).unwrap(),
+            from.cb() * num_traits::cast(0.436).unwrap(),
+            from.cr() * num_traits::cast(0.615).unwrap(),
         )
     }
 }

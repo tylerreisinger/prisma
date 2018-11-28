@@ -1,6 +1,6 @@
 use angle::{Angle, FromAngle, Rad};
 use convert::{GetChroma, GetHue};
-use num;
+use num_traits;
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct ChromaticityCoordinates<T> {
@@ -10,7 +10,7 @@ pub struct ChromaticityCoordinates<T> {
 
 impl<T> ChromaticityCoordinates<T>
 where
-    T: num::Float,
+    T: num_traits::Float,
 {
     pub fn new(alpha: T, beta: T) -> Self {
         ChromaticityCoordinates {
@@ -22,7 +22,7 @@ where
 
 impl<T> Default for ChromaticityCoordinates<T>
 where
-    T: num::Float,
+    T: num_traits::Float,
 {
     fn default() -> Self {
         ChromaticityCoordinates {
@@ -34,7 +34,7 @@ where
 
 impl<T> GetChroma for ChromaticityCoordinates<T>
 where
-    T: num::Float,
+    T: num_traits::Float,
 {
     type ChromaType = T;
 
@@ -45,7 +45,7 @@ where
 
 impl<T> GetHue for ChromaticityCoordinates<T>
 where
-    T: num::Float,
+    T: num_traits::Float,
 {
     type InternalAngle = Rad<T>;
 

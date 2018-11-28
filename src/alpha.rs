@@ -2,7 +2,7 @@
 use approx;
 use channel::{ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar};
 use color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor};
-use num;
+use num_traits;
 use std::fmt;
 use std::marker::PhantomData;
 use std::mem;
@@ -174,7 +174,7 @@ impl<T, InnerColor> approx::AbsDiffEq for Alpha<T, InnerColor>
 where
     T: PosNormalChannelScalar + approx::AbsDiffEq<Epsilon = InnerColor::Epsilon>,
     InnerColor: Color + approx::AbsDiffEq,
-    InnerColor::Epsilon: Clone + num::Float,
+    InnerColor::Epsilon: Clone + num_traits::Float,
 {
     impl_abs_diff_eq!({color, alpha});
 }
@@ -183,7 +183,7 @@ impl<T, InnerColor> approx::RelativeEq for Alpha<T, InnerColor>
 where
     T: PosNormalChannelScalar + approx::RelativeEq<Epsilon = InnerColor::Epsilon>,
     InnerColor: Color + approx::RelativeEq,
-    InnerColor::Epsilon: Clone + num::Float,
+    InnerColor::Epsilon: Clone + num_traits::Float,
 {
     impl_rel_eq!({color, alpha});
 }
@@ -192,15 +192,15 @@ impl<T, InnerColor> approx::UlpsEq for Alpha<T, InnerColor>
 where
     T: PosNormalChannelScalar + approx::UlpsEq<Epsilon = InnerColor::Epsilon>,
     InnerColor: Color + approx::UlpsEq,
-    InnerColor::Epsilon: Clone + num::Float,
+    InnerColor::Epsilon: Clone + num_traits::Float,
 {
     impl_ulps_eq!({color, alpha});
 }
 
 impl<T, InnerColor> Default for Alpha<T, InnerColor>
 where
-    T: PosNormalChannelScalar + Default + num::Zero,
-    InnerColor: Color + Default + num::Zero,
+    T: PosNormalChannelScalar + Default + num_traits::Zero,
+    InnerColor: Color + Default + num_traits::Zero,
 {
     fn default() -> Self {
         Alpha {

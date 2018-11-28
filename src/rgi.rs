@@ -5,8 +5,8 @@ use channel::{
 };
 use color::{Bounded, Color, Flatten, FromTuple, Lerp};
 use convert::FromColor;
-use num;
-use num::Float;
+use num_traits;
+use num_traits::Float;
 use rgb::Rgb;
 use std::fmt;
 use std::mem;
@@ -27,8 +27,8 @@ where
     T: PosNormalChannelScalar + Float,
 {
     pub fn from_channels(red: T, green: T, intensity: T) -> Self {
-        let zero = num::cast(0.0).unwrap();
-        if red + green > num::cast(1.0).unwrap() || red + green < num::cast(0.0).unwrap() {
+        let zero = num_traits::cast(0.0).unwrap();
+        if red + green > num_traits::cast(1.0).unwrap() || red + green < num_traits::cast(0.0).unwrap() {
             panic!("rgi channels must sum to exactly 1.0");
         }
         assert!(red >= zero);
@@ -56,7 +56,7 @@ where
         self.green.0.clone()
     }
     pub fn blue(&self) -> T {
-        num::cast::<_, T>(1.0).unwrap() - self.green() - self.red()
+        num_traits::cast::<_, T>(1.0).unwrap() - self.green() - self.red()
     }
     pub fn intensity(&self) -> T {
         self.intensity.0.clone()
@@ -91,13 +91,13 @@ where
             panic!("rgi color channels must be 1.0 or below");
         }
 
-        let zero = num::cast(0.0).unwrap();
+        let zero = num_traits::cast(0.0).unwrap();
         let rem_scale = c2 + c3;
-        let rem = num::cast::<_, T>(1.0).unwrap() - new_primary;
+        let rem = num_traits::cast::<_, T>(1.0).unwrap() - new_primary;
         if rem_scale > zero {
             (new_primary, (c2 / rem_scale) * rem, (c3 / rem_scale) * rem)
         } else {
-            let one_half = num::cast(0.5).unwrap();
+            let one_half = num_traits::cast(0.5).unwrap();
             (new_primary, rem * one_half, rem * one_half)
         }
     }
@@ -189,7 +189,7 @@ where
 
 impl<T> Default for Rgi<T>
 where
-    T: PosNormalChannelScalar + num::Zero + Float,
+    T: PosNormalChannelScalar + num_traits::Zero + Float,
 {
     impl_color_default!(Rgi {
         red: PosNormalBoundedChannel,
@@ -212,14 +212,14 @@ where
     T: PosNormalChannelScalar + Float,
 {
     fn from_color(from: &Rgb<T>) -> Self {
-        let zero = num::cast(0.0).unwrap();
+        let zero = num_traits::cast(0.0).unwrap();
         let sum = from.red() + from.green() + from.blue();
 
         if sum != zero {
             let r = from.red() / sum;
             let g = from.green() / sum;
 
-            let i = num::cast::<_, T>(1.0 / 3.0).unwrap() * sum;
+            let i = num_traits::cast::<_, T>(1.0 / 3.0).unwrap() * sum;
 
             Rgi::from_channels(r, g, i)
         } else {
@@ -233,7 +233,7 @@ where
     T: PosNormalChannelScalar + Float,
 {
     fn from_color(from: &Rgi<T>) -> Self {
-        let sum = from.intensity() * num::cast(3.0).unwrap();
+        let sum = from.intensity() * num_traits::cast(3.0).unwrap();
         let red = from.red() * sum;
         let green = from.green() * sum;
         let blue = from.blue() * sum;

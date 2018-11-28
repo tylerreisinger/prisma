@@ -11,7 +11,7 @@ use color;
 use color::{Color, FromTuple};
 use convert;
 use convert::GetChroma;
-use num;
+use num_traits;
 use rgb::Rgb;
 use std::fmt;
 use std::mem;
@@ -152,7 +152,7 @@ where
 
 impl<T, A> color::Flatten for Hsl<T, A>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
 {
     type ScalarFormat = T;
@@ -167,7 +167,7 @@ impl<T, A> approx::AbsDiffEq for Hsl<T, A>
 where
     T: PosNormalChannelScalar + approx::AbsDiffEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::AbsDiffEq,
-    A::Epsilon: Clone + num::Float,
+    A::Epsilon: Clone + num_traits::Float,
 {
     impl_abs_diff_eq!({hue, saturation, lightness});
 }
@@ -176,7 +176,7 @@ impl<T, A> approx::RelativeEq for Hsl<T, A>
 where
     T: PosNormalChannelScalar + approx::RelativeEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::RelativeEq,
-    A::Epsilon: Clone + num::Float,
+    A::Epsilon: Clone + num_traits::Float,
 {
     impl_rel_eq!({hue, saturation, lightness});
 }
@@ -185,15 +185,15 @@ impl<T, A> approx::UlpsEq for Hsl<T, A>
 where
     T: PosNormalChannelScalar + approx::UlpsEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::UlpsEq,
-    A::Epsilon: Clone + num::Float,
+    A::Epsilon: Clone + num_traits::Float,
 {
     impl_ulps_eq!({hue, saturation, lightness});
 }
 
 impl<T, A> Default for Hsl<T, A>
 where
-    T: PosNormalChannelScalar + num::Zero,
-    A: AngularChannelScalar + num::Zero,
+    T: PosNormalChannelScalar + num_traits::Zero,
+    A: AngularChannelScalar + num_traits::Zero,
 {
     impl_color_default!(Hsl {
         hue: AngularChannel,
@@ -217,13 +217,13 @@ where
 
 impl<T, A> convert::GetChroma for Hsl<T, A>
 where
-    T: PosNormalChannelScalar + ops::Mul<T, Output = T> + num::Float,
+    T: PosNormalChannelScalar + ops::Mul<T, Output = T> + num_traits::Float,
     A: AngularChannelScalar,
 {
     type ChromaType = T;
     fn get_chroma(&self) -> T {
-        let one: T = num::cast(1.0).unwrap();
-        let scaled_lightness: T = (num::cast::<_, T>(2.0).unwrap() * self.lightness() - one).abs();
+        let one: T = num_traits::cast(1.0).unwrap();
+        let scaled_lightness: T = (num_traits::cast::<_, T>(2.0).unwrap() * self.lightness() - one).abs();
 
         (one - scaled_lightness) * self.saturation()
     }
@@ -238,17 +238,17 @@ where
 
 impl<T, A> convert::FromColor<Hsl<T, A>> for Rgb<T>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar,
 {
     fn from_color(from: &Hsl<T, A>) -> Self {
         let (hue_seg, hue_frac) = convert::decompose_hue_segment(from);
-        let one_half: T = num::cast(0.5).unwrap();
+        let one_half: T = num_traits::cast(0.5).unwrap();
 
-        let hue_frac_t: T = num::cast(hue_frac).unwrap();
+        let hue_frac_t: T = num_traits::cast(hue_frac).unwrap();
 
         let chroma = from.get_chroma();
-        let channel_min = from.lightness() - num::cast::<_, T>(0.5).unwrap() * chroma;
+        let channel_min = from.lightness() - num_traits::cast::<_, T>(0.5).unwrap() * chroma;
         let channel_max = channel_min + chroma;
 
         match hue_seg {

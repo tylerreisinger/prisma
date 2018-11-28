@@ -5,7 +5,7 @@ use encoding::{
     LinearEncoding,
 };
 use linalg::Matrix3;
-use num;
+use num_traits;
 use rgb::Rgb;
 use xyz::Xyz;
 
@@ -64,7 +64,7 @@ pub type LinearColorSpace<T> = EncodedColorSpace<T, LinearEncoding>;
 
 impl<T, E> EncodedColorSpace<T, E>
 where
-    T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
     E: ColorEncoding,
 {
     pub fn new(
@@ -145,7 +145,7 @@ where
     }
 
     fn calc_transform_vector(primary_vec: (T, T)) -> (T, T, T) {
-        let one: T = num::cast(1.0).unwrap();
+        let one: T = num_traits::cast(1.0).unwrap();
 
         let (ix, iy) = primary_vec;
 
@@ -159,7 +159,7 @@ where
 
 impl<T> EncodedColorSpace<T, LinearEncoding>
 where
-    T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
 {
     pub fn new_linear_color_space(
         red: RgbPrimary<T>,
@@ -173,12 +173,12 @@ where
 
 impl<T, E> ChannelEncoder for EncodedColorSpace<T, E>
 where
-    T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
     E: ColorEncoding,
 {
     fn encode_channel<U>(&self, val: U) -> U
     where
-        U: num::Float,
+        U: num_traits::Float,
     {
         self.encoding.encode_channel(val)
     }
@@ -186,12 +186,12 @@ where
 
 impl<T, E> ChannelDecoder for EncodedColorSpace<T, E>
 where
-    T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
     E: ColorEncoding,
 {
     fn decode_channel<U>(&self, val: U) -> U
     where
-        U: num::Float,
+        U: num_traits::Float,
     {
         self.encoding.decode_channel(val)
     }
@@ -199,7 +199,7 @@ where
 
 impl<T, E> ColorSpace<T> for EncodedColorSpace<T, E>
 where
-    T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
     E: ColorEncoding,
 {
     fn red_primary(&self) -> RgbPrimary<T> {
@@ -227,7 +227,7 @@ where
 
 impl<T, E> ColorSpaceEncoding<E> for EncodedColorSpace<T, E>
 where
-    T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
     E: ColorEncoding,
 {
     fn encoding(&self) -> &E {
@@ -245,7 +245,7 @@ where
 
 impl<T, EIn, E> ColorToXyz<T, EncodedColor<Rgb<T>, EIn>> for EncodedColorSpace<T, E>
 where
-    T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
     Rgb<T>: EncodableColor,
     LinearColor<Rgb<T>>: ToXyz<T>,
     E: ColorEncoding,
@@ -258,7 +258,7 @@ where
 
 impl<T, E> XyzToColor<T, EncodedColor<Rgb<T>, E>> for EncodedColorSpace<T, E>
 where
-    T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
     Rgb<T>: EncodableColor,
     LinearColor<Rgb<T>>: FromXyz<T>,
     E: ColorEncoding,
@@ -270,7 +270,7 @@ where
 
 impl<T, E> ColorToXyz<T, Rgb<T>> for EncodedColorSpace<T, E>
 where
-    T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
     Rgb<T>: EncodableColor,
     LinearColor<Rgb<T>>: ToXyz<T>,
     E: ColorEncoding,
@@ -286,7 +286,7 @@ where
 
 impl<T> ToXyz<T> for LinearColor<Rgb<T>>
 where
-    T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
     Rgb<T>: EncodableColor + Color<ChannelsTuple = (T, T, T)>,
 {
     fn convert_to_xyz<S>(&self, space: &S) -> Xyz<T>
@@ -300,7 +300,7 @@ where
 }
 impl<T> FromXyz<T> for LinearColor<Rgb<T>>
 where
-    T: num::Float + FreeChannelScalar + PosNormalChannelScalar,
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
     Rgb<T>: EncodableColor + Color<ChannelsTuple = (T, T, T)>,
 {
     fn convert_from_xyz<S>(from: &Xyz<T>, space: &S) -> Self

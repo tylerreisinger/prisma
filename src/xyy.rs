@@ -7,7 +7,7 @@ use channel::{
 };
 use color::{Bounded, Color, Flatten, FromTuple, Lerp};
 use convert::FromColor;
-use num;
+use num_traits;
 use std::fmt;
 use std::mem;
 use std::slice;
@@ -25,11 +25,11 @@ pub struct XyY<T> {
 
 impl<T> XyY<T>
 where
-    T: FreeChannelScalar + num::Float + PosNormalChannelScalar,
+    T: FreeChannelScalar + num_traits::Float + PosNormalChannelScalar,
 {
     pub fn from_channels(x: T, y: T, Y: T) -> Self {
-        let zero = num::cast(0.0).unwrap();
-        if x + y > num::cast(1.0).unwrap() || x + y < zero {
+        let zero = num_traits::cast(0.0).unwrap();
+        if x + y > num_traits::cast(1.0).unwrap() || x + y < zero {
             panic!("xyY `x` and `y` channels are ratios and must sum to be between 0 and 1");
         }
         assert!(x >= zero);
@@ -52,7 +52,7 @@ where
         self.y.0.clone()
     }
     pub fn z(&self) -> T {
-        num::cast::<_, T>(1.0).unwrap() - self.x() - self.y()
+        num_traits::cast::<_, T>(1.0).unwrap() - self.x() - self.y()
     }
     pub fn Y(&self) -> T {
         self.Y.0.clone()
@@ -83,13 +83,13 @@ where
             panic!("xyY chromaticity channels must be between 0.0 and 1.0")
         }
 
-        let zero = num::cast(0.0).unwrap();
+        let zero = num_traits::cast(0.0).unwrap();
         let rem_scale = c2 + c3;
-        let rem = num::cast::<_, T>(1.0).unwrap() - primary;
+        let rem = num_traits::cast::<_, T>(1.0).unwrap() - primary;
         if rem_scale > zero {
             (primary, (c2 / rem_scale) * rem, (c3 / rem_scale) * rem)
         } else {
-            let one_half = num::cast(0.5).unwrap();
+            let one_half = num_traits::cast(0.5).unwrap();
             (primary, rem * one_half, rem * one_half)
         }
     }
@@ -97,7 +97,7 @@ where
 
 impl<T> Color for XyY<T>
 where
-    T: FreeChannelScalar + PosNormalChannelScalar + num::Float,
+    T: FreeChannelScalar + PosNormalChannelScalar + num_traits::Float,
 {
     type Tag = XyYTag;
     type ChannelsTuple = (T, T, T);
@@ -113,7 +113,7 @@ where
 
 impl<T> FromTuple for XyY<T>
 where
-    T: FreeChannelScalar + num::Float + PosNormalChannelScalar,
+    T: FreeChannelScalar + num_traits::Float + PosNormalChannelScalar,
 {
     fn from_tuple(values: (T, T, T)) -> Self {
         XyY::from_channels(values.0, values.1, values.2)
@@ -122,7 +122,7 @@ where
 
 impl<T> Bounded for XyY<T>
 where
-    T: FreeChannelScalar + PosNormalChannelScalar + num::Float,
+    T: FreeChannelScalar + PosNormalChannelScalar + num_traits::Float,
 {
     fn normalize(self) -> Self {
         self
@@ -134,7 +134,7 @@ where
 
 impl<T> Lerp for XyY<T>
 where
-    T: FreeChannelScalar + PosNormalChannelScalar + num::Float,
+    T: FreeChannelScalar + PosNormalChannelScalar + num_traits::Float,
     FreeChannel<T>: Lerp,
     PosNormalBoundedChannel<T>: Lerp<Position = <FreeChannel<T> as Lerp>::Position>,
 {
@@ -144,7 +144,7 @@ where
 
 impl<T> Flatten for XyY<T>
 where
-    T: FreeChannelScalar + PosNormalChannelScalar + num::Float,
+    T: FreeChannelScalar + PosNormalChannelScalar + num_traits::Float,
 {
     type ScalarFormat = T;
 
@@ -180,7 +180,7 @@ where
 
 impl<T> Default for XyY<T>
 where
-    T: FreeChannelScalar + PosNormalChannelScalar + num::Float,
+    T: FreeChannelScalar + PosNormalChannelScalar + num_traits::Float,
 {
     impl_color_default!(XyY {
         x: PosNormalBoundedChannel,
@@ -191,7 +191,7 @@ where
 
 impl<T> fmt::Display for XyY<T>
 where
-    T: FreeChannelScalar + PosNormalChannelScalar + num::Float + fmt::Display,
+    T: FreeChannelScalar + PosNormalChannelScalar + num_traits::Float + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "xyY({}, {}, {})", self.x, self.y, self.Y)
@@ -200,10 +200,10 @@ where
 
 impl<T> FromColor<Xyz<T>> for XyY<T>
 where
-    T: FreeChannelScalar + PosNormalChannelScalar + num::Float,
+    T: FreeChannelScalar + PosNormalChannelScalar + num_traits::Float,
 {
     fn from_color(from: &Xyz<T>) -> Self {
-        let zero = num::cast(0.0).unwrap();
+        let zero = num_traits::cast(0.0).unwrap();
         if from.x() < zero || from.y() < zero || from.z() < zero {
             panic!("Cannot convert an XYZ color with negative channels to xyY");
         }
@@ -223,10 +223,10 @@ where
 
 impl<T> FromColor<XyY<T>> for Xyz<T>
 where
-    T: FreeChannelScalar + PosNormalChannelScalar + num::Float,
+    T: FreeChannelScalar + PosNormalChannelScalar + num_traits::Float,
 {
     fn from_color(from: &XyY<T>) -> Self {
-        let zero = num::cast(0.0).unwrap();
+        let zero = num_traits::cast(0.0).unwrap();
         if from.y() == zero {
             Xyz::from_channels(zero, zero, zero)
         } else {

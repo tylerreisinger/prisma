@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Tyler Reisinger <reisinger.tyler@gmail.com>"]
 
 [dependencies]
-num = "0.1"
+num-traits = "^0.2"
 approx = { version = "^0.3", optional = true }
 angular-units = "^0.2.4"
 

@@ -2,7 +2,7 @@
 
 #[cfg(feature = "approx")]
 use approx;
-use num;
+use num_traits;
 use std::fmt;
 use std::mem;
 use std::ops;
@@ -28,7 +28,7 @@ where
 
 impl<T> Matrix3<T>
 where
-    T: num::Num + Copy + num::Zero + num::NumCast,
+    T: num_traits::Num + Copy + num_traits::Zero + num_traits::NumCast,
 {
     #[inline]
     pub fn new(values: [T; 9]) -> Self {
@@ -42,8 +42,8 @@ where
 
     #[inline]
     pub fn identity() -> Self {
-        let one = num::cast(1.0).unwrap();
-        let zero = num::cast(0.0).unwrap();
+        let one = num_traits::cast(1.0).unwrap();
+        let zero = num_traits::cast(0.0).unwrap();
         Matrix3::new([one, zero, zero, zero, one, zero, zero, zero, one])
     }
 
@@ -110,8 +110,8 @@ where
 
         let cofactor_transpose = Matrix3::new([ca, cd, cg, cb, ce, ch, cc, cf, ci]);
 
-        if det != num::cast(0).unwrap() {
-            Some(cofactor_transpose * (num::cast::<_, T>(1).unwrap() / det))
+        if det != num_traits::cast(0).unwrap() {
+            Some(cofactor_transpose * (num_traits::cast::<_, T>(1).unwrap() / det))
         } else {
             None
         }
@@ -120,12 +120,12 @@ where
     #[inline]
     pub fn transform_vector<U>(&self, vec: (U, U, U)) -> (U, U, U)
     where
-        U: num::NumCast,
+        U: num_traits::NumCast,
     {
         let (v1, v2, v3) = vec;
-        let fv1: T = num::cast(v1).unwrap();
-        let fv2: T = num::cast(v2).unwrap();
-        let fv3: T = num::cast(v3).unwrap();
+        let fv1: T = num_traits::cast(v1).unwrap();
+        let fv2: T = num_traits::cast(v2).unwrap();
+        let fv3: T = num_traits::cast(v3).unwrap();
 
         let (m1, m2, m3, m4, m5, m6, m7, m8, m9) = self.clone().to_tuple();
 
@@ -133,9 +133,9 @@ where
         let fo2 = fv1 * m4 + fv2 * m5 + fv3 * m6;
         let fo3 = fv1 * m7 + fv2 * m8 + fv3 * m9;
 
-        let o1: U = num::cast(fo1).unwrap();
-        let o2: U = num::cast(fo2).unwrap();
-        let o3: U = num::cast(fo3).unwrap();
+        let o1: U = num_traits::cast(fo1).unwrap();
+        let o2: U = num_traits::cast(fo2).unwrap();
+        let o3: U = num_traits::cast(fo3).unwrap();
 
         (o1, o2, o3)
     }
@@ -143,7 +143,7 @@ where
 
 impl<T> Default for Matrix3<T>
 where
-    T: num::Num + Copy + Default,
+    T: num_traits::Num + Copy + Default,
 {
     fn default() -> Self {
         Matrix3 {
@@ -155,7 +155,7 @@ where
 #[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for Matrix3<T>
 where
-    T: num::Num + Copy + approx::AbsDiffEq,
+    T: num_traits::Num + Copy + approx::AbsDiffEq,
     T::Epsilon: Clone,
 {
     type Epsilon = T::Epsilon;
@@ -176,7 +176,7 @@ where
 #[cfg(feature = "approx")]
 impl<T> approx::RelativeEq for Matrix3<T>
 where
-    T: num::Num + Copy + approx::RelativeEq,
+    T: num_traits::Num + Copy + approx::RelativeEq,
     T::Epsilon: Clone,
 {
     fn default_max_relative() -> Self::Epsilon {
@@ -199,7 +199,7 @@ where
 #[cfg(feature = "approx")]
 impl<T> approx::UlpsEq for Matrix3<T>
 where
-    T: num::Num + Copy + approx::UlpsEq,
+    T: num_traits::Num + Copy + approx::UlpsEq,
     T::Epsilon: Clone,
 {
     fn default_max_ulps() -> u32 {
@@ -216,7 +216,7 @@ where
 }
 impl<T> ops::Div<T> for Matrix3<T>
 where
-    T: num::Num + Copy,
+    T: num_traits::Num + Copy,
 {
     type Output = Self;
     #[inline]
@@ -229,7 +229,7 @@ where
 
 impl<T> ops::DivAssign<T> for Matrix3<T>
 where
-    T: num::Num + Copy,
+    T: num_traits::Num + Copy,
 {
     #[inline]
     fn div_assign(&mut self, rhs: T) {
@@ -249,7 +249,7 @@ where
 
 impl<T> ops::Mul for Matrix3<T>
 where
-    T: num::Num + Copy,
+    T: num_traits::Num + Copy,
 {
     type Output = Self;
     #[inline]
@@ -261,7 +261,7 @@ where
 }
 impl<T> ops::Mul<T> for Matrix3<T>
 where
-    T: num::Num + Copy,
+    T: num_traits::Num + Copy,
 {
     type Output = Self;
     #[inline]
@@ -274,7 +274,7 @@ where
 
 impl<T> ops::MulAssign<T> for Matrix3<T>
 where
-    T: num::Num + Copy,
+    T: num_traits::Num + Copy,
 {
     #[inline]
     fn mul_assign(&mut self, rhs: T) {
@@ -294,7 +294,7 @@ where
 
 impl<T> ops::MulAssign for Matrix3<T>
 where
-    T: num::Num + Copy,
+    T: num_traits::Num + Copy,
 {
     #[inline]
     fn mul_assign(&mut self, rhs: Matrix3<T>) {
@@ -342,7 +342,7 @@ where
 
 impl<T> ops::Add for Matrix3<T>
 where
-    T: num::Num + Copy + ops::AddAssign<T>,
+    T: num_traits::Num + Copy + ops::AddAssign<T>,
 {
     type Output = Self;
     #[inline]
@@ -355,7 +355,7 @@ where
 
 impl<T> ops::AddAssign for Matrix3<T>
 where
-    T: num::Num + Copy + ops::AddAssign<T>,
+    T: num_traits::Num + Copy + ops::AddAssign<T>,
 {
     #[inline]
     fn add_assign(&mut self, rhs: Self) {
@@ -375,7 +375,7 @@ where
 
 impl<T> ops::Sub for Matrix3<T>
 where
-    T: num::Num + Copy + ops::SubAssign<T>,
+    T: num_traits::Num + Copy + ops::SubAssign<T>,
 {
     type Output = Self;
     #[inline]
@@ -388,7 +388,7 @@ where
 
 impl<T> ops::SubAssign for Matrix3<T>
 where
-    T: num::Num + Copy + ops::SubAssign<T>,
+    T: num_traits::Num + Copy + ops::SubAssign<T>,
 {
     #[inline]
     fn sub_assign(&mut self, rhs: Self) {
@@ -408,7 +408,7 @@ where
 
 impl<T> fmt::Display for Matrix3<T>
 where
-    T: num::Num + Copy + fmt::Display,
+    T: num_traits::Num + Copy + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(

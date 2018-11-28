@@ -2,7 +2,7 @@
 #![allow(clippy::unreadable_literal)]
 #![allow(clippy::module_inception)]
 
-extern crate num;
+extern crate num_traits;
 #[cfg(any(feature = "approx", test))]
 #[macro_use]
 extern crate approx;

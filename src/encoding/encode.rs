@@ -1,19 +1,19 @@
 use channel::{ChannelFormatCast, PosNormalChannelScalar};
 use color::Color;
 use encoding::EncodedColor;
-use num;
+use num_traits;
 use rgb::Rgb;
 use std::fmt;
 
 pub trait ChannelEncoder {
     fn encode_channel<T>(&self, val: T) -> T
     where
-        T: num::Float;
+        T: num_traits::Float;
 }
 pub trait ChannelDecoder {
     fn decode_channel<T>(&self, val: T) -> T
     where
-        T: num::Float;
+        T: num_traits::Float;
 }
 
 pub trait EncodableColor: Color {
@@ -51,13 +51,13 @@ impl SrgbEncoding {
 impl ChannelDecoder for SrgbEncoding {
     fn decode_channel<T>(&self, val: T) -> T
     where
-        T: num::Float,
+        T: num_traits::Float,
     {
-        let one: T = num::cast(1.0).unwrap();
-        let a: T = num::cast(0.055).unwrap();
-        let k: T = num::cast(12.92).unwrap();
-        let gamma: T = num::cast(2.4).unwrap();
-        let linear_threshold: T = num::cast(0.04045).unwrap();
+        let one: T = num_traits::cast(1.0).unwrap();
+        let a: T = num_traits::cast(0.055).unwrap();
+        let k: T = num_traits::cast(12.92).unwrap();
+        let gamma: T = num_traits::cast(2.4).unwrap();
+        let linear_threshold: T = num_traits::cast(0.04045).unwrap();
 
         if val.abs() < linear_threshold {
             val / k
@@ -71,13 +71,13 @@ impl ChannelDecoder for SrgbEncoding {
 impl ChannelEncoder for SrgbEncoding {
     fn encode_channel<T>(&self, val: T) -> T
     where
-        T: num::Float,
+        T: num_traits::Float,
     {
-        let one: T = num::cast(1.0).unwrap();
-        let a: T = num::cast(0.055).unwrap();
-        let k: T = num::cast(12.92).unwrap();
-        let gamma: T = num::cast(2.4).unwrap();
-        let linear_threshold: T = num::cast(0.0031308).unwrap();
+        let one: T = num_traits::cast(1.0).unwrap();
+        let a: T = num_traits::cast(0.055).unwrap();
+        let k: T = num_traits::cast(12.92).unwrap();
+        let gamma: T = num_traits::cast(2.4).unwrap();
+        let linear_threshold: T = num_traits::cast(0.0031308).unwrap();
 
         if val.abs() < linear_threshold {
             k * val
@@ -110,7 +110,7 @@ impl LinearEncoding {
 impl ChannelDecoder for LinearEncoding {
     fn decode_channel<T>(&self, val: T) -> T
     where
-        T: num::Float,
+        T: num_traits::Float,
     {
         val
     }
@@ -119,7 +119,7 @@ impl ChannelDecoder for LinearEncoding {
 impl ChannelEncoder for LinearEncoding {
     fn encode_channel<T>(&self, val: T) -> T
     where
-        T: num::Float,
+        T: num_traits::Float,
     {
         val
     }
@@ -141,7 +141,7 @@ impl fmt::Display for LinearEncoding {
 
 impl<T> GammaEncoding<T>
 where
-    T: num::Float,
+    T: num_traits::Float,
 {
     pub fn new(val: T) -> Self {
         GammaEncoding(val)
@@ -154,39 +154,39 @@ where
 
 impl<T> ChannelDecoder for GammaEncoding<T>
 where
-    T: num::Float,
+    T: num_traits::Float,
 {
     fn decode_channel<U>(&self, val: U) -> U
     where
-        U: num::Float,
+        U: num_traits::Float,
     {
-        val.signum() * val.abs().powf(num::cast(self.0).unwrap())
+        val.signum() * val.abs().powf(num_traits::cast(self.0).unwrap())
     }
 }
 impl<T> ChannelEncoder for GammaEncoding<T>
 where
-    T: num::Float,
+    T: num_traits::Float,
 {
     fn encode_channel<U>(&self, val: U) -> U
     where
-        U: num::Float,
+        U: num_traits::Float,
     {
-        let one: T = num::cast(1.0).unwrap();
-        val.signum() * val.abs().powf(num::cast(one / self.0).unwrap())
+        let one: T = num_traits::cast(1.0).unwrap();
+        val.signum() * val.abs().powf(num_traits::cast(one / self.0).unwrap())
     }
 }
 
-impl<T: num::Float> ColorEncoding for GammaEncoding<T> {}
+impl<T: num_traits::Float> ColorEncoding for GammaEncoding<T> {}
 
-impl<T: num::Float> Default for GammaEncoding<T> {
+impl<T: num_traits::Float> Default for GammaEncoding<T> {
     fn default() -> Self {
-        GammaEncoding::new(num::cast(2.2).unwrap())
+        GammaEncoding::new(num_traits::cast(2.2).unwrap())
     }
 }
 
 impl<T> fmt::Display for GammaEncoding<T>
 where
-    T: num::Float + fmt::Display,
+    T: num_traits::Float + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "γ={}", self.0)

@@ -11,7 +11,7 @@ use channel::{
 use color::{Bounded, Color, Flatten, FromTuple, Lerp, PolarColor};
 use convert::{FromColor, GetChroma, GetHue};
 use lab::Lab;
-use num;
+use num_traits;
 use std::fmt;
 use std::mem;
 use std::slice;
@@ -128,7 +128,7 @@ where
 
 impl<T, A> Flatten for Lchab<T, A>
 where
-    T: FreeChannelScalar + num::Float,
+    T: FreeChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Turns<T>>,
 {
     type ScalarFormat = T;
@@ -149,7 +149,7 @@ impl<T, A> approx::AbsDiffEq for Lchab<T, A>
 where
     T: FreeChannelScalar + approx::AbsDiffEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::AbsDiffEq,
-    A::Epsilon: Clone + num::Float,
+    A::Epsilon: Clone + num_traits::Float,
 {
     impl_abs_diff_eq!({L, chroma, hue});
 }
@@ -158,7 +158,7 @@ impl<T, A> approx::RelativeEq for Lchab<T, A>
 where
     T: FreeChannelScalar + approx::RelativeEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::RelativeEq,
-    A::Epsilon: Clone + num::Float,
+    A::Epsilon: Clone + num_traits::Float,
 {
     impl_rel_eq!({L, chroma, hue});
 }
@@ -167,15 +167,15 @@ impl<T, A> approx::UlpsEq for Lchab<T, A>
 where
     T: FreeChannelScalar + approx::UlpsEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::UlpsEq,
-    A::Epsilon: Clone + num::Float,
+    A::Epsilon: Clone + num_traits::Float,
 {
     impl_ulps_eq!({L, chroma, hue});
 }
 
 impl<T, A> Default for Lchab<T, A>
 where
-    T: FreeChannelScalar + num::Zero,
-    A: AngularChannelScalar + num::Zero,
+    T: FreeChannelScalar + num_traits::Zero,
+    A: AngularChannelScalar + num_traits::Zero,
 {
     impl_color_default!(Lchab {
         hue: AngularChannel,

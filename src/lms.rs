@@ -4,7 +4,7 @@ use channel::{ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeCha
 use color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Lerp};
 use convert::FromColor;
 use linalg::Matrix3;
-use num;
+use num_traits;
 use std::fmt;
 use std::marker::PhantomData;
 use std::mem;
@@ -244,29 +244,29 @@ where
 {
     fn forward_transform() -> Matrix3<T> {
         Matrix3::<T>::new([
-            num::cast(0.7328).unwrap(),
-            num::cast(0.4296).unwrap(),
-            num::cast(-0.1624).unwrap(),
-            num::cast(-0.7036).unwrap(),
-            num::cast(1.6975).unwrap(),
-            num::cast(0.0061).unwrap(),
-            num::cast(0.0030).unwrap(),
-            num::cast(0.0136).unwrap(),
-            num::cast(0.9834).unwrap(),
+            num_traits::cast(0.7328).unwrap(),
+            num_traits::cast(0.4296).unwrap(),
+            num_traits::cast(-0.1624).unwrap(),
+            num_traits::cast(-0.7036).unwrap(),
+            num_traits::cast(1.6975).unwrap(),
+            num_traits::cast(0.0061).unwrap(),
+            num_traits::cast(0.0030).unwrap(),
+            num_traits::cast(0.0136).unwrap(),
+            num_traits::cast(0.9834).unwrap(),
         ])
     }
 
     fn inverse_transform() -> Matrix3<T> {
         Matrix3::<T>::new([
-            num::cast(1.09612).unwrap(),
-            num::cast(-0.27887).unwrap(),
-            num::cast(0.18275).unwrap(),
-            num::cast(0.45437).unwrap(),
-            num::cast(0.47353).unwrap(),
-            num::cast(0.07209).unwrap(),
-            num::cast(-0.009628).unwrap(),
-            num::cast(-0.005698).unwrap(),
-            num::cast(1.015326).unwrap(),
+            num_traits::cast(1.09612).unwrap(),
+            num_traits::cast(-0.27887).unwrap(),
+            num_traits::cast(0.18275).unwrap(),
+            num_traits::cast(0.45437).unwrap(),
+            num_traits::cast(0.47353).unwrap(),
+            num_traits::cast(0.07209).unwrap(),
+            num_traits::cast(-0.009628).unwrap(),
+            num_traits::cast(-0.005698).unwrap(),
+            num_traits::cast(1.015326).unwrap(),
         ])
     }
 }
@@ -277,29 +277,29 @@ where
 {
     fn forward_transform() -> Matrix3<T> {
         Matrix3::<T>::new([
-            num::cast(0.8562).unwrap(),
-            num::cast(0.3372).unwrap(),
-            num::cast(-0.1934).unwrap(),
-            num::cast(-0.8360).unwrap(),
-            num::cast(1.8327).unwrap(),
-            num::cast(0.0033).unwrap(),
-            num::cast(0.0357).unwrap(),
-            num::cast(-0.0469).unwrap(),
-            num::cast(1.0112).unwrap(),
+            num_traits::cast(0.8562).unwrap(),
+            num_traits::cast(0.3372).unwrap(),
+            num_traits::cast(-0.1934).unwrap(),
+            num_traits::cast(-0.8360).unwrap(),
+            num_traits::cast(1.8327).unwrap(),
+            num_traits::cast(0.0033).unwrap(),
+            num_traits::cast(0.0357).unwrap(),
+            num_traits::cast(-0.0469).unwrap(),
+            num_traits::cast(1.0112).unwrap(),
         ])
     }
 
     fn inverse_transform() -> Matrix3<T> {
         Matrix3::<T>::new([
-            num::cast(0.98740).unwrap(),
-            num::cast(-0.17683).unwrap(),
-            num::cast(0.18943).unwrap(),
-            num::cast(0.45044).unwrap(),
-            num::cast(0.46493).unwrap(),
-            num::cast(0.08463).unwrap(),
-            num::cast(-0.01397).unwrap(),
-            num::cast(0.027807).unwrap(),
-            num::cast(0.98616).unwrap(),
+            num_traits::cast(0.98740).unwrap(),
+            num_traits::cast(-0.17683).unwrap(),
+            num_traits::cast(0.18943).unwrap(),
+            num_traits::cast(0.45044).unwrap(),
+            num_traits::cast(0.46493).unwrap(),
+            num_traits::cast(0.08463).unwrap(),
+            num_traits::cast(-0.01397).unwrap(),
+            num_traits::cast(0.027807).unwrap(),
+            num_traits::cast(0.98616).unwrap(),
         ])
     }
 }
@@ -310,29 +310,29 @@ where
 {
     fn forward_transform() -> Matrix3<T> {
         Matrix3::<T>::new([
-            num::cast(0.8951).unwrap(),
-            num::cast(0.2664).unwrap(),
-            num::cast(-0.1614).unwrap(),
-            num::cast(-0.7502).unwrap(),
-            num::cast(1.7135).unwrap(),
-            num::cast(0.0367).unwrap(),
-            num::cast(0.0389).unwrap(),
-            num::cast(-0.0685).unwrap(),
-            num::cast(1.0296).unwrap(),
+            num_traits::cast(0.8951).unwrap(),
+            num_traits::cast(0.2664).unwrap(),
+            num_traits::cast(-0.1614).unwrap(),
+            num_traits::cast(-0.7502).unwrap(),
+            num_traits::cast(1.7135).unwrap(),
+            num_traits::cast(0.0367).unwrap(),
+            num_traits::cast(0.0389).unwrap(),
+            num_traits::cast(-0.0685).unwrap(),
+            num_traits::cast(1.0296).unwrap(),
         ])
     }
 
     fn inverse_transform() -> Matrix3<T> {
         Matrix3::<T>::new([
-            num::cast(0.98699).unwrap(),
-            num::cast(-0.14705).unwrap(),
-            num::cast(0.15996).unwrap(),
-            num::cast(0.43231).unwrap(),
-            num::cast(0.51836).unwrap(),
-            num::cast(0.04929).unwrap(),
-            num::cast(-0.00853).unwrap(),
-            num::cast(0.040043).unwrap(),
-            num::cast(0.96849).unwrap(),
+            num_traits::cast(0.98699).unwrap(),
+            num_traits::cast(-0.14705).unwrap(),
+            num_traits::cast(0.15996).unwrap(),
+            num_traits::cast(0.43231).unwrap(),
+            num_traits::cast(0.51836).unwrap(),
+            num_traits::cast(0.04929).unwrap(),
+            num_traits::cast(-0.00853).unwrap(),
+            num_traits::cast(0.040043).unwrap(),
+            num_traits::cast(0.96849).unwrap(),
         ])
     }
 }

@@ -11,8 +11,8 @@ use channel::{
 use color;
 use color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
 use convert;
-use num;
-use num::cast;
+use num_traits;
+use num_traits::cast;
 use rgb;
 use std::fmt;
 use std::mem;
@@ -153,7 +153,7 @@ where
 
 impl<T, A> color::Flatten for Hsv<T, A>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
 {
     type ScalarFormat = T;
@@ -168,7 +168,7 @@ impl<T, A> approx::AbsDiffEq for Hsv<T, A>
 where
     T: PosNormalChannelScalar + approx::AbsDiffEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::AbsDiffEq,
-    A::Epsilon: Clone + num::Float,
+    A::Epsilon: Clone + num_traits::Float,
 {
     impl_abs_diff_eq!({hue, saturation, value});
 }
@@ -177,7 +177,7 @@ impl<T, A> approx::RelativeEq for Hsv<T, A>
 where
     T: PosNormalChannelScalar + approx::RelativeEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::RelativeEq,
-    A::Epsilon: Clone + num::Float,
+    A::Epsilon: Clone + num_traits::Float,
 {
     impl_rel_eq!({hue, saturation, value});
 }
@@ -186,15 +186,15 @@ impl<T, A> approx::UlpsEq for Hsv<T, A>
 where
     T: PosNormalChannelScalar + approx::UlpsEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::UlpsEq,
-    A::Epsilon: Clone + num::Float,
+    A::Epsilon: Clone + num_traits::Float,
 {
     impl_ulps_eq!({hue, saturation, value});
 }
 
 impl<T, A> Default for Hsv<T, A>
 where
-    T: PosNormalChannelScalar + num::Zero,
-    A: AngularChannelScalar + num::Zero,
+    T: PosNormalChannelScalar + num_traits::Zero,
+    A: AngularChannelScalar + num_traits::Zero,
 {
     impl_color_default!(Hsv {
         hue: AngularChannel,
@@ -233,7 +233,7 @@ where
 
 impl<T, A> convert::FromColor<Hsv<T, A>> for rgb::Rgb<T>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar,
 {
     fn from_color(from: &Hsv<T, A>) -> Self {

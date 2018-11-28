@@ -5,7 +5,7 @@ use approx;
 use channel::{ChannelFormatCast, NormalChannelScalar, PosNormalChannelScalar};
 use color::{Bounded, Color, Flatten, FromTuple, Invert, Lerp};
 use convert::{FromColor, TryFromColor};
-use num;
+use num_traits;
 use rgb::Rgb;
 use std::fmt;
 
@@ -150,7 +150,7 @@ where
 
 impl<T, M> YCbCr<T, M>
 where
-    T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
+    T: NormalChannelScalar + PosNormalChannelScalar + num_traits::NumCast,
     M: YCbCrModel<T> + Canonicalize<T>,
 {
     /// Return the channels rescaled to their canonical range for the given `YCbCr`'s model.
@@ -165,7 +165,7 @@ where
 
 impl<T> YCbCr<T, YiqModel>
 where
-    T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
+    T: NormalChannelScalar + PosNormalChannelScalar + num_traits::NumCast,
     YiqModel: YCbCrModel<T>,
 {
     /// The `I` channel of a YIQ color.
@@ -333,7 +333,7 @@ where
 
 impl<T, M> Default for YCbCr<T, M>
 where
-    T: NormalChannelScalar + PosNormalChannelScalar + num::Zero + Default,
+    T: NormalChannelScalar + PosNormalChannelScalar + num_traits::Zero + Default,
     M: YCbCrModel<T> + UnitModel<T>,
 {
     fn default() -> Self {
@@ -353,7 +353,7 @@ where
 
 impl<T, M> YCbCr<T, M>
 where
-    T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
+    T: NormalChannelScalar + PosNormalChannelScalar + num_traits::NumCast,
     M: YCbCrModel<T> + UnitModel<T>,
 {
     /// Convert from RGB to YCbCr for UnitModels.
@@ -364,7 +364,7 @@ where
 
 impl<T, M> YCbCr<T, M>
 where
-    T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
+    T: NormalChannelScalar + PosNormalChannelScalar + num_traits::NumCast,
     M: YCbCrModel<T>,
 {
     /// Convert from RGB to YCbCr, using `model`.
@@ -389,7 +389,7 @@ where
 
 impl<T, M> FromColor<Rgb<T>> for YCbCr<T, M>
 where
-    T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
+    T: NormalChannelScalar + PosNormalChannelScalar + num_traits::NumCast,
     M: YCbCrModel<T> + UnitModel<T>,
 {
     fn from_color(from: &Rgb<T>) -> YCbCr<T, M> {
@@ -399,7 +399,7 @@ where
 
 impl<T, M> TryFromColor<YCbCr<T, M>> for Rgb<T>
 where
-    T: NormalChannelScalar + PosNormalChannelScalar + num::NumCast,
+    T: NormalChannelScalar + PosNormalChannelScalar + num_traits::NumCast,
     M: YCbCrModel<T>,
 {
     fn try_from_color(from: &YCbCr<T, M>) -> Option<Rgb<T>> {

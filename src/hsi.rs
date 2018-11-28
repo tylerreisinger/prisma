@@ -9,7 +9,7 @@ use channel::{
 use color;
 use color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
 use convert::{FromColor, GetHue, TryFromColor};
-use num;
+use num_traits;
 use rgb::Rgb;
 use std::f64::consts;
 use std::fmt;
@@ -35,7 +35,7 @@ pub struct Hsi<T, A = Deg<T>> {
 
 impl<T, A> Hsi<T, A>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T>,
 {
     pub fn from_channels(hue: A, saturation: T, intensity: T) -> Self {
@@ -83,12 +83,12 @@ where
         self.intensity.0 = val;
     }
     pub fn is_same_as_ehsi(&self) -> bool {
-        let deg_hue = Deg::from_angle(self.hue().clone()) % Deg(num::cast::<_, T>(120.0).unwrap());
-        let i_limit = num::cast::<_, T>(2.0 / 3.0).unwrap()
-            - (deg_hue - Deg(num::cast::<_, T>(60.0).unwrap()))
+        let deg_hue = Deg::from_angle(self.hue().clone()) % Deg(num_traits::cast::<_, T>(120.0).unwrap());
+        let i_limit = num_traits::cast::<_, T>(2.0 / 3.0).unwrap()
+            - (deg_hue - Deg(num_traits::cast::<_, T>(60.0).unwrap()))
                 .scalar()
                 .abs()
-                / Deg(num::cast::<_, T>(180.0).unwrap()).scalar();
+                / Deg(num_traits::cast::<_, T>(180.0).unwrap()).scalar();
 
         self.intensity() <= i_limit
     }
@@ -121,7 +121,7 @@ where
 
 impl<T, A> FromTuple for Hsi<T, A>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T>,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
@@ -165,7 +165,7 @@ where
 
 impl<T, A> color::Flatten for Hsi<T, A>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Turns<T>>,
 {
     type ScalarFormat = T;
@@ -180,7 +180,7 @@ impl<T, A> approx::AbsDiffEq for Hsi<T, A>
 where
     T: PosNormalChannelScalar + approx::AbsDiffEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::AbsDiffEq,
-    A::Epsilon: Clone + num::Float,
+    A::Epsilon: Clone + num_traits::Float,
 {
     impl_abs_diff_eq!({hue, saturation, intensity});
 }
@@ -189,7 +189,7 @@ impl<T, A> approx::RelativeEq for Hsi<T, A>
 where
     T: PosNormalChannelScalar + approx::RelativeEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::RelativeEq,
-    A::Epsilon: Clone + num::Float,
+    A::Epsilon: Clone + num_traits::Float,
 {
     impl_rel_eq!({hue, saturation, intensity});
 }
@@ -198,15 +198,15 @@ impl<T, A> approx::UlpsEq for Hsi<T, A>
 where
     T: PosNormalChannelScalar + approx::UlpsEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::UlpsEq,
-    A::Epsilon: Clone + num::Float,
+    A::Epsilon: Clone + num_traits::Float,
 {
     impl_ulps_eq!({hue, saturation, intensity});
 }
 
 impl<T, A> Default for Hsi<T, A>
 where
-    T: PosNormalChannelScalar + num::Zero,
-    A: AngularChannelScalar + num::Zero,
+    T: PosNormalChannelScalar + num_traits::Zero,
+    A: AngularChannelScalar + num_traits::Zero,
 {
     impl_color_default!(Hsi {
         hue: AngularChannel,
@@ -239,7 +239,7 @@ where
 
 impl<T, A> FromColor<Rgb<T>> for Hsi<T, A>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>> + fmt::Display,
 {
     fn from_color(from: &Rgb<T>) -> Self {
@@ -250,11 +250,11 @@ where
 
         let min = from.red().min(from.green().min(from.blue()));
         let intensity =
-            num::cast::<_, T>(1.0 / 3.0).unwrap() * (from.red() + from.green() + from.blue());
-        let saturation: T = if intensity != num::cast::<_, T>(0.0).unwrap() {
-            num::cast::<_, T>(1.0).unwrap() - min / intensity
+            num_traits::cast::<_, T>(1.0 / 3.0).unwrap() * (from.red() + from.green() + from.blue());
+        let saturation: T = if intensity != num_traits::cast::<_, T>(0.0).unwrap() {
+            num_traits::cast::<_, T>(1.0).unwrap() - min / intensity
         } else {
-            num::cast(0.0).unwrap()
+            num_traits::cast(0.0).unwrap()
         };
 
         Hsi::from_channels(hue, saturation, intensity)
@@ -263,7 +263,7 @@ where
 
 impl<T, A> TryFromColor<Hsi<T, A>> for Rgb<T>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T>,
 {
     fn try_from_color(from: &Hsi<T, A>) -> Option<Self> {
@@ -280,28 +280,28 @@ where
 
 impl<T, A> Hsi<T, A>
 where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + IntoAngle<Rad<T>, OutputScalar = T>,
 {
     pub fn to_rgb(&self, mode: OutOfGamutMode) -> Rgb<T> {
-        let pi_over_3: T = num::cast(consts::PI / 3.0).unwrap();
+        let pi_over_3: T = num_traits::cast(consts::PI / 3.0).unwrap();
         let hue_frac =
-            Rad::from_angle(self.hue()) % Rad(num::cast::<_, T>(2.0).unwrap() * pi_over_3);
+            Rad::from_angle(self.hue()) % Rad(num_traits::cast::<_, T>(2.0).unwrap() * pi_over_3);
 
-        let one = num::cast::<_, T>(1.0).unwrap();
+        let one = num_traits::cast::<_, T>(1.0).unwrap();
 
         let mut c1 = self.intensity() * (one - self.saturation());
         let mut c2 = self.intensity()
             * (one
                 + (self.saturation() * hue_frac.cos()) / (Angle::cos(Rad(pi_over_3) - hue_frac)));
-        let mut c3 = num::cast::<_, T>(3.0).unwrap() * self.intensity() - (c1 + c2);
+        let mut c3 = num_traits::cast::<_, T>(3.0).unwrap() * self.intensity() - (c1 + c2);
 
         to_rgb_out_of_gamut(self, &hue_frac, mode, &mut c1, &mut c2, &mut c3);
 
         let turns_hue = Turns::from_angle(self.hue());
-        if turns_hue < Turns(num::cast(1.0 / 3.0).unwrap()) {
+        if turns_hue < Turns(num_traits::cast(1.0 / 3.0).unwrap()) {
             Rgb::from_channels(c2, c3, c1)
-        } else if turns_hue < Turns(num::cast(2.0 / 3.0).unwrap()) {
+        } else if turns_hue < Turns(num_traits::cast(2.0 / 3.0).unwrap()) {
             Rgb::from_channels(c1, c2, c3)
         } else {
             Rgb::from_channels(c3, c1, c2)
@@ -317,10 +317,10 @@ fn to_rgb_out_of_gamut<T, A>(
     c2: &mut T,
     c3: &mut T,
 ) where
-    T: PosNormalChannelScalar + num::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T>,
 {
-    let one = num::cast(1.0).unwrap();
+    let one = num_traits::cast(1.0).unwrap();
     match mode {
         // Do nothing.
         OutOfGamutMode::Preserve => {}
@@ -342,7 +342,7 @@ fn to_rgb_out_of_gamut<T, A>(
         // without gamut problem," 2014 6th International Symposium on Communications,
         // Control and Signal Processing (ISCCSP), Athens, 2014, pp. 578-581.
         OutOfGamutMode::SaturationRescale => {
-            let pi_over_3 = num::cast(consts::PI / 3.0).unwrap();
+            let pi_over_3 = num_traits::cast(consts::PI / 3.0).unwrap();
             let cos_pi3_sub_hue = Rad::cos(Rad(pi_over_3) - *hue_frac);
             let cos_hue = hue_frac.cos();
             if *hue_frac < Rad(pi_over_3) {

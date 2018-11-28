@@ -20,8 +20,8 @@
 //! The exact canonical range for the channels
 //! varies between spaces, so we opt to normalize all chromaticity channels
 //! to a fixed [-1.0, 1.0] range for float channels. Integral channels
-//! run from 0 to `Integer::max_value()` with the central value
-//! `(Integer::max_value() >> 1) + 1` representing a neutral value.
+//! run from 0 to `PrimInt::max_value()` with the central value
+//! `(PrimInt::max_value() >> 1) + 1` representing a neutral value.
 //!
 //! YIQ is a nearly obsolete space used for NTSC televisions. It is equivalent to
 //! a 33 degree rotation from the standard YUV plane and thus can represent the same

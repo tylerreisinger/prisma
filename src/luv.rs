@@ -6,7 +6,7 @@ use channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar, PosFreeChannel,
 };
 use color::{Bounded, Color, Flatten, FromTuple, Lerp};
-use num;
+use num_traits;
 use std::fmt;
 use std::mem;
 use std::slice;
@@ -170,11 +170,11 @@ where
     T: FreeChannelScalar + fmt::Display,
 {
     pub fn from_xyz(from: &Xyz<T>, wp: &Xyz<T>) -> Self {
-        let epsilon: T = num::cast(1e-8).unwrap();
-        let four: T = num::cast(4.0).unwrap();
-        let fifteen: T = num::cast(15.0).unwrap();
-        let three: T = num::cast(3.0).unwrap();
-        let nine: T = num::cast(9.0).unwrap();
+        let epsilon: T = num_traits::cast(1e-8).unwrap();
+        let four: T = num_traits::cast(4.0).unwrap();
+        let fifteen: T = num_traits::cast(15.0).unwrap();
+        let three: T = num_traits::cast(3.0).unwrap();
+        let nine: T = num_traits::cast(9.0).unwrap();
 
         let yr = from.y() / wp.y();
         let L = Self::compute_L(yr);
@@ -186,18 +186,18 @@ where
         let ur_prime = (four * wp.x()) / r_denom;
         let vr_prime = (nine * wp.y()) / r_denom;
 
-        let u = num::cast::<_, T>(13.0).unwrap() * L * (u_prime - ur_prime);
-        let v = num::cast::<_, T>(13.0).unwrap() * L * (v_prime - vr_prime);
+        let u = num_traits::cast::<_, T>(13.0).unwrap() * L * (u_prime - ur_prime);
+        let v = num_traits::cast::<_, T>(13.0).unwrap() * L * (v_prime - vr_prime);
 
         Luv::from_channels(L, u, v)
     }
 
     pub fn to_xyz(&self, wp: &Xyz<T>) -> Xyz<T> {
-        let epsilon: T = num::cast(1e-8).unwrap();
-        let four: T = num::cast(4.0).unwrap();
-        let fifteen: T = num::cast(15.0).unwrap();
-        let three: T = num::cast(3.0).unwrap();
-        let nine: T = num::cast(9.0).unwrap();
+        let epsilon: T = num_traits::cast(1e-8).unwrap();
+        let four: T = num_traits::cast(4.0).unwrap();
+        let fifteen: T = num_traits::cast(15.0).unwrap();
+        let three: T = num_traits::cast(3.0).unwrap();
+        let nine: T = num_traits::cast(9.0).unwrap();
 
         let r_denom = wp.x() + fifteen * wp.y() + three * wp.z();
         let u0 = (four * wp.x()) / r_denom;
@@ -205,24 +205,24 @@ where
 
         let Y = Self::compute_Y(self.L());
 
-        let a = num::cast::<_, T>(1.0 / 3.0).unwrap()
-            * ((num::cast::<_, T>(52.0).unwrap() * self.L())
-                / (self.u() + num::cast::<_, T>(13.0).unwrap() * self.L() * u0 + epsilon)
-                - num::cast(1.0).unwrap());
+        let a = num_traits::cast::<_, T>(1.0 / 3.0).unwrap()
+            * ((num_traits::cast::<_, T>(52.0).unwrap() * self.L())
+                / (self.u() + num_traits::cast::<_, T>(13.0).unwrap() * self.L() * u0 + epsilon)
+                - num_traits::cast(1.0).unwrap());
 
-        let b = num::cast::<_, T>(-5.0).unwrap() * Y;
-        let c: T = num::cast(-1.0 / 3.0).unwrap();
+        let b = num_traits::cast::<_, T>(-5.0).unwrap() * Y;
+        let c: T = num_traits::cast(-1.0 / 3.0).unwrap();
         let d = Y
-            * ((num::cast::<_, T>(39.0).unwrap() * self.L())
-                / (self.v() + num::cast::<_, T>(13.0).unwrap() * self.L() * v0 + epsilon)
-                - num::cast::<_, T>(5.0).unwrap());
+            * ((num_traits::cast::<_, T>(39.0).unwrap() * self.L())
+                / (self.v() + num_traits::cast::<_, T>(13.0).unwrap() * self.L() * v0 + epsilon)
+                - num_traits::cast::<_, T>(5.0).unwrap());
 
         println!("{} {} {} {}", a, b, c, d);
         let X;
         if a != c {
             X = (d - b) / (a - c);
         } else {
-            X = num::cast(0.0).unwrap();
+            X = num_traits::cast(0.0).unwrap();
         }
 
         let Z = X * a + b;
@@ -232,7 +232,7 @@ where
 
     fn compute_Y(L: T) -> T {
         if L > Self::kappa() * Self::epsilon() {
-            let val = (L + num::cast::<_, T>(16.0).unwrap()) / num::cast::<_, T>(116.0).unwrap();
+            let val = (L + num_traits::cast::<_, T>(16.0).unwrap()) / num_traits::cast::<_, T>(116.0).unwrap();
             val * val * val
         } else {
             L / Self::kappa()
@@ -241,7 +241,7 @@ where
 
     fn compute_L(yr: T) -> T {
         if yr > Self::epsilon() {
-            num::cast::<_, T>(116.0).unwrap() * yr.cbrt() - num::cast(16.0).unwrap()
+            num_traits::cast::<_, T>(116.0).unwrap() * yr.cbrt() - num_traits::cast(16.0).unwrap()
         } else {
             Self::kappa() * yr
         }
@@ -249,11 +249,11 @@ where
 
     #[inline]
     pub fn epsilon() -> T {
-        num::cast(0.008856451679035631).unwrap()
+        num_traits::cast(0.008856451679035631).unwrap()
     }
     #[inline]
     pub fn kappa() -> T {
-        num::cast(903.2962962963).unwrap()
+        num_traits::cast(903.2962962963).unwrap()
     }
 }
 

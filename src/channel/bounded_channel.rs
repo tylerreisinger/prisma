@@ -5,7 +5,7 @@ use approx;
 use channel::cast::ChannelFormatCast;
 use channel::ChannelCast;
 use color;
-use num;
+use num_traits;
 use std::fmt;
 
 pub struct PosNormalChannelTag;
@@ -105,7 +105,7 @@ macro_rules! impl_bounded_channel_type {
 
         impl<T> Default for $name<T>
         where
-            T: $scalar_type + num::Zero,
+            T: $scalar_type + num_traits::Zero,
         {
             fn default() -> Self {
                 $name(T::zero())

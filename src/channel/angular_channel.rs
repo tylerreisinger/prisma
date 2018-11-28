@@ -4,7 +4,7 @@ use approx;
 use channel::{ChannelCast, ChannelFormatCast, ColorChannel};
 use color;
 use color::Lerp;
-use num;
+use num_traits;
 use std::fmt;
 use std::ops;
 
@@ -114,7 +114,7 @@ where
 
 impl<T> Default for AngularChannel<T>
 where
-    T: Angle + num::Zero,
+    T: Angle + num_traits::Zero,
 {
     fn default() -> Self {
         AngularChannel(T::zero())
@@ -134,7 +134,7 @@ where
 impl<T> approx::AbsDiffEq for AngularChannel<T>
 where
     T: Angle + approx::AbsDiffEq,
-    T::Epsilon: num::Float,
+    T::Epsilon: num_traits::Float,
 {
     type Epsilon = T::Epsilon;
 
@@ -143,14 +143,14 @@ where
     }
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
         self.0
-            .abs_diff_eq(&other.0, epsilon * num::cast(T::period()).unwrap())
+            .abs_diff_eq(&other.0, epsilon * num_traits::cast(T::period()).unwrap())
     }
 }
 #[cfg(feature = "approx")]
 impl<T> approx::RelativeEq for AngularChannel<T>
 where
     T: Angle + approx::RelativeEq,
-    T::Epsilon: num::Float,
+    T::Epsilon: num_traits::Float,
 {
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
@@ -163,7 +163,7 @@ where
     ) -> bool {
         self.0.clone().normalize().relative_eq(
             &other.0.clone().normalize(),
-            epsilon * num::cast(T::period()).unwrap(),
+            epsilon * num_traits::cast(T::period()).unwrap(),
             max_relative,
         )
     }
@@ -173,7 +173,7 @@ where
 impl<T> approx::UlpsEq for AngularChannel<T>
 where
     T: Angle + approx::UlpsEq,
-    T::Epsilon: num::Float,
+    T::Epsilon: num_traits::Float,
 {
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()
@@ -182,7 +182,7 @@ where
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
         self.0.ulps_eq(
             &other.0,
-            epsilon * num::cast(T::period()).unwrap(),
+            epsilon * num_traits::cast(T::period()).unwrap(),
             max_ulps,
         )
     }
