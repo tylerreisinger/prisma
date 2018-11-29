@@ -10,6 +10,7 @@ use channel::{
     AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel, PosNormalBoundedChannel,
     PosNormalChannelScalar,
 };
+use encoding::DeviceDependentColor;
 use chromaticity::ChromaticityCoordinates;
 use color;
 use color::{Color, FromTuple, HomogeneousColor};
@@ -205,6 +206,11 @@ where
     impl_color_from_slice_square!(Rgb<T> {red:PosNormalBoundedChannel - 0, 
         green:PosNormalBoundedChannel - 1, blue:PosNormalBoundedChannel - 2});
 }
+
+impl<T> DeviceDependentColor for Rgb<T>
+    where
+        T: PosNormalChannelScalar,
+{}
 
 #[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for Rgb<T>

@@ -8,6 +8,7 @@ use channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
     PosNormalBoundedChannel, PosNormalChannelScalar,
 };
+use encoding::DeviceDependentColor;
 use color;
 use color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
 use convert::{decompose_hue_segment, FromColor, GetHue, TryFromColor};
@@ -190,6 +191,12 @@ where
     impl_color_from_slice_angular!(eHsi<T, A> {hue:AngularChannel - 0, 
         saturation:PosNormalBoundedChannel - 1, intensity:PosNormalBoundedChannel - 2});
 }
+
+impl<T, A> DeviceDependentColor for eHsi<T, A>
+    where
+        T: PosNormalChannelScalar + num_traits::Float,
+        A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
+{}
 
 #[cfg(feature = "approx")]
 impl<T, A> approx::AbsDiffEq for eHsi<T, A>

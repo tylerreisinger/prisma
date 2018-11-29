@@ -5,6 +5,7 @@ use approx;
 use channel::{ChannelFormatCast, NormalChannelScalar, PosNormalChannelScalar};
 use color::{Bounded, Color, Flatten, FromTuple, Invert, Lerp};
 use convert::{FromColor, TryFromColor};
+use encoding::DeviceDependentColor;
 use num_traits;
 use rgb::Rgb;
 use std::fmt;
@@ -278,6 +279,13 @@ where
         YCbCr::from_channels(vals[0].clone(), vals[1].clone(), vals[2].clone())
     }
 }
+
+impl<T, M> DeviceDependentColor for YCbCr<T, M>
+where
+    T: NormalChannelScalar + PosNormalChannelScalar,
+    M: YCbCrModel<T>,
+{}
+
 
 #[cfg(feature = "approx")]
 impl<T, M> approx::AbsDiffEq for YCbCr<T, M>

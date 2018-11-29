@@ -19,7 +19,7 @@ pub mod linalg;
 
 pub mod white_point;
 
-pub mod color_space;
+//pub mod color_space;
 pub mod encoding;
 
 pub mod alpha;

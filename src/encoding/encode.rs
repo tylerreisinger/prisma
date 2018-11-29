@@ -1,22 +1,39 @@
+//! Traits and structs to perform encoding and decoding
+//!
+//! See the [`encoding`](../index.html) module level documentation for more information
+
 use channel::{ChannelFormatCast, PosNormalChannelScalar};
 use color::Color;
-use encoding::EncodedColor;
 use num_traits;
-use rgb::Rgb;
+use rgb::{Rgb, Rgba};
 use std::fmt;
 
+/// An object that can encode a color from a linear encoding to a different encoding
+///
+/// This is a low level trait that is unlikely to be used directly
 pub trait ChannelEncoder {
+    /// Encode a linearly-encoded channel
     fn encode_channel<T>(&self, val: T) -> T
     where
         T: num_traits::Float;
 }
+/// An object that can decode a color from some encoding to a linear encoding
+///
+/// This is a low level trait that is unlikely to be used directly
 pub trait ChannelDecoder {
+    /// Decode a channel into a linear-encoding
     fn decode_channel<T>(&self, val: T) -> T
     where
         T: num_traits::Float;
 }
 
+/// A color that can have its encoding changed
+///
+/// Because of the non-linear nature of encodings, only Rgb can have its encoding changed. The other
+/// device-dependent colors can come from an encoding, and may be stored in `EncodedColor`, but
+/// they must go through Rgb for that encoding to change.
 pub trait EncodableColor: Color {
+    /// The color type used internally to do conversions. This will always have floating-point channels
     type IntermediateColor;
     fn encode_color<Encoder>(self, enc: &Encoder) -> Self
     where
@@ -24,21 +41,21 @@ pub trait EncodableColor: Color {
     fn decode_color<Decoder>(self, dec: &Decoder) -> Self
     where
         Decoder: ChannelDecoder;
-
-    fn with_encoding<Encoding>(self, enc: Encoding) -> EncodedColor<Self, Encoding>
-    where
-        Encoding: ColorEncoding,
-    {
-        EncodedColor::new(self, enc)
-    }
 }
 
+/// An object able to encode and decode a color
 pub trait ColorEncoding: ChannelEncoder + ChannelDecoder + Sized + Clone {}
 
+/// An encoding scheme used by the sRGB color space.
+///
+/// sRGB features a small linear region at the lowest values, and then transitions to
+/// a $`\gamma`$ of 2.4.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SrgbEncoding {}
+/// A linear encoding scheme
 #[derive(Clone, Debug, PartialEq)]
 pub struct LinearEncoding {}
+/// A gamma encoding scheme with a given value for $`\gamma`$
 #[derive(Clone, Debug, PartialEq)]
 pub struct GammaEncoding<T>(pub T);
 
@@ -230,28 +247,55 @@ where
     }
 }
 
+impl<T> EncodableColor for Rgba<T>
+    where
+        T: PosNormalChannelScalar + ChannelFormatCast<f64>,
+        f64: ChannelFormatCast<T>,
+{
+    type IntermediateColor = Rgba<f64>;
+
+    fn encode_color<Encoder>(self, enc: &Encoder) -> Self
+        where
+            Encoder: ChannelEncoder,
+    {
+        let alpha = self.alpha();
+        let inner_color = self.color.encode_color(enc);
+        Rgba::from_color_and_alpha(inner_color, alpha)
+    }
+
+    fn decode_color<Decoder>(self, dec: &Decoder) -> Self
+        where
+            Decoder: ChannelDecoder,
+    {
+        let alpha = self.alpha();
+        let inner_color = self.color.decode_color(dec);
+        Rgba::from_color_and_alpha(inner_color, alpha)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
     use color::*;
     use rgb::Rgb;
+    use encoding::DeviceDependentColor;
 
     #[test]
     fn test_gamma_encoding() {
-        let c1 = Rgb::from_channels(0.0, 0.0, 0.0).with_encoding(LinearEncoding::new());
+        let c1 = Rgb::from_channels(0.0, 0.0, 0.0).encoded_as(LinearEncoding::new());
         let t1 = c1.clone().encode(GammaEncoding::new(2.0));
         assert_relative_eq!(t1.color(), c1.color(), epsilon = 1e-6);
 
-        let c2 = Rgb::from_channels(1.0, 1.0, 1.0).with_encoding(LinearEncoding::new());
+        let c2 = Rgb::from_channels(1.0, 1.0, 1.0).encoded_as(LinearEncoding::new());
         let t2 = c2.clone().encode(GammaEncoding::new(2.2));
         assert_relative_eq!(t2.color(), c2.color(), epsilon = 1e-6);
 
-        let c3 = Rgb::from_channels(0.5, 0.5, 0.5).with_encoding(LinearEncoding::new());
+        let c3 = Rgb::from_channels(0.5, 0.5, 0.5).encoded_as(LinearEncoding::new());
         let t3 = c3.clone().encode(GammaEncoding::new(2.2));
         assert_relative_eq!(*t3.color(), Rgb::broadcast(0.72974005), epsilon = 1e-6);
         assert_relative_eq!(t3.decode(), c3, epsilon = 1e-6);
 
-        let c4 = Rgb::from_channels(0.2, 0.8, 0.66).with_encoding(LinearEncoding::new());
+        let c4 = Rgb::from_channels(0.2, 0.8, 0.66).encoded_as(LinearEncoding::new());
         let t4 = c4.clone().encode(GammaEncoding::new(1.8));
         assert_relative_eq!(
             *t4.color(),
@@ -260,11 +304,11 @@ mod test {
         );
         assert_relative_eq!(t4.decode(), c4, epsilon = 1e-6);
 
-        let c5 = Rgb::from_channels(0.5, 0.5, 0.5).with_encoding(GammaEncoding::new(2.4));
+        let c5 = Rgb::from_channels(0.5, 0.5, 0.5).encoded_as(GammaEncoding::new(2.4));
         let t5 = c5.clone().decode();
         assert_relative_eq!(*t5.color(), Rgb::broadcast(0.18946457), epsilon = 1e-6);
 
-        let c6 = Rgb::from_channels(-0.3, 0.0, -1.0).with_encoding(GammaEncoding::new(2.2));
+        let c6 = Rgb::from_channels(-0.3, 0.0, -1.0).encoded_as(GammaEncoding::new(2.2));
         let t6 = c6.clone().decode();
         assert_relative_eq!(
             *t6.color(),
@@ -276,20 +320,20 @@ mod test {
 
     #[test]
     fn test_srgb_encoding() {
-        let c1 = Rgb::from_channels(0.0, 0.0, 0.0).with_encoding(LinearEncoding::new());
+        let c1 = Rgb::from_channels(0.0, 0.0, 0.0).encoded_as(LinearEncoding::new());
         let t1 = c1.clone().encode(SrgbEncoding::new());
         assert_relative_eq!(t1.color(), c1.color(), epsilon = 1e-6);
 
-        let c2 = Rgb::from_channels(1.0, 1.0, 1.0).with_encoding(LinearEncoding::new());
+        let c2 = Rgb::from_channels(1.0, 1.0, 1.0).encoded_as(LinearEncoding::new());
         let t2 = c2.clone().encode(SrgbEncoding::new());
         assert_relative_eq!(t2.color(), c2.color(), epsilon = 1e-6);
 
-        let c3 = Rgb::from_channels(0.5, 0.5, 0.5).with_encoding(LinearEncoding::new());
+        let c3 = Rgb::from_channels(0.5, 0.5, 0.5).encoded_as(LinearEncoding::new());
         let t3 = c3.clone().encode(SrgbEncoding::new());
         assert_relative_eq!(*t3.color(), Rgb::broadcast(0.735356983052), epsilon = 1e-6);
         assert_relative_eq!(t3.decode(), c3, epsilon = 1e-6);
 
-        let c4 = Rgb::from_channels(0.2, 0.8, 0.66).with_encoding(LinearEncoding::new());
+        let c4 = Rgb::from_channels(0.2, 0.8, 0.66).encoded_as(LinearEncoding::new());
         let t4 = c4.clone().encode(SrgbEncoding::new());
         assert_relative_eq!(
             *t4.color(),
@@ -298,11 +342,11 @@ mod test {
         );
         assert_relative_eq!(t4.decode(), c4, epsilon = 1e-6);
 
-        let c5 = Rgb::from_channels(0.5, 0.5, 0.5).with_encoding(SrgbEncoding::new());
+        let c5 = Rgb::from_channels(0.5, 0.5, 0.5).encoded_as(SrgbEncoding::new());
         let t5 = c5.clone().decode();
         assert_relative_eq!(*t5.color(), Rgb::broadcast(0.21404114048), epsilon = 1e-6);
 
-        let c6 = Rgb::from_channels(-0.25, -0.74, -1.00).with_encoding(LinearEncoding::new());
+        let c6 = Rgb::from_channels(-0.25, -0.74, -1.00).encoded_as(LinearEncoding::new());
         let t6 = c6.clone().encode(SrgbEncoding::new());
         assert_relative_eq!(
             *t6.color(),

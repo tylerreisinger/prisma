@@ -9,6 +9,7 @@ use channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
     PosNormalBoundedChannel, PosNormalChannelScalar,
 };
+use encoding::DeviceDependentColor;
 use color;
 use color::{Color, FromTuple};
 use convert;
@@ -209,6 +210,12 @@ where
     impl_color_from_slice_angular!(Hwb<T, A> {hue:AngularChannel - 0, 
         whiteness:PosNormalBoundedChannel - 1, blackness:PosNormalBoundedChannel - 2});
 }
+
+impl<T, A> DeviceDependentColor for Hwb<T, A>
+where
+    T: HwbBoundedChannelTraits + num_traits::Float,
+    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
+{}
 
 #[cfg(feature = "approx")]
 impl<T, A> approx::AbsDiffEq for Hwb<T, A>

@@ -4,6 +4,7 @@
 use approx;
 use channel::{ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar};
 use color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor};
+use encoding::DeviceDependentColor;
 use num_traits;
 use std::fmt;
 use std::marker::PhantomData;
@@ -183,6 +184,13 @@ where
     type Angular = InnerColor::Angular;
     type Cartesian = InnerColor::Cartesian;
 }
+
+impl<T, InnerColor> DeviceDependentColor for Alpha<T, InnerColor>
+where
+    T: PosNormalChannelScalar,
+    InnerColor: DeviceDependentColor,
+{}
+
 
 #[cfg(feature = "approx")]
 impl<T, InnerColor> approx::AbsDiffEq for Alpha<T, InnerColor>

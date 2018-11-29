@@ -10,6 +10,7 @@ use channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ColorChannel, PosNormalBoundedChannel,
     PosNormalChannelScalar,
 };
+use encoding::DeviceDependentColor;
 use color;
 use color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
 use convert;
@@ -185,6 +186,12 @@ where
     impl_color_from_slice_angular!(Hsv<T, A> {hue:AngularChannel - 0, 
         saturation:PosNormalBoundedChannel - 1, value:PosNormalBoundedChannel - 2});
 }
+
+impl<T, A> DeviceDependentColor for Hsv<T, A>
+where
+    T: PosNormalChannelScalar + num_traits::Float,
+    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
+{}
 
 #[cfg(feature = "approx")]
 impl<T, A> approx::AbsDiffEq for Hsv<T, A>

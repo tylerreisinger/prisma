@@ -7,6 +7,7 @@ use channel::{
     PosNormalBoundedChannel, PosNormalChannelScalar,
 };
 use color::{Bounded, Color, Flatten, FromTuple, Invert, Lerp};
+use encoding::DeviceDependentColor;
 use num_traits;
 use std::fmt;
 use std::mem;
@@ -184,6 +185,11 @@ where
     impl_color_from_slice_square!(BareYCbCr<T> {luma:PosNormalBoundedChannel - 0,
         cb:NormalBoundedChannel - 1, cr:NormalBoundedChannel - 2});
 }
+
+impl<T> DeviceDependentColor for BareYCbCr<T>
+    where
+        T: PosNormalChannelScalar + NormalChannelScalar,
+{}
 
 #[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for BareYCbCr<T>

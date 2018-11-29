@@ -1,60 +1,106 @@
+//! Provides the `EncodedColor` type for storing colors with their encodings.
 #[cfg(feature = "approx")]
 use approx;
 use color::{Bounded, Color, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor};
+use super::DeviceDependentColor;
 use encoding::encode::{ColorEncoding, EncodableColor, LinearEncoding};
+use crate::Rgb;
+use crate::channel::{ChannelFormatCast, PosNormalChannelScalar};
 use std::fmt;
 
+/// A color decorated with its encoding. This is the primary way to use encodings.
+///
+/// As most encodings are zero-sized structs except for `GammaEncoding`, there will be no size
+/// penalty for using `EncodedColor`.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct EncodedColor<C, E> {
     color: C,
     encoding: E,
 }
 
+/// A color with a linear encoding
 pub type LinearColor<C> = EncodedColor<C, LinearEncoding>;
 
 impl<C, E> EncodedColor<C, E>
 where
-    C: Color + EncodableColor,
+    C: Color + DeviceDependentColor,
     E: ColorEncoding,
 {
+    /// Construct a new `EncodedColor` from a color and an encoding.
     pub fn new(color: C, encoding: E) -> Self {
         EncodedColor {
             color,
             encoding,
         }
     }
-
+}
+impl<C, E> EncodedColor<C, E>
+    where
+        C: Color,
+        E: ColorEncoding,
+{
+    /// Decompose a `EncodedColor` into it's color and encoding objects
     pub fn decompose(self) -> (C, E) {
         (self.color, self.encoding)
     }
-
+    /// Returns a reference to the color object
     pub fn color(&self) -> &C {
         &self.color
     }
+    /// Returns a mutable reference to the color object
+    pub fn color_mut(&mut self) -> &mut C {
+        &mut self.color
+    }
+    /// Discard the encoding, returning the bare color object
     pub fn strip_encoding(self) -> C {
         self.color
     }
-
+    /// Returns a reference to the encoding object
     pub fn encoding(&self) -> &E {
         &self.encoding
     }
 
-    pub fn decode(self) -> EncodedColor<C, LinearEncoding> {
+}
+
+impl<T, E> EncodedColor<Rgb<T>, E>
+    where T: PosNormalChannelScalar + ChannelFormatCast<f64>,
+          f64: ChannelFormatCast<T>,
+          E: ColorEncoding,
+{
+    /// Decode the color, making it linearly encoded
+    ///
+    /// Note: This only is implemented for Rgb. All other encoded colors must convert to Rgb first.
+    pub fn decode(self) -> EncodedColor<Rgb<T>, LinearEncoding> {
         let decoded_color = self.color.decode_color(&self.encoding);
         EncodedColor::new(decoded_color, LinearEncoding::new())
     }
 
-    pub fn transcode<Encoder>(self, new_encoding: Encoder) -> EncodedColor<C, Encoder>
-    where
-        Encoder: ColorEncoding,
+    /// Change the encoding of the color
+    ///
+    /// Note: This only is implemented for Rgb. All other encoded colors must convert to Rgb first.
+    pub fn transcode<Encoder>(self, new_encoding: Encoder) -> EncodedColor<Rgb<T>, Encoder>
+        where
+            Encoder: ColorEncoding,
     {
         let decoded_color = self.decode();
         decoded_color.encode(new_encoding)
     }
 }
+impl<T> EncodedColor<Rgb<T>, LinearEncoding>
+    where T: PosNormalChannelScalar + ChannelFormatCast<f64>,
+          f64: ChannelFormatCast<T>,
+{
+    /// Encode a linear RGB color with `encoding`
+    pub fn encode<Encoder>(self, encoding: Encoder) -> EncodedColor<Rgb<T>, Encoder>
+        where Encoder: ColorEncoding
+    {
+        self.color.encode_color(&encoding).encoded_as(encoding)
+    }
+}
+
 impl<C, E> EncodedColor<C, E>
 where
-    C: Color + EncodableColor + HomogeneousColor,
+    C: Color + EncodableColor + HomogeneousColor + DeviceDependentColor,
     E: ColorEncoding + PartialEq,
 {
     pub fn broadcast(value: C::ChannelFormat, encoding: E) -> Self {
@@ -64,25 +110,11 @@ where
 
 impl<C, E> EncodedColor<C, E>
 where
-    C: Color + EncodableColor + FromTuple,
+    C: Color + EncodableColor + FromTuple + DeviceDependentColor,
     E: ColorEncoding + PartialEq,
 {
     pub fn from_tuple(values: C::ChannelsTuple, encoding: E) -> Self {
         EncodedColor::new(C::from_tuple(values), encoding)
-    }
-}
-
-impl<C> EncodedColor<C, LinearEncoding>
-where
-    C: Color + EncodableColor,
-{
-    pub fn encode<Encoder>(self, encoder: Encoder) -> EncodedColor<C, Encoder>
-    where
-        Encoder: ColorEncoding,
-    {
-        let encoded_color = self.color.encode_color(&encoder);
-
-        EncodedColor::new(encoded_color, encoder)
     }
 }
 
@@ -113,7 +145,7 @@ where
 
 impl<C, E> Lerp for EncodedColor<C, E>
 where
-    C: Color + EncodableColor + Lerp,
+    C: Color + EncodableColor + Lerp + DeviceDependentColor,
     E: ColorEncoding + PartialEq + fmt::Debug,
 {
     type Position = C::Position;
@@ -126,7 +158,7 @@ where
 
 impl<C, E> Invert for EncodedColor<C, E>
 where
-    C: Color + EncodableColor + Invert,
+    C: Color + EncodableColor + Invert + DeviceDependentColor,
     E: ColorEncoding + PartialEq,
 {
     fn invert(self) -> Self {
@@ -136,7 +168,7 @@ where
 
 impl<C, E> Bounded for EncodedColor<C, E>
 where
-    C: Color + EncodableColor + Bounded,
+    C: Color + EncodableColor + Bounded + DeviceDependentColor,
     E: ColorEncoding + PartialEq,
 {
     fn normalize(self) -> Self {
@@ -146,6 +178,11 @@ where
         self.color.is_normalized()
     }
 }
+
+impl<C, E> DeviceDependentColor for EncodedColor<C, E>
+where C: DeviceDependentColor + EncodableColor,
+      E: ColorEncoding + PartialEq,
+{}
 
 #[cfg(feature = "approx")]
 impl<C, E> approx::AbsDiffEq for EncodedColor<C, E>
@@ -193,18 +230,6 @@ where
     }
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
         (self.encoding == other.encoding) && self.color.ulps_eq(&other.color, epsilon, max_ulps)
-    }
-}
-
-impl<C, E> Default for EncodedColor<C, E>
-where
-    C: Color + EncodableColor + Default,
-    E: ColorEncoding + Default,
-{
-    fn default() -> Self {
-        C::default()
-            .with_encoding(LinearEncoding::new())
-            .encode(E::default())
     }
 }
 

@@ -5,6 +5,7 @@ use approx;
 use channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar,
 };
+use encoding::DeviceDependentColor;
 use color::{Bounded, Color, Flatten, FromTuple, Lerp};
 use convert::FromColor;
 use num_traits;
@@ -211,6 +212,11 @@ where
         intensity
     });
 }
+
+impl<T> DeviceDependentColor for Rgi<T>
+    where
+        T: PosNormalChannelScalar + Float,
+{}
 
 #[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for Rgi<T>
