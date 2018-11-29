@@ -19,7 +19,7 @@ pub mod linalg;
 
 pub mod white_point;
 
-//pub mod color_space;
+pub mod color_space;
 pub mod encoding;
 
 pub mod alpha;
@@ -43,7 +43,8 @@ pub mod ycbcr;
 #[cfg(test)]
 pub mod test;
 
-pub use color::*;
+pub use color::{Flatten, Color, Color3, Color4, HomogeneousColor, PolarColor, Lerp, FromTuple, Bounded, Invert};
+
 pub use ehsi::{eHsi, EHsiTag};
 pub use hsi::{Hsi, HsiTag};
 pub use hsl::{Hsl, HslTag, Hsla};

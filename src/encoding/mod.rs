@@ -65,6 +65,8 @@
 //! let srgb_color = linear_color.encode(SrgbEncoding::new());
 //! ```
 
+use num_traits::Float;
+
 pub mod encode;
 pub mod encoded_color;
 
@@ -82,5 +84,22 @@ pub trait DeviceDependentColor: crate::Color {
         where E: ColorEncoding
     {
         EncodedColor::new(self, encoding)
+    }
+
+    /// Specify that the color is linear
+    fn linear(self) -> EncodedColor<Self, LinearEncoding> {
+        self.encoded_as(LinearEncoding::new())
+    }
+
+    /// Specify that the color is sRGB encoded
+    ///
+    /// This only applies to the encoding, not the sRGB color space.
+    fn srgb_encoded(self) -> EncodedColor<Self, SrgbEncoding> {
+        self.encoded_as(SrgbEncoding::new())
+    }
+
+    /// Specify that the color is gamma encoded with a given gamma
+    fn gamma_encoded<T: Float>(self, gamma: T) -> EncodedColor<Self, GammaEncoding<T>> {
+        self.encoded_as(GammaEncoding::new(gamma))
     }
 }
