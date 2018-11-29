@@ -1,3 +1,5 @@
+//! The eHSI device-dependent polar color model
+
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle, Rad, Turns};
 #[cfg(feature = "approx")]
@@ -19,6 +21,21 @@ use std::slice;
 
 pub struct EHsiTag;
 
+/// The eHSI device-dependent polar color model
+///
+/// eHSI has the same components as [`Hsi`](../hsi/struct.Hsi.html): hue, saturation, intensity
+/// but has additional logic for rescaling saturation in the case of what would be out-of-gamut
+/// colors in the original HSI model. eHSI was adapted from the algorithm described in:
+///
+/// ```
+/// K. Yoshinari, Y. Hoshi and A. Taguchi, "Color image enhancement in HSI color space
+/// without gamut problem," 2014 6th International Symposium on Communications,
+/// Control and Signal Processing (ISCCSP), Athens, 2014, pp. 578-581.
+/// ```
+///
+/// found freely [here](http://www.ijicic.org/ijicic-10-07057.pdf).
+///
+/// eHSI is fully defined over the cylinder, and is generally visually better at adjusting intensity.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct eHsi<T, A = Deg<T>> {
@@ -32,6 +49,7 @@ where
     T: PosNormalChannelScalar + Float,
     A: AngularChannelScalar + Angle<Scalar = T>,
 {
+    /// Construct an eHsi instance from hue, saturation and intensity.
     pub fn from_channels(hue: A, saturation: T, intensity: T) -> Self {
         eHsi {
             hue: AngularChannel::new(hue),
@@ -49,12 +67,15 @@ where
         chan_traits = { PosNormalChannelScalar }
     );
 
+    /// Returns the hue scalar
     pub fn hue(&self) -> A {
         self.hue.0.clone()
     }
+    /// Returns the saturation scalar
     pub fn saturation(&self) -> T {
         self.saturation.0.clone()
     }
+    /// Returns the intensity scalar
     pub fn intensity(&self) -> T {
         self.intensity.0.clone()
     }
@@ -76,6 +97,7 @@ where
     pub fn set_intensity(&mut self, val: T) {
         self.intensity.0 = val;
     }
+    /// Returns whether the `eHsi` instance would be the same in `Hsi`
     pub fn is_same_as_hsi(&self) -> bool {
         let deg_hue = Deg::from_angle(self.hue().clone()) % Deg(num_traits::cast::<_, T>(120.0).unwrap());
         let i_limit = num_traits::cast::<_, T>(2.0 / 3.0).unwrap()
@@ -274,7 +296,7 @@ where
 {
     fn from_color(from: &Rgb<T>) -> Self {
         let epsilon: T = num_traits::cast(1e-10).unwrap();
-        let coords = from.get_chromaticity_coordinates();
+        let coords = from.chromaticity_coordinates();
 
         let hue_unnormal: A = coords.get_hue::<A>();
         let hue = Angle::normalize(hue_unnormal);

@@ -1,3 +1,5 @@
+//! Common data for testing
+
 pub mod hwb_test_data;
 pub mod rgb_hs_test_data;
 

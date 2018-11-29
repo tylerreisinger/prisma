@@ -1,3 +1,7 @@
+//! Macros for the common implementation of color type methods
+//!
+//! These are used internally and not exposed.
+
 macro_rules! impl_channel_clamp {
     ($name: ident, $param: ty) => {
         fn clamp(&self, min: T, max: T) -> Self {

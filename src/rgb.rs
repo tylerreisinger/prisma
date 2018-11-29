@@ -1,3 +1,7 @@
+//! The RGB device-dependent color model.
+//!
+//! Provides the [Rgb<T>](struct.Rgb.html) type.
+
 use alpha::Alpha;
 use angle;
 #[cfg(feature = "approx")]
@@ -19,22 +23,52 @@ use std::fmt;
 use std::mem;
 use std::slice;
 
+/// A marker type to identify Rgb colors in a generic context.
 pub struct RgbTag;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+/// The `Rgb` device-dependent cartesian color model.
+///
+/// `Rgb<T>` has three primaries: red, green blue, which are always positive and in the normalized
+/// range `[0, 1]`. `Rgb<T>` accepts both integer and float components.
+///
+/// It is made to be efficient and easy to use in many different applications, and can be
+/// transmuted directly to a `&[T; N]`.
+///
+/// `Rgb` is the base device dependent color space from which all others go through to convert,
+/// which can be converted to the other
+/// device dependent spaces or to the device independent CIE spaces directly. The color space
+/// of `Rgb` is not specified or assumed, it is up to you to not mix color spaces improperly or use
+/// an appropriate wrapper.
+///
+/// ## Examples:
+///
+/// ```rust
+/// // HomogeneousColor provides `broadcast`
+/// use prisma::{HomogeneousColor, Lerp, Rgb};
+///
+/// let black = Rgb::broadcast(0.0f32);
+/// let blue = Rgb::from_channels(0, 0, 255u8);
+/// // Convert blue to have float channels and compute the color halfway between blue and black
+/// let blended = black.lerp(&blue.color_cast(), 0.5);
+///
+/// assert_eq!(blended, Rgb::from_channels(0.0, 0.0, 0.5));
+/// ```
 pub struct Rgb<T> {
     pub red: PosNormalBoundedChannel<T>,
     pub green: PosNormalBoundedChannel<T>,
     pub blue: PosNormalBoundedChannel<T>,
 }
 
+/// A convenience type for representing Rgb with an alpha channel.
 pub type Rgba<T> = Alpha<T, Rgb<T>>;
 
 impl<T> Rgb<T>
 where
     T: PosNormalChannelScalar,
 {
+    /// Construct a new `Rgb` instance with the given channel values
     pub fn from_channels(red: T, green: T, blue: T) -> Self {
         Rgb {
             red: PosNormalBoundedChannel::new(red),
@@ -48,12 +82,15 @@ where
         chan_traits = { PosNormalChannelScalar }
     );
 
+    /// The red channel scalar
     pub fn red(&self) -> T {
         self.red.0.clone()
     }
+    /// The green channel scalar
     pub fn green(&self) -> T {
         self.green.0.clone()
     }
+    /// The blue channel scalar
     pub fn blue(&self) -> T {
         self.blue.0.clone()
     }
@@ -81,7 +118,9 @@ impl<T> Rgb<T>
 where
     T: PosNormalChannelScalar + num_traits::Float,
 {
-    pub fn get_chromaticity_coordinates(&self) -> ChromaticityCoordinates<T> {
+    /// Compute the [`ChromaticityCooridinates`](../chromaticity/struct.ChromaticityCoordinates.html)
+    /// for an `Rgb` instance
+    pub fn chromaticity_coordinates(&self) -> ChromaticityCoordinates<T> {
         let alpha = cast::<_, T>(0.5).unwrap()
             * (cast::<_, T>(2.0).unwrap() * self.red() - self.green() - self.blue());
 

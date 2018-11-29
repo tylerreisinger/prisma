@@ -1,6 +1,9 @@
+//! A channel that is represented by an angle
+
 use angle::Angle;
 #[cfg(feature = "approx")]
 use approx;
+
 use channel::{ChannelCast, ChannelFormatCast, ColorChannel};
 use color;
 use color::Lerp;
@@ -8,8 +11,10 @@ use num_traits;
 use std::fmt;
 use std::ops;
 
+/// A tag uniquely identifying an AngularChannel
 pub struct AngularChannelTag;
 
+/// A channel that is represented by an angle
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AngularChannel<T>(pub T);
 

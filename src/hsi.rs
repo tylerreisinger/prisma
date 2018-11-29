@@ -1,3 +1,5 @@
+//! The HSI device-dependent polar color space
+
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle, Rad, Turns};
 #[cfg(feature = "approx")]
@@ -18,13 +20,33 @@ use std::slice;
 
 pub struct HsiTag;
 
+/// Defines methods for handling out-of-gamut transformations from Hsi to Rgb
 pub enum OutOfGamutMode {
+    /// Simply clamp each channel to `[0,1]`
     Clip,
+    /// Even if the value is out-of-gamut, return the raw, out-of-range Rgb value
     Preserve,
+    /// Rescale all components back proportionally such that the color is valid
     SimpleRescale,
+    /// Rescale the saturation using similar logic to eHsi to put the color back in range
     SaturationRescale,
 }
 
+/// The HSI device-dependent polar color space
+///
+/// HSI is defined by a hue (base color), saturation (colorfulness) and intensity (brightness).
+/// While HSI has a construction very similar to HSV and HSL, it is a space with very different
+/// properties. It shares a strong similarity to HSL except that it uses $`I = \frac{R + G + B}{3}`$
+/// instead of $`L = \frac{max(R,G,B) + min(R,G,B)}{2}`$ and is also a bi-cone space. However,
+/// HSI is not distorted to fit a cylinder as the other HS* spaces are, meaning that there are no
+/// degeneracies but also that not all $`H,S,I \in [0,1]`$ are valid.
+///
+/// HSI is often used in imaging processing for this lack of distortion, but it is notably less
+/// convenient for a human to reason through.
+///
+/// An extension to HSI titled eHSI and implemented as [`eHsi`](../ehsi/struct.eHsi.html)
+/// was developed to map HSI into a cylinder as well as fix a few deficiencies in the
+/// original HSI model.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct Hsi<T, A = Deg<T>> {
@@ -38,6 +60,7 @@ where
     T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T>,
 {
+    /// Construct an `Hsi` instance from hue, saturation and intensity
     pub fn from_channels(hue: A, saturation: T, intensity: T) -> Self {
         Hsi {
             hue: AngularChannel::new(hue),
@@ -55,12 +78,15 @@ where
         chan_traits = { PosNormalChannelScalar }
     );
 
+    /// Returns the scalar hue
     pub fn hue(&self) -> A {
         self.hue.0.clone()
     }
+    /// Returns the scalar saturation
     pub fn saturation(&self) -> T {
         self.saturation.0.clone()
     }
+    /// Returns the scalar intensity
     pub fn intensity(&self) -> T {
         self.intensity.0.clone()
     }
@@ -82,6 +108,7 @@ where
     pub fn set_intensity(&mut self, val: T) {
         self.intensity.0 = val;
     }
+    /// Returns whether the `Hsi` instance would be equivalent in `eHsi`
     pub fn is_same_as_ehsi(&self) -> bool {
         let deg_hue = Deg::from_angle(self.hue().clone()) % Deg(num_traits::cast::<_, T>(120.0).unwrap());
         let i_limit = num_traits::cast::<_, T>(2.0 / 3.0).unwrap()
@@ -243,7 +270,7 @@ where
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>> + fmt::Display,
 {
     fn from_color(from: &Rgb<T>) -> Self {
-        let coords = from.get_chromaticity_coordinates();
+        let coords = from.chromaticity_coordinates();
 
         let hue_unnormal: A = coords.get_hue::<A>();
         let hue = Angle::normalize(hue_unnormal);
@@ -283,6 +310,7 @@ where
     T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + IntoAngle<Rad<T>, OutputScalar = T>,
 {
+    /// Convert to `Rgb`, providing a method for translating out-of-gamut colors.
     pub fn to_rgb(&self, mode: OutOfGamutMode) -> Rgb<T> {
         let pi_over_3: T = num_traits::cast(consts::PI / 3.0).unwrap();
         let hue_frac =

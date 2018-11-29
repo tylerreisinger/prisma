@@ -1,3 +1,5 @@
+//! Channels with no upper and/or lower bound
+
 #[cfg(feature = "approx")]
 use approx;
 use channel::{ChannelCast, ChannelFormatCast, ColorChannel, FreeChannelScalar};
@@ -5,11 +7,15 @@ use color::{Bounded, Lerp};
 use num_traits;
 use std::fmt;
 
+/// A tag uniquely identifying a FreeChannel
 pub struct FreeChannelTag;
+/// A tag uniquely identifying a PosFreeChannel
 pub struct PosFreeChannelTag;
 
+/// A free channel that only takes on positive values
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct PosFreeChannel<T>(pub T);
+/// A free channel with no constraints
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct FreeChannel<T>(pub T);
 

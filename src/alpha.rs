@@ -1,3 +1,5 @@
+//! A wrapper type adding an alpha channel to other color types
+
 #[cfg(feature = "approx")]
 use approx;
 use channel::{ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar};
@@ -8,13 +10,18 @@ use std::marker::PhantomData;
 use std::mem;
 use std::slice;
 
+/// A tag type uniquely identifying the `Alpha` type
 pub struct AlphaTag<T>(pub PhantomData<T>);
 
+/// A wrapper around a color with an alpha channel
+///
+/// `Alpha<T>` makes it easy to add an alpha channel to any other color and share code between
+/// all color types.
 #[repr(C)]
-#[derive(Clone, Debug, PartialEq, PartialOrd, Hash)]
+#[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
 pub struct Alpha<T, InnerColor> {
-    color: InnerColor,
-    alpha: PosNormalBoundedChannel<T>,
+    pub color: InnerColor,
+    pub alpha: PosNormalBoundedChannel<T>,
 }
 
 impl<T, InnerColor> Alpha<T, InnerColor>
@@ -22,31 +29,39 @@ where
     T: PosNormalChannelScalar,
     InnerColor: Color,
 {
+    /// Construct an `Alpha` object from a color and an alpha value
     pub fn from_color_and_alpha(color: InnerColor, alpha: T) -> Self {
         Alpha {
             color,
             alpha: PosNormalBoundedChannel::new(alpha),
         }
     }
+    /// Break apart an `Alpha` into the inner color and alpha channel value
     pub fn decompose(self) -> (InnerColor, T) {
         (self.color, self.alpha.0)
     }
 
+    /// Returns a reference to the inner color
     pub fn color(&self) -> &InnerColor {
         &self.color
     }
+    /// Returns the alpha scalar
     pub fn alpha(&self) -> T {
         self.alpha.0.clone()
     }
+    /// Returns a mutable reference to the inner color
     pub fn color_mut(&mut self) -> &mut InnerColor {
         &mut self.color
     }
+    /// Returns a mutable reference to the alpha scalar
     pub fn alpha_mut(&mut self) -> &mut T {
         &mut self.alpha.0
     }
+    /// Set the inner color
     pub fn set_color(&mut self, color: InnerColor) {
         self.color = color;
     }
+    /// Set the alpha channel value
     pub fn set_alpha(&mut self, alpha: T) {
         self.alpha.0 = alpha
     }

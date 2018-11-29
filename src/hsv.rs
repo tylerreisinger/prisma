@@ -1,3 +1,5 @@
+//! The HSV device-dependent color model
+
 use alpha::Alpha;
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle};
@@ -21,6 +23,23 @@ use std::slice;
 
 pub struct HsvTag;
 
+/// The HSV device-dependent polar color model
+///
+/// ![hsv-diagram](https://upload.wikimedia.org/wikipedia/commons/3/33/HSV_color_solid_cylinder_saturation_gray.png)
+///
+/// HSV is defined by a hue (base color), saturation (color richness) and value (color intensity).
+/// HSV is modeled as a cylinder, however the underlying space is conical. This causes some level of
+/// distortion and a degeneracy at S=0 or V=0. Thus, while easy to reason about, it is not good for
+/// perceptual uniformity. It does an okay job with averaging colors or doing other math, but prefer
+/// the CIE spaces for uniform gradients.
+///
+/// Hsv takes two type parameters: the cartesian channel scalar, and an angular channel scalar.
+///
+/// Hsv is in the same color space and encoding as the parent RGB space, it is merely a geometric
+/// transformation and distortion.
+///
+/// For an undistorted device-dependent polar color model, look at
+/// [Hsi](../hsi/struct.Hsi.html).
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct Hsv<T, A = Deg<T>> {
@@ -36,6 +55,7 @@ where
     T: PosNormalChannelScalar,
     A: AngularChannelScalar,
 {
+    /// Construct an Hsv instance from hue, saturation and value
     pub fn from_channels(hue: A, saturation: T, value: T) -> Self {
         Hsv {
             hue: AngularChannel::new(hue),
@@ -53,12 +73,15 @@ where
         chan_traits = { PosNormalChannelScalar }
     );
 
+    /// Return the hue scalar
     pub fn hue(&self) -> A {
         self.hue.0.clone()
     }
+    /// Return the saturation scalar
     pub fn saturation(&self) -> T {
         self.saturation.0.clone()
     }
+    /// Return the value scalar
     pub fn value(&self) -> T {
         self.value.0.clone()
     }

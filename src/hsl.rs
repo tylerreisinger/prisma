@@ -1,3 +1,5 @@
+//! The HSL device-dependent polar color model
+
 use alpha::Alpha;
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle};
@@ -20,6 +22,25 @@ use std::slice;
 
 pub struct HslTag;
 
+//TODO: Consider adding an `HCL` constructor and conversion
+/// The HSL device-dependent polar color model
+///
+/// ![hsl-diagram](https://upload.wikimedia.org/wikipedia/commons/6/6b/HSL_color_solid_cylinder_saturation_gray.png)
+///
+/// HSL is defined by a hue (base color), saturation (color richness) and value (whiteness).
+/// Like HSV, HSL is modeled as a cylinder, however the underlying space is two cones
+/// stacked bottom-to-bottom. /// This causes some level of
+/// distortion and a degeneracy at `S=0` or `L={0,1}`. Thus, while easy to reason about, it is not good for
+/// perceptual uniformity. It does an okay job with averaging colors or doing other math, but prefer
+/// the CIE spaces for uniform gradients.
+///
+/// Hsl takes two type parameters: the cartesian channel scalar, and an angular channel scalar.
+///
+/// Hsl is in the same color space and encoding as the parent RGB space, it is merely a geometric
+/// transformation and distortion.
+///
+/// For an undistorted device-dependent polar color model, look at
+/// [Hsi](../hsi/struct.Hsi.html).
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct Hsl<T, A = Deg<T>> {
@@ -35,6 +56,7 @@ where
     T: PosNormalChannelScalar,
     A: AngularChannelScalar,
 {
+    /// Construct an `Hsl` instance from hue, saturation and lightness
     pub fn from_channels(hue: A, saturation: T, lightness: T) -> Self {
         Hsl {
             hue: AngularChannel::new(hue),
@@ -52,12 +74,15 @@ where
         chan_traits = { PosNormalChannelScalar }
     );
 
+    /// Return the hue scalar
     pub fn hue(&self) -> A {
         self.hue.0.clone()
     }
+    /// Return the saturation scalar
     pub fn saturation(&self) -> T {
         self.saturation.0.clone()
     }
+    /// Return the lightness scalar
     pub fn lightness(&self) -> T {
         self.lightness.0.clone()
     }

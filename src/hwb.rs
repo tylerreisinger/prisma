@@ -1,3 +1,5 @@
+//! The HWB device-dependent polar color model
+
 use alpha::Alpha;
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle};
@@ -19,6 +21,18 @@ use std::slice;
 
 pub struct HwbTag;
 
+/// The HWB device-dependent polar color model
+///
+/// HWB is defined by a hue (base color), whiteness and blackness.
+/// HWB is a conical space that is not distorted into a cylinder like HSV and HSL are, but with the
+/// property that any value of `W+B` greater than 1 loses any chroma and is technically not inside the
+/// space. HWB is a relatively recent color model, and was designed to be easy for a human to reason
+/// about and use to build colors.
+///
+/// Hwb takes two type parameters: the cartesian channel scalar, and an angular channel scalar.
+///
+/// Hwb is in the same color space and encoding as the parent RGB space, it is merely a geometric
+/// transformation and distortion.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct Hwb<T, A = Deg<T>> {
@@ -38,6 +52,7 @@ where
     T: HwbBoundedChannelTraits,
     A: AngularChannelScalar,
 {
+    /// Construct a `Hwb` instance from hue, whiteness and blackness
     pub fn from_channels(hue: A, whiteness: T, blackness: T) -> Self {
         Hwb {
             hue: AngularChannel::new(hue),
@@ -55,12 +70,15 @@ where
         chan_traits = { PosNormalChannelScalar }
     );
 
+    /// Returns the hue scalar
     pub fn hue(&self) -> A {
         self.hue.0.clone()
     }
+    /// Returns the whiteness scalar
     pub fn whiteness(&self) -> T {
         self.whiteness.0.clone()
     }
+    /// Returns the blackness scalar
     pub fn blackness(&self) -> T {
         self.blackness.0.clone()
     }
@@ -89,10 +107,12 @@ where
     T: HwbBoundedChannelTraits,
     A: AngularChannelScalar,
 {
+    /// Returns whether the whiteness + blackness is outside the cylinder (greater than 1)
     pub fn wb_needs_rescaled(&self) -> bool {
         (self.whiteness() + self.blackness()) > num_traits::cast::<_, T>(1.0).unwrap()
     }
 
+    /// Rescale such that whiteness + blackness is no greater than 1
     pub fn rescale_wb(self) -> Self {
         let sum = self.whiteness() + self.blackness();
 

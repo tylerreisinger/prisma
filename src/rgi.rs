@@ -1,3 +1,5 @@
+//! The rgI device-dependent chromaticity color model
+
 #[cfg(feature = "approx")]
 use approx;
 use channel::{
@@ -14,6 +16,31 @@ use std::slice;
 
 pub struct RgiTag;
 
+/// The rgI device-dependent chromaticity color model
+///
+/// rgI is defined by a *relative* red amount, relative green amount and intensity. The rgI color
+/// model is used to keep the color intensity relatively invariant (that is, only the color matters,
+/// not how white or black it is), with the caveat that its parent RGB is not perceptually uniform. It is a
+/// device-dependent relative to the [`xyY`](../xyy/struct.XyY.html) CIE space.
+///
+/// The `r` and `g` components here are not absolute red and green like in RGB, but rather the
+/// ratio of red or green to the sum of RGB. That is:
+/// ```math
+/// \begin{aligned}
+/// r &= \frac{R}{R+G+B} \\
+/// g &= \frac{G}{R+G+B} \\
+/// b &= \frac{B}{R+G+B} \\
+/// r+g+b &= 1 \\
+/// I &= \frac{R+G+B}{3}
+/// \end{aligned}
+/// ```
+///
+/// Since `r+g+b=1`, the `b` component is not stored, but can be reconstructed at will. This also means
+/// that setting any of r,g,b will require the others to be changed as well. `Rgi` does this by
+/// proportionally rescaling the other channels with respect to the new value.
+///
+/// Including the intensity channel makes Rgi still a full color model that can convert back to
+/// RGB, unlike the sometimes used `rg` model.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct Rgi<T> {
@@ -26,6 +53,10 @@ impl<T> Rgi<T>
 where
     T: PosNormalChannelScalar + Float,
 {
+    /// Construct a `Rgi` instance from red, green and intensity
+    ///
+    /// ## Panics:
+    /// If red+green is greater than 1.0 or less than 0.0, `from_channels` will panic.
     pub fn from_channels(red: T, green: T, intensity: T) -> Self {
         let zero = num_traits::cast(0.0).unwrap();
         if red + green > num_traits::cast(1.0).unwrap() || red + green < num_traits::cast(0.0).unwrap() {
@@ -49,31 +80,49 @@ where
         chan_traits = { PosNormalChannelScalar }
     );
 
+    /// Returns the relative red scalar
     pub fn red(&self) -> T {
         self.red.0.clone()
     }
+    /// Returns the relative green scalar
     pub fn green(&self) -> T {
         self.green.0.clone()
     }
+    /// Returns the relative blue scalar
+    ///
+    /// Unlike red and green, this requires a small computation
     pub fn blue(&self) -> T {
         num_traits::cast::<_, T>(1.0).unwrap() - self.green() - self.red()
     }
+    /// Returns the intensity scalar
     pub fn intensity(&self) -> T {
         self.intensity.0.clone()
     }
     pub fn intensity_mut(&mut self) -> &mut T {
         &mut self.intensity.0
     }
+    /// Set the relative red channel
+    ///
+    /// ## Panics:
+    /// This will panic if `val` is greater than one or less than zero.
     pub fn set_red(&mut self, val: T) {
         let (red, green, _) = Self::rescale_channels(val, self.green(), self.blue());
         self.red.0 = red;
         self.green.0 = green;
     }
+    /// Set the relative green channel
+    ///
+    /// ## Panics:
+    /// This will panic if `val` is greater than one or less than zero.
     pub fn set_green(&mut self, val: T) {
         let (green, red, _) = Self::rescale_channels(val, self.red(), self.blue());
         self.red.0 = red;
         self.green.0 = green;
     }
+    /// Set the relative blue channel
+    ///
+    /// ## Panics:
+    /// This will panic if `val` is greater than one or less than zero.
     pub fn set_blue(&mut self, val: T) {
         let (_, red, green) = Self::rescale_channels(val, self.red(), self.green());
         self.red.0 = red;
@@ -83,6 +132,7 @@ where
         self.intensity.0 = val;
     }
 
+    /// Proportionately rescale the two channels not modifies so the sum is one
     fn rescale_channels(primary: T, c2: T, c3: T) -> (T, T, T) {
         let new_primary = primary;
         if new_primary > PosNormalBoundedChannel::max_bound()

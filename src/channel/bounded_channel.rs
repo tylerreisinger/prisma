@@ -1,3 +1,7 @@
+//! Channels bounded between two values
+//!
+//! Bounded channels are the only to support integer scalars
+
 use super::scalar::{NormalChannelScalar, PosNormalChannelScalar};
 use super::traits::ColorChannel;
 #[cfg(feature = "approx")]
@@ -8,11 +12,15 @@ use color;
 use num_traits;
 use std::fmt;
 
+/// A tag uniquely identifying a PosNormalChannel
 pub struct PosNormalChannelTag;
+/// A tag uniquely identifying a NormalChannel
 pub struct NormalChannelTag;
 
+/// A channel bounded between 0 and a maximum value
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PosNormalBoundedChannel<T>(pub T);
+/// A channel bounded between a minimum and a maximum value
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NormalBoundedChannel<T>(pub T);
 

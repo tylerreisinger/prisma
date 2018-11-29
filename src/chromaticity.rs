@@ -3,6 +3,30 @@ use convert::{GetChroma, GetHue};
 use num_traits;
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
+/// A pair of chromaticity coordinates $`\alpha`$ and $`\beta`$
+///
+/// Chromaticity coordinates are a basis set of a two-dimensional space defining the chroma and hue
+/// of the color without the luminance. These are primarily used for computing non-approximate
+/// (circular) HS* color values. `Hsi` is an example of a color space that uses these coordinates
+/// in its construction.
+///
+/// $`\alpha`$ is the "redness vs blue-greenness" whereas $`\beta`$ is "greenness vs blueness"
+///
+/// `Hsv` and similar models convert from RGB using a hexagonal transformation that is then treated
+/// as circular. This is convenient
+/// and very easy to compute, but it is slightly off of the "correct" value for hue and chroma
+/// obtained when using a circle.
+///
+/// From these coordinates, you can obtain the circular chroma and hue:
+///
+/// ```math
+/// \begin{aligned}
+/// H_{\textrm{circle}} &= atan2(\beta, \alpha) \\
+/// C_{\textrm{circle}} &= \sqrt{\alpha^2 + \beta^2}
+/// \end{aligned}
+/// ```
+///
+///
 pub struct ChromaticityCoordinates<T> {
     pub alpha: T,
     pub beta: T,

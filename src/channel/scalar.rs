@@ -1,14 +1,20 @@
+//! The scalar traits defining what primitives can be used in channels
+//!
+//! For an overview of scalars, look at the [`channel`](../index.html) module documentation.
+
 use angle;
 use angle::*;
 use color;
 use num_traits::{cast, Float, PrimInt, NumCast, Zero};
 use std::ops;
 
+/// A scalar with no upper and/or lower bound
 pub trait FreeChannelScalar: Clone + Float + Default {}
 
 impl FreeChannelScalar for f32 {}
 impl FreeChannelScalar for f64 {}
 
+/// A scalar with an upper and lower bound
 pub trait BoundedChannelScalar:
     Clone
     + PartialEq
@@ -26,6 +32,7 @@ impl BoundedChannelScalar for u32 {}
 impl BoundedChannelScalar for f32 {}
 impl BoundedChannelScalar for f64 {}
 
+/// A scalar for periodic, angular channels
 pub trait AngularChannelScalar:
     Clone
     + PartialEq
@@ -87,12 +94,14 @@ impl_traits_for_angle!(Turns);
 impl_traits_for_angle!(ArcMinutes);
 impl_traits_for_angle!(ArcSeconds);
 
+/// A bounded scalar that only takes positive values
 pub trait PosNormalChannelScalar: BoundedChannelScalar {
     fn min_bound() -> Self;
     fn max_bound() -> Self;
     fn is_normalized(&self) -> bool;
     fn normalize(self) -> Self;
 }
+/// A bounded scalar that has positive and negative values
 pub trait NormalChannelScalar: BoundedChannelScalar {
     fn min_bound() -> Self;
     fn max_bound() -> Self;

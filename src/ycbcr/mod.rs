@@ -1,4 +1,4 @@
-//! A module for encoded values in the YUV and YIQ family of spaces.
+//! A module for encoded values in the YUV and YIQ family of device-dependent color models.
 //!
 //! YUV and YIQ refer to a collection of spaces, each derived from a parent
 //! RGB space. Fundamentally, these spaces are created from a linear transformation

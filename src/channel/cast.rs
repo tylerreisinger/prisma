@@ -1,7 +1,10 @@
+//! Defines ChannelFormatCast for converting between channel formats
+
 use angle;
 use angle::Angle;
 use num_traits;
 
+/// Convert between channel formats
 pub trait ChannelFormatCast<Out>: Sized {
     fn cast(self) -> Out;
     fn cast_with_rescale(self, _: f64, _: f64) -> Out {
@@ -140,7 +143,7 @@ impl ChannelFormatCast<u16> for u64 {
 }
 impl ChannelFormatCast<u32> for u64 {
     fn cast(self) -> u32 {
-        (self >> 24) as u32
+        (self >> 32) as u32
     }
 }
 impl ChannelFormatCast<u64> for u64 {
