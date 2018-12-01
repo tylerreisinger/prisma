@@ -28,7 +28,7 @@ pub struct EHsiTag;
 /// but has additional logic for rescaling saturation in the case of what would be out-of-gamut
 /// colors in the original HSI model. eHSI was adapted from the algorithm described in:
 ///
-/// ```
+/// ```ignore
 /// K. Yoshinari, Y. Hoshi and A. Taguchi, "Color image enhancement in HSI color space
 /// without gamut problem," 2014 6th International Symposium on Communications,
 /// Control and Signal Processing (ISCCSP), Athens, 2014, pp. 578-581.

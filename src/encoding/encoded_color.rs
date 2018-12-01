@@ -1,12 +1,15 @@
 //! Provides the `EncodedColor` type for storing colors with their encodings.
 #[cfg(feature = "approx")]
 use approx;
-use color::{Bounded, Color, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor};
+use crate::{Bounded, Color, Color3, Color4, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor};
+use convert::{FromColor};
 use super::DeviceDependentColor;
 use encoding::encode::{ColorEncoding, EncodableColor, LinearEncoding};
 use crate::Rgb;
 use crate::channel::{ChannelFormatCast, PosNormalChannelScalar};
+
 use std::fmt;
+use std::ops::{Deref, DerefMut};
 
 /// A color decorated with its encoding. This is the primary way to use encodings.
 ///
@@ -134,6 +137,18 @@ where
     }
 }
 
+impl<C, E> Color3 for EncodedColor<C, E>
+    where
+        C: Color3 + EncodableColor,
+        E: ColorEncoding + PartialEq,
+{}
+
+impl<C, E> Color4 for EncodedColor<C, E>
+    where
+        C: Color4 + EncodableColor,
+        E: ColorEncoding + PartialEq,
+{}
+
 impl<C, E> PolarColor for EncodedColor<C, E>
 where
     C: Color + EncodableColor + PolarColor,
@@ -183,6 +198,36 @@ impl<C, E> DeviceDependentColor for EncodedColor<C, E>
 where C: DeviceDependentColor + EncodableColor,
       E: ColorEncoding + PartialEq,
 {}
+
+impl<C, E> Deref for EncodedColor<C, E>
+where C: DeviceDependentColor,
+      E: ColorEncoding,
+{
+    type Target = C;
+
+    fn deref(&self) -> &C {
+        &self.color
+    }
+}
+impl<C, E> DerefMut for EncodedColor<C, E>
+    where C: DeviceDependentColor,
+          E: ColorEncoding,
+{
+    fn deref_mut(&mut self) -> &mut C {
+        &mut self.color
+    }
+}
+
+impl<C, E, C2> FromColor<EncodedColor<C2, E>> for EncodedColor<C, E>
+    where
+        C: Color + FromColor<C2> + DeviceDependentColor,
+        E: ColorEncoding,
+        C2: DeviceDependentColor,
+{
+    fn from_color(from: &EncodedColor<C2, E>) -> Self {
+        EncodedColor::new(FromColor::from_color(from.color()), from.encoding.clone())
+    }
+}
 
 #[cfg(feature = "approx")]
 impl<C, E> approx::AbsDiffEq for EncodedColor<C, E>
@@ -239,6 +284,44 @@ where
     E: ColorEncoding + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} @ {}", self.color, self.encoding)
+        write!(f, "{} as {}", self.color, self.encoding)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{Rgb, Hsv};
+    use angle::Deg;
+
+    #[test]
+    fn test_encode_as() {
+        let c1 = Rgb::from_channels(0.5, 0.5, 0.5);
+        let e1 = c1.clone().encoded_as(LinearEncoding {});
+
+        assert_eq!(&c1, e1.color());
+        assert_eq!(e1.encoding(), &LinearEncoding {});
+
+        let e2 = c1.clone().linear();
+
+        assert_eq!(e1, e2);
+
+    }
+
+    #[test]
+    fn test_deref() {
+        let mut e1 = Rgb::from_channels(1.0, 0.0, 0.5).srgb_encoded();
+
+        assert_eq!(e1.red(), 1.0);
+        assert_eq!(e1.green(), 0.0);
+        assert_eq!(e1.blue(), 0.5);
+        assert_eq!(e1.clone().to_tuple(), (1.0, 0.0, 0.5));
+
+        *e1.blue_mut() = 0.33;
+        assert_eq!(e1.blue(), 0.33);
+
+        let e2 = Hsv::from_channels(Deg(180.0), 0.5, 0.25).srgb_encoded();
+        assert_eq!(e2.hue(), e2.color().hue());
+        assert_eq!(e2.hue(), Deg(180.0));
     }
 }
