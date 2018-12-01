@@ -1,27 +1,27 @@
 /// Traits and methods for converting between colors and representations
 
+use ycbcr::YCbCrOutOfGamutMode;
+use hsi::HsiOutOfGamutMode;
 use angle;
 use angle::{Angle, FromAngle};
 use color::PolarColor;
 use num_traits;
 use num_traits::Float;
 
-/// Convert between two color models
+/// Infallibly convert between two color models
 ///
-/// The `From` traits only apply when not changing color spaces. Thus, Rgb -> XYZ is not supported
-/// via `FromColor`.
-pub trait FromColor<From>: TryFromColor<From> {
+/// The `From` trait only apply when not changing color spaces. Thus, Rgb -> XYZ is not supported
+/// via `FromColor`. Additionally, any conversion that may go out of gamut requires a different
+/// conversion method or trait.
+pub trait FromColor<From> {
     /// Construct `Self` from `from`
     fn from_color(from: &From) -> Self;
 }
-
-/// Attempt to convert between two color models
-///
-/// The `From` traits only apply when not changing color spaces. Thus, Rgb -> XYZ is not supported
-/// via `TryFromColor`.
-pub trait TryFromColor<From>: Sized {
-    /// Try to construct `Self` from `from`
-    fn try_from_color(from: &From) -> Option<Self>;
+pub trait FromHsi<From> {
+    fn from_hsi(from: &From, out_of_gamut_mode: HsiOutOfGamutMode) -> Self;
+}
+pub trait FromYCbCr<From> {
+    fn from_ycbcr(from: &From, out_of_gamut_mode: YCbCrOutOfGamutMode) -> Self;
 }
 
 /// Return the chroma of a color
@@ -40,15 +40,6 @@ pub trait GetHue {
     fn get_hue<U>(&self) -> U
     where
         U: Angle<Scalar = <Self::InternalAngle as Angle>::Scalar> + FromAngle<Self::InternalAngle>;
-}
-
-impl<T, From> TryFromColor<From> for T
-where
-    T: FromColor<From>,
-{
-    fn try_from_color(from: &From) -> Option<Self> {
-        Some(T::from_color(from))
-    }
 }
 
 /// Compute the hexagonal segment that the hue falls under, as well as the distance into that segment

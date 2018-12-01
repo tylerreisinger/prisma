@@ -33,6 +33,6 @@ pub mod bare_ycbcr;
 pub mod model;
 pub mod ycbcr;
 
-pub use self::bare_ycbcr::{BareYCbCr, OutOfGamutMode, YCbCrTag};
+pub use self::bare_ycbcr::{BareYCbCr, YCbCrOutOfGamutMode, YCbCrTag};
 pub use self::model::*;
 pub use self::ycbcr::*;

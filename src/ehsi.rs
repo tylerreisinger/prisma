@@ -11,7 +11,7 @@ use channel::{
 use encoding::DeviceDependentColor;
 use color;
 use color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
-use convert::{decompose_hue_segment, FromColor, GetHue, TryFromColor};
+use convert::{decompose_hue_segment, FromColor, GetHue};
 use hsi::Hsi;
 use num_traits;
 use num_traits::Float;
@@ -108,6 +108,25 @@ where
                 / Deg(num_traits::cast::<_, T>(180.0).unwrap()).scalar();
 
         self.intensity() <= i_limit
+    }
+    /// Returns an `Hsi` instance that is the same as `self` if they would be equivalent, or `None` otherwise
+    pub fn to_hsi(&self) -> Option<Hsi<T, A>> {
+        if self.is_same_as_hsi() {
+            Some(Hsi::from_channels(self.hue().clone(), self.saturation().clone(), self.intensity().clone()))
+        } else {
+            None
+        }
+    }
+    /// Construct an `eHsi` instance from an `Hsi` instance if both would be equivalent
+    ///
+    /// If they would not be equivalent, returns `None`.
+    pub fn from_hsi(hsi: &Hsi<T, A>) -> Option<eHsi<T, A>> {
+        let out = eHsi::from_channels(hsi.hue().clone(), hsi.saturation().clone(), hsi.intensity().clone());
+        if out.is_same_as_hsi() {
+            Some(out)
+        } else {
+            None
+        }
     }
 }
 
@@ -258,42 +277,6 @@ where
     A: AngularChannelScalar,
 {
     impl_color_get_hue_angular!(eHsi);
-}
-
-impl<T, A> TryFromColor<Hsi<T, A>> for eHsi<T, A>
-where
-    T: PosNormalChannelScalar + num_traits::Float,
-    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>>,
-{
-    fn try_from_color(from: &Hsi<T, A>) -> Option<eHsi<T, A>> {
-        if from.is_same_as_ehsi() {
-            Some(eHsi {
-                hue: from.hue.clone(),
-                saturation: from.saturation.clone(),
-                intensity: from.intensity.clone(),
-            })
-        } else {
-            None
-        }
-    }
-}
-
-impl<T, A> TryFromColor<eHsi<T, A>> for Hsi<T, A>
-where
-    T: PosNormalChannelScalar + num_traits::Float,
-    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>>,
-{
-    fn try_from_color(from: &eHsi<T, A>) -> Option<Hsi<T, A>> {
-        if from.is_same_as_hsi() {
-            Some(Hsi {
-                hue: from.hue.clone(),
-                saturation: from.saturation.clone(),
-                intensity: from.intensity.clone(),
-            })
-        } else {
-            None
-        }
-    }
 }
 
 impl<T, A> FromColor<Rgb<T>> for eHsi<T, A>
@@ -467,20 +450,20 @@ mod test {
     #[test]
     fn hsi_ehsi_convert() {
         let hsi1 = Hsi::from_channels(Deg(120.0), 0.0, 0.0);
-        let ehsi1 = eHsi::try_from_color(&hsi1);
+        let ehsi1 = eHsi::from_hsi(&hsi1);
         assert_eq!(ehsi1, Some(eHsi::from_channels(Deg(120.0), 0.0, 0.0)));
-        assert_eq!(hsi1, Hsi::try_from_color(&ehsi1.unwrap()).unwrap());
+        assert_eq!(hsi1, ehsi1.unwrap().to_hsi().unwrap());
 
-        let ehsi2 = eHsi::try_from_color(&Hsi::from_channels(Deg(120.0), 1.0, 1.0));
+        let ehsi2 = eHsi::from_hsi(&Hsi::from_channels(Deg(120.0), 1.0, 1.0));
         assert_eq!(ehsi2, None);
 
         let hsi3 = Hsi::from_channels(Deg(180.0), 1.0, 0.60);
-        let ehsi3 = eHsi::try_from_color(&hsi3);
+        let ehsi3 = eHsi::from_hsi(&hsi3);
         assert_relative_eq!(ehsi3.unwrap(), eHsi::from_channels(Deg(180.0), 1.0, 0.60));
-        assert_relative_eq!(hsi3, Hsi::try_from_color(&ehsi3.unwrap()).unwrap());
+        assert_relative_eq!(hsi3, &ehsi3.unwrap().to_hsi().unwrap());
 
         let hsi3 = Hsi::from_channels(Deg(180.0), 1.0, 0.70);
-        let ehsi3 = eHsi::try_from_color(&hsi3);
+        let ehsi3 = eHsi::from_hsi(&hsi3);
         assert_eq!(ehsi3, None);
     }
 

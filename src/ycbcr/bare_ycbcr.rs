@@ -21,7 +21,7 @@ use ycbcr::YCbCr;
 ///
 /// These are used by the `to_rgb` method. Using `TryFromColor` will instead
 /// return `None` any time an out of gamut value is produced.
-pub enum OutOfGamutMode {
+pub enum YCbCrOutOfGamutMode {
     /// Return the exact result of the transformation.
     ///
     /// This can result in channels outside the normal range
@@ -262,7 +262,7 @@ where
     ///   different model, the resulting colors will be different.
     /// * out_of_gamut_mode - How to handle colors that are out of gamut in `Rgb`. See
     ///   [OutOfGamutMode](enum.OutOfGamutMode.html) for a description the options.
-    pub fn to_rgb<M: YCbCrModel<T>>(&self, model: &M, out_of_gamut_mode: OutOfGamutMode) -> Rgb<T> {
+    pub fn to_rgb<M: YCbCrModel<T>>(&self, model: &M, out_of_gamut_mode: YCbCrOutOfGamutMode) -> Rgb<T> {
         let transform = model.inverse_transform();
         let shift = model.shift();
 
@@ -282,8 +282,8 @@ where
         );
 
         match out_of_gamut_mode {
-            OutOfGamutMode::Preserve => out,
-            OutOfGamutMode::Clip => out.normalize(),
+            YCbCrOutOfGamutMode::Preserve => out,
+            YCbCrOutOfGamutMode::Clip => out.normalize(),
         }
     }
 }

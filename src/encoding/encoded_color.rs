@@ -1,12 +1,15 @@
 //! Provides the `EncodedColor` type for storing colors with their encodings.
 #[cfg(feature = "approx")]
 use approx;
+use hsi::{Hsi, HsiOutOfGamutMode};
+use ycbcr::{YCbCr, YCbCrOutOfGamutMode, YCbCrModel};
 use crate::{Bounded, Color, Color3, Color4, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor};
-use convert::{FromColor};
+use convert::{FromColor, FromHsi, FromYCbCr};
 use super::DeviceDependentColor;
 use encoding::encode::{ColorEncoding, EncodableColor, LinearEncoding};
 use crate::Rgb;
-use crate::channel::{ChannelFormatCast, PosNormalChannelScalar};
+use crate::channel::{ChannelFormatCast, PosNormalChannelScalar, AngularChannelScalar};
+use angle::Angle;
 
 use std::fmt;
 use std::ops::{Deref, DerefMut};
@@ -229,10 +232,33 @@ impl<C, E, C2> FromColor<EncodedColor<C2, E>> for EncodedColor<C, E>
     }
 }
 
+impl<C, E, T, A> FromHsi<EncodedColor<Hsi<T, A>, E>> for EncodedColor<C, E>
+    where
+        C: Color + DeviceDependentColor + FromHsi<Hsi<T, A>>,
+        E: ColorEncoding,
+        T: PosNormalChannelScalar + num_traits::Float,
+        A: AngularChannelScalar + Angle<Scalar = T>,
+{
+    fn from_hsi(from: &EncodedColor<Hsi<T, A>, E>, out_of_gamut_mode: HsiOutOfGamutMode) -> Self {
+        EncodedColor::new(C::from_hsi(&from.color, out_of_gamut_mode), from.encoding.clone())
+    }
+}
+impl<C, E, T, M> FromYCbCr<EncodedColor<YCbCr<T, M>, E>> for EncodedColor<C, E>
+    where
+        C: Color + DeviceDependentColor + FromYCbCr<YCbCr<T, M>>,
+        E: ColorEncoding,
+        T: PosNormalChannelScalar + num_traits::Float,
+        M: YCbCrModel<T>,
+{
+    fn from_ycbcr(from: &EncodedColor<YCbCr<T, M>, E>, out_of_gamut_mode: YCbCrOutOfGamutMode) -> Self {
+        EncodedColor::new(C::from_ycbcr(&from.color, out_of_gamut_mode), from.encoding.clone())
+    }
+}
+
 #[cfg(feature = "approx")]
 impl<C, E> approx::AbsDiffEq for EncodedColor<C, E>
 where
-    C: Color + EncodableColor + approx::AbsDiffEq,
+    C: Color + DeviceDependentColor + approx::AbsDiffEq,
     E: ColorEncoding + PartialEq,
 {
     type Epsilon = C::Epsilon;
@@ -247,7 +273,7 @@ where
 #[cfg(feature = "approx")]
 impl<C, E> approx::RelativeEq for EncodedColor<C, E>
 where
-    C: Color + EncodableColor + approx::RelativeEq,
+    C: Color + DeviceDependentColor + approx::RelativeEq,
     E: ColorEncoding + PartialEq,
 {
     fn default_max_relative() -> Self::Epsilon {
@@ -267,7 +293,7 @@ where
 #[cfg(feature = "approx")]
 impl<C, E> approx::UlpsEq for EncodedColor<C, E>
 where
-    C: Color + EncodableColor + approx::UlpsEq,
+    C: Color + DeviceDependentColor + approx::UlpsEq,
     E: ColorEncoding + PartialEq,
 {
     fn default_max_ulps() -> u32 {
@@ -293,6 +319,7 @@ mod tests {
     use super::*;
     use crate::{Rgb, Hsv};
     use angle::Deg;
+    use test;
 
     #[test]
     fn test_encode_as() {
@@ -306,6 +333,8 @@ mod tests {
 
         assert_eq!(e1, e2);
 
+        let c3 = Rgb::from_channels(0.25, 0.5, 0.75).linear().invert();
+        assert_eq!(c3, Rgb::from_channels(0.75, 0.5, 0.25).linear());
     }
 
     #[test]
@@ -316,6 +345,7 @@ mod tests {
         assert_eq!(e1.green(), 0.0);
         assert_eq!(e1.blue(), 0.5);
         assert_eq!(e1.clone().to_tuple(), (1.0, 0.0, 0.5));
+        assert_eq!(&*e1, e1.color());
 
         *e1.blue_mut() = 0.33;
         assert_eq!(e1.blue(), 0.33);
@@ -323,5 +353,15 @@ mod tests {
         let e2 = Hsv::from_channels(Deg(180.0), 0.5, 0.25).srgb_encoded();
         assert_eq!(e2.hue(), e2.color().hue());
         assert_eq!(e2.hue(), Deg(180.0));
+    }
+
+    #[test]
+    fn test_convert() {
+        for color in test::build_hs_test_data() {
+            let rgb = color.rgb.clone().linear();
+            let hsv = color.hsv.clone().linear();
+
+            assert_relative_eq!(EncodedColor::<Hsv<_>, _>::from_color(&rgb), hsv, epsilon=1e-3);
+        }
     }
 }
