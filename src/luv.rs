@@ -218,12 +218,11 @@ where
                 - num_traits::cast::<_, T>(5.0).unwrap());
 
         println!("{} {} {} {}", a, b, c, d);
-        let X;
-        if a != c {
-            X = (d - b) / (a - c);
+        let X = if a != c {
+            (d - b) / (a - c)
         } else {
-            X = num_traits::cast(0.0).unwrap();
-        }
+            num_traits::cast(0.0).unwrap()
+        };
 
         let Z = X * a + b;
 
@@ -232,7 +231,8 @@ where
 
     fn compute_Y(L: T) -> T {
         if L > Self::kappa() * Self::epsilon() {
-            let val = (L + num_traits::cast::<_, T>(16.0).unwrap()) / num_traits::cast::<_, T>(116.0).unwrap();
+            let val = (L + num_traits::cast::<_, T>(16.0).unwrap())
+                / num_traits::cast::<_, T>(116.0).unwrap();
             val * val * val
         } else {
             L / Self::kappa()

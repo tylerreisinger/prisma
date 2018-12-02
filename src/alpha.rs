@@ -1,11 +1,15 @@
 //! A wrapper type adding an alpha channel to other color types
 
+use angle::Angle;
 #[cfg(feature = "approx")]
 use approx;
-use angle::Angle;
-use ycbcr::{YCbCr, YCbCrOutOfGamutMode, YCbCrModel};
-use channel::{ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar, AngularChannelScalar, NormalChannelScalar};
-use color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor, Color3, Color4};
+use channel::{
+    AngularChannelScalar, ColorChannel, NormalChannelScalar, PosNormalBoundedChannel,
+    PosNormalChannelScalar,
+};
+use color::{
+    Bounded, Color, Color3, Color4, Flatten, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor,
+};
 use convert::{FromColor, FromHsi, FromYCbCr};
 use encoding::EncodableColor;
 use hsi::{Hsi, HsiOutOfGamutMode};
@@ -14,6 +18,7 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::mem;
 use std::slice;
+use ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
 
 /// A tag type uniquely identifying the `Alpha` type
 pub struct AlphaTag<T>(pub PhantomData<T>);
@@ -90,10 +95,11 @@ where
 }
 
 impl<T, InnerColor> Color4 for Alpha<T, InnerColor>
-    where
-        T: PosNormalChannelScalar,
-        InnerColor: Color3,
-{}
+where
+    T: PosNormalChannelScalar,
+    InnerColor: Color3,
+{
+}
 
 impl<T, InnerColor> FromTuple for Alpha<T, InnerColor>
 where
@@ -199,7 +205,8 @@ impl<T, InnerColor> EncodableColor for Alpha<T, InnerColor>
 where
     T: PosNormalChannelScalar,
     InnerColor: EncodableColor,
-{}
+{
+}
 
 impl<T, InnerColor, InnerColor2> FromColor<Alpha<T, InnerColor2>> for Alpha<T, InnerColor>
 where
@@ -212,26 +219,31 @@ where
     }
 }
 impl<T, InnerColor, A> FromHsi<Alpha<T, Hsi<T, A>>> for Alpha<T, InnerColor>
-    where
-        T: PosNormalChannelScalar,
-        InnerColor: Color + FromHsi<Hsi<T, A>>,
-        A: AngularChannelScalar + Angle,
+where
+    T: PosNormalChannelScalar,
+    InnerColor: Color + FromHsi<Hsi<T, A>>,
+    A: AngularChannelScalar + Angle,
 {
     fn from_hsi(from: &Alpha<T, Hsi<T, A>>, out_of_gamut_mode: HsiOutOfGamutMode) -> Self {
-        Alpha::from_color_and_alpha(InnerColor::from_hsi(from.color(), out_of_gamut_mode), from.alpha())
+        Alpha::from_color_and_alpha(
+            InnerColor::from_hsi(from.color(), out_of_gamut_mode),
+            from.alpha(),
+        )
     }
 }
 impl<T, InnerColor, M> FromYCbCr<Alpha<T, YCbCr<T, M>>> for Alpha<T, InnerColor>
-    where
-        T: PosNormalChannelScalar + NormalChannelScalar,
-        InnerColor: Color + FromYCbCr<YCbCr<T, M>>,
-        M: YCbCrModel<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
+    InnerColor: Color + FromYCbCr<YCbCr<T, M>>,
+    M: YCbCrModel<T>,
 {
     fn from_ycbcr(from: &Alpha<T, YCbCr<T, M>>, out_of_gamut_mode: YCbCrOutOfGamutMode) -> Self {
-        Alpha::from_color_and_alpha(InnerColor::from_ycbcr(from.color(), out_of_gamut_mode), from.alpha())
+        Alpha::from_color_and_alpha(
+            InnerColor::from_ycbcr(from.color(), out_of_gamut_mode),
+            from.alpha(),
+        )
     }
 }
-
 
 #[cfg(feature = "approx")]
 impl<T, InnerColor> approx::AbsDiffEq for Alpha<T, InnerColor>

@@ -8,10 +8,10 @@ use channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
     PosNormalBoundedChannel, PosNormalChannelScalar,
 };
-use encoding::EncodableColor;
 use color;
 use color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
 use convert::{decompose_hue_segment, FromColor, GetHue};
+use encoding::EncodableColor;
 use hsi::Hsi;
 use num_traits;
 use num_traits::Float;
@@ -100,7 +100,8 @@ where
     }
     /// Returns whether the `eHsi` instance would be the same in `Hsi`
     pub fn is_same_as_hsi(&self) -> bool {
-        let deg_hue = Deg::from_angle(self.hue().clone()) % Deg(num_traits::cast::<_, T>(120.0).unwrap());
+        let deg_hue =
+            Deg::from_angle(self.hue().clone()) % Deg(num_traits::cast::<_, T>(120.0).unwrap());
         let i_limit = num_traits::cast::<_, T>(2.0 / 3.0).unwrap()
             - (deg_hue - Deg(num_traits::cast::<_, T>(60.0).unwrap()))
                 .scalar()
@@ -112,7 +113,11 @@ where
     /// Returns an `Hsi` instance that is the same as `self` if they would be equivalent, or `None` otherwise
     pub fn to_hsi(&self) -> Option<Hsi<T, A>> {
         if self.is_same_as_hsi() {
-            Some(Hsi::from_channels(self.hue().clone(), self.saturation().clone(), self.intensity().clone()))
+            Some(Hsi::from_channels(
+                self.hue().clone(),
+                self.saturation().clone(),
+                self.intensity().clone(),
+            ))
         } else {
             None
         }
@@ -121,7 +126,11 @@ where
     ///
     /// If they would not be equivalent, returns `None`.
     pub fn from_hsi(hsi: &Hsi<T, A>) -> Option<eHsi<T, A>> {
-        let out = eHsi::from_channels(hsi.hue().clone(), hsi.saturation().clone(), hsi.intensity().clone());
+        let out = eHsi::from_channels(
+            hsi.hue().clone(),
+            hsi.saturation().clone(),
+            hsi.intensity().clone(),
+        );
         if out.is_same_as_hsi() {
             Some(out)
         } else {
@@ -212,10 +221,11 @@ where
 }
 
 impl<T, A> EncodableColor for eHsi<T, A>
-    where
-        T: PosNormalChannelScalar + num_traits::Float,
-        A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
-{}
+where
+    T: PosNormalChannelScalar + num_traits::Float,
+    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
+{
+}
 
 #[cfg(feature = "approx")]
 impl<T, A> approx::AbsDiffEq for eHsi<T, A>

@@ -44,7 +44,6 @@
 //! * [FreeChannel](free_channel/struct.FreeChannel.html)
 //! * [PosFreeChannel](free_channel/struct.PosFreeChannel.html)
 
-
 pub mod angular_channel;
 pub mod bounded_channel;
 pub mod cast;
@@ -56,6 +55,8 @@ pub use self::angular_channel::AngularChannel;
 pub use self::bounded_channel::{NormalBoundedChannel, PosNormalBoundedChannel};
 pub use self::cast::ChannelFormatCast;
 pub use self::free_channel::{FreeChannel, PosFreeChannel};
-pub use self::scalar::{AngularChannelScalar, BoundedChannelScalar, FreeChannelScalar,
-    NormalChannelScalar, PosNormalChannelScalar};
-pub use self::traits::{ColorChannel, ChannelCast};
+pub use self::scalar::{
+    AngularChannelScalar, BoundedChannelScalar, FreeChannelScalar, NormalChannelScalar,
+    PosNormalChannelScalar,
+};
+pub use self::traits::{ChannelCast, ColorChannel};

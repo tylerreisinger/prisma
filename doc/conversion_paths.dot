@@ -1,0 +1,56 @@
+digraph Conversions {
+    rankdir=LR
+
+    Hsv
+    Hsl
+    Hwb
+    Hsi
+    eHsi
+    Rgb
+    Rgi
+    YCbCr
+
+    XYZ
+    xyY
+    Lab
+    Luv
+    LMS
+    Lchab
+    Lchuv
+
+    {rank = same; Hsv Hsl Hsi eHsi Rgi Hwb};
+
+    Hsv -> Rgb
+    Hsl -> Rgb
+    Hwb -> Rgb
+    Rgi -> Rgb
+    Rgb -> Hsv
+    Rgb -> Hsl
+    Rgb -> Hwb
+    Hsv -> Hwb
+    Hwb -> Hsv
+    Rgb -> Rgi
+    Rgb -> Hsi
+    YCbCr -> Rgb [color=red];
+    Rgb -> YCbCr
+    Hsi -> Rgb [color=red];
+    Rgb -> eHsi
+    eHsi -> Rgb
+    eHsi -> Hsi [color=orange];
+    Hsi -> eHsi [color=orange];
+
+    Rgb -> XYZ [color=purple];
+    XYZ -> Rgb [color=purple];
+    XYZ -> xyY
+    xyY -> XYZ
+    XYZ -> Lab
+    Lab -> XYZ
+    XYZ -> LMS
+    LMS -> XYZ
+    XYZ -> Luv
+    Luv -> XYZ
+    Luv -> Lchuv
+    Lchuv -> Luv
+    Lab -> Lchab
+    Lchab -> Lab
+}

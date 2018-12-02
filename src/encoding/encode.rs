@@ -2,12 +2,12 @@
 //!
 //! See the [`encoding`](../index.html) module level documentation for more information
 
+use super::EncodableColor;
 use channel::{ChannelFormatCast, PosNormalChannelScalar};
 use color::Color;
 use num_traits;
 use rgb::{Rgb, Rgba};
 use std::fmt;
-use super::EncodableColor;
 
 /// An object that can encode a color from a linear encoding to a different encoding
 ///
@@ -249,15 +249,15 @@ where
 }
 
 impl<T> TranscodableColor for Rgba<T>
-    where
-        T: PosNormalChannelScalar + ChannelFormatCast<f64>,
-        f64: ChannelFormatCast<T>,
+where
+    T: PosNormalChannelScalar + ChannelFormatCast<f64>,
+    f64: ChannelFormatCast<T>,
 {
     type IntermediateColor = Rgba<f64>;
 
     fn encode_color<Encoder>(self, enc: &Encoder) -> Self
-        where
-            Encoder: ChannelEncoder,
+    where
+        Encoder: ChannelEncoder,
     {
         let alpha = self.alpha();
         let inner_color = self.color.encode_color(enc);
@@ -265,8 +265,8 @@ impl<T> TranscodableColor for Rgba<T>
     }
 
     fn decode_color<Decoder>(self, dec: &Decoder) -> Self
-        where
-            Decoder: ChannelDecoder,
+    where
+        Decoder: ChannelDecoder,
     {
         let alpha = self.alpha();
         let inner_color = self.color.decode_color(dec);
@@ -278,8 +278,8 @@ impl<T> TranscodableColor for Rgba<T>
 mod test {
     use super::*;
     use color::*;
-    use rgb::Rgb;
     use encoding::EncodableColor;
+    use rgb::Rgb;
 
     #[test]
     fn test_gamma_encoding() {

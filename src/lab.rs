@@ -169,12 +169,13 @@ impl<T> Lab<T>
 where
     T: FreeChannelScalar,
 {
-    #![cfg_attr(feature = "cargo-clippy", allow(many_single_char_names))]
+    #![cfg_attr(feature = "cargo-clippy", allow(clippy::many_single_char_names))]
     pub fn from_xyz(from: &Xyz<T>, wp: &Xyz<T>) -> Lab<T> {
         let x = from.x() / wp.x();
         let y = from.y() / wp.y();
         let z = from.z() / wp.z();
-        let L = num_traits::cast::<_, T>(116.0).unwrap() * Lab::lab_f(y) - num_traits::cast(16.0).unwrap();
+        let L = num_traits::cast::<_, T>(116.0).unwrap() * Lab::lab_f(y)
+            - num_traits::cast(16.0).unwrap();
         let a = num_traits::cast::<_, T>(500.0).unwrap() * (Lab::lab_f(x) - Lab::lab_f(y));
         let b = num_traits::cast::<_, T>(200.0).unwrap() * (Lab::lab_f(y) - Lab::lab_f(z));
 
@@ -196,7 +197,8 @@ where
         if channel > Self::epsilon() {
             channel.cbrt()
         } else {
-            (Self::kappa() * channel + num_traits::cast(16.0).unwrap()) / num_traits::cast(116.0).unwrap()
+            (Self::kappa() * channel + num_traits::cast(16.0).unwrap())
+                / num_traits::cast(116.0).unwrap()
         }
     }
 
@@ -205,13 +207,15 @@ where
         if f3 > Self::epsilon() {
             f3
         } else {
-            (num_traits::cast::<_, T>(116.0).unwrap() * f - num_traits::cast::<_, T>(16.00).unwrap())
+            (num_traits::cast::<_, T>(116.0).unwrap() * f
+                - num_traits::cast::<_, T>(16.00).unwrap())
                 / Self::kappa()
         }
     }
     fn calc_y(L: T) -> T {
         if L > Self::kappa() * Self::epsilon() {
-            let num = (L + num_traits::cast::<_, T>(16.0).unwrap()) / num_traits::cast::<_, T>(116.0).unwrap();
+            let num = (L + num_traits::cast::<_, T>(16.0).unwrap())
+                / num_traits::cast::<_, T>(116.0).unwrap();
             num * num * num
         } else {
             L / Self::kappa()

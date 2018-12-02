@@ -9,11 +9,11 @@ use channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
     PosNormalBoundedChannel, PosNormalChannelScalar,
 };
-use encoding::EncodableColor;
 use color;
 use color::{Color, FromTuple};
 use convert;
 use convert::GetChroma;
+use encoding::EncodableColor;
 use num_traits;
 use rgb::Rgb;
 use std::fmt;
@@ -189,10 +189,11 @@ where
 }
 
 impl<T, A> EncodableColor for Hsl<T, A>
-    where
-        T: PosNormalChannelScalar + num_traits::Float,
-        A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
-{}
+where
+    T: PosNormalChannelScalar + num_traits::Float,
+    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
+{
+}
 
 #[cfg(feature = "approx")]
 impl<T, A> approx::AbsDiffEq for Hsl<T, A>
@@ -255,7 +256,8 @@ where
     type ChromaType = T;
     fn get_chroma(&self) -> T {
         let one: T = num_traits::cast(1.0).unwrap();
-        let scaled_lightness: T = (num_traits::cast::<_, T>(2.0).unwrap() * self.lightness() - one).abs();
+        let scaled_lightness: T =
+            (num_traits::cast::<_, T>(2.0).unwrap() * self.lightness() - one).abs();
 
         (one - scaled_lightness) * self.saturation()
     }

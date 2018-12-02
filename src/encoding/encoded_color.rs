@@ -1,15 +1,17 @@
 //! Provides the `EncodedColor` type for storing colors with their encodings.
+use super::EncodableColor;
+use crate::channel::{AngularChannelScalar, PosNormalChannelScalar};
+use crate::{
+    Bounded, Color, Color3, Color4, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor,
+};
+use angle::Angle;
 #[cfg(feature = "approx")]
 use approx;
-use hsi::{Hsi, HsiOutOfGamutMode};
-use ycbcr::{YCbCr, YCbCrOutOfGamutMode, YCbCrModel};
-use crate::{Bounded, Color, Color3, Color4, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor};
-use convert::{FromColor, FromHsi, FromYCbCr};
-use super::EncodableColor;
-use encoding::encode::{ColorEncoding, TranscodableColor, LinearEncoding};
-use crate::channel::{PosNormalChannelScalar, AngularChannelScalar};
-use angle::Angle;
 use color_space::{ColorSpace, SpacedColor, WithColorSpace};
+use convert::{FromColor, FromHsi, FromYCbCr};
+use encoding::encode::{ColorEncoding, LinearEncoding, TranscodableColor};
+use hsi::{Hsi, HsiOutOfGamutMode};
+use ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
 
 use std::fmt;
 use std::ops::{Deref, DerefMut};
@@ -34,16 +36,13 @@ where
 {
     /// Construct a new `EncodedColor` from a color and an encoding.
     pub fn new(color: C, encoding: E) -> Self {
-        EncodedColor {
-            color,
-            encoding,
-        }
+        EncodedColor { color, encoding }
     }
 }
 impl<C, E> EncodedColor<C, E>
-    where
-        C: Color,
-        E: ColorEncoding,
+where
+    C: Color,
+    E: ColorEncoding,
 {
     /// Decompose a `EncodedColor` into it's color and encoding objects
     pub fn decompose(self) -> (C, E) {
@@ -65,13 +64,12 @@ impl<C, E> EncodedColor<C, E>
     pub fn encoding(&self) -> &E {
         &self.encoding
     }
-
 }
 
 impl<C, E> EncodedColor<C, E>
-    where
-          E: ColorEncoding,
-          C: TranscodableColor,
+where
+    E: ColorEncoding,
+    C: TranscodableColor,
 {
     /// Decode the color, making it linearly encoded
     ///
@@ -85,20 +83,21 @@ impl<C, E> EncodedColor<C, E>
     ///
     /// Note: This only is implemented for Rgb. All other encoded colors must convert to Rgb first.
     pub fn transcode<Encoder>(self, new_encoding: Encoder) -> EncodedColor<C, Encoder>
-        where
-            Encoder: ColorEncoding,
+    where
+        Encoder: ColorEncoding,
     {
         let decoded_color = self.decode();
         decoded_color.encode(new_encoding)
     }
 }
 impl<C> EncodedColor<C, LinearEncoding>
-    where
-        C: TranscodableColor,
+where
+    C: TranscodableColor,
 {
     /// Encode a linear RGB color with `encoding`
     pub fn encode<Encoder>(self, encoding: Encoder) -> EncodedColor<C, Encoder>
-        where Encoder: ColorEncoding
+    where
+        Encoder: ColorEncoding,
     {
         self.color.encode_color(&encoding).encoded_as(encoding)
     }
@@ -125,10 +124,10 @@ where
 }
 
 impl<T, C, E, S> WithColorSpace<T, C, E, S> for EncodedColor<C, E>
-    where
-       C: EncodableColor,
-       S: ColorSpace<T>,
-       E: ColorEncoding
+where
+    C: EncodableColor,
+    S: ColorSpace<T>,
+    E: ColorEncoding,
 {
     fn with_color_space(self, space: S) -> SpacedColor<T, C, E, S> {
         SpacedColor::new(self, space)
@@ -152,16 +151,18 @@ where
 }
 
 impl<C, E> Color3 for EncodedColor<C, E>
-    where
-        C: Color3 + EncodableColor,
-        E: ColorEncoding + PartialEq,
-{}
+where
+    C: Color3 + EncodableColor,
+    E: ColorEncoding + PartialEq,
+{
+}
 
 impl<C, E> Color4 for EncodedColor<C, E>
-    where
-        C: Color4 + EncodableColor,
-        E: ColorEncoding + PartialEq,
-{}
+where
+    C: Color4 + EncodableColor,
+    E: ColorEncoding + PartialEq,
+{
+}
 
 impl<C, E> PolarColor for EncodedColor<C, E>
 where
@@ -211,13 +212,16 @@ where
 }
 
 impl<C, E> EncodableColor for EncodedColor<C, E>
-where C: EncodableColor,
-      E: ColorEncoding + PartialEq,
-{}
+where
+    C: EncodableColor,
+    E: ColorEncoding + PartialEq,
+{
+}
 
 impl<C, E> Deref for EncodedColor<C, E>
-where C: EncodableColor,
-      E: ColorEncoding,
+where
+    C: EncodableColor,
+    E: ColorEncoding,
 {
     type Target = C;
 
@@ -226,8 +230,9 @@ where C: EncodableColor,
     }
 }
 impl<C, E> DerefMut for EncodedColor<C, E>
-    where C: EncodableColor,
-          E: ColorEncoding,
+where
+    C: EncodableColor,
+    E: ColorEncoding,
 {
     fn deref_mut(&mut self) -> &mut C {
         &mut self.color
@@ -235,10 +240,10 @@ impl<C, E> DerefMut for EncodedColor<C, E>
 }
 
 impl<C, E, C2> FromColor<EncodedColor<C2, E>> for EncodedColor<C, E>
-    where
-        C: Color + FromColor<C2> + EncodableColor,
-        E: ColorEncoding,
-        C2: EncodableColor,
+where
+    C: Color + FromColor<C2> + EncodableColor,
+    E: ColorEncoding,
+    C2: EncodableColor,
 {
     fn from_color(from: &EncodedColor<C2, E>) -> Self {
         EncodedColor::new(FromColor::from_color(from.color()), from.encoding.clone())
@@ -246,25 +251,34 @@ impl<C, E, C2> FromColor<EncodedColor<C2, E>> for EncodedColor<C, E>
 }
 
 impl<C, E, T, A> FromHsi<EncodedColor<Hsi<T, A>, E>> for EncodedColor<C, E>
-    where
-        C: Color + EncodableColor + FromHsi<Hsi<T, A>>,
-        E: ColorEncoding,
-        T: PosNormalChannelScalar + num_traits::Float,
-        A: AngularChannelScalar + Angle<Scalar = T>,
+where
+    C: Color + EncodableColor + FromHsi<Hsi<T, A>>,
+    E: ColorEncoding,
+    T: PosNormalChannelScalar + num_traits::Float,
+    A: AngularChannelScalar + Angle<Scalar = T>,
 {
     fn from_hsi(from: &EncodedColor<Hsi<T, A>, E>, out_of_gamut_mode: HsiOutOfGamutMode) -> Self {
-        EncodedColor::new(C::from_hsi(&from.color, out_of_gamut_mode), from.encoding.clone())
+        EncodedColor::new(
+            C::from_hsi(&from.color, out_of_gamut_mode),
+            from.encoding.clone(),
+        )
     }
 }
 impl<C, E, T, M> FromYCbCr<EncodedColor<YCbCr<T, M>, E>> for EncodedColor<C, E>
-    where
-        C: Color + EncodableColor + FromYCbCr<YCbCr<T, M>>,
-        E: ColorEncoding,
-        T: PosNormalChannelScalar + num_traits::Float,
-        M: YCbCrModel<T>,
+where
+    C: Color + EncodableColor + FromYCbCr<YCbCr<T, M>>,
+    E: ColorEncoding,
+    T: PosNormalChannelScalar + num_traits::Float,
+    M: YCbCrModel<T>,
 {
-    fn from_ycbcr(from: &EncodedColor<YCbCr<T, M>, E>, out_of_gamut_mode: YCbCrOutOfGamutMode) -> Self {
-        EncodedColor::new(C::from_ycbcr(&from.color, out_of_gamut_mode), from.encoding.clone())
+    fn from_ycbcr(
+        from: &EncodedColor<YCbCr<T, M>, E>,
+        out_of_gamut_mode: YCbCrOutOfGamutMode,
+    ) -> Self {
+        EncodedColor::new(
+            C::from_ycbcr(&from.color, out_of_gamut_mode),
+            from.encoding.clone(),
+        )
     }
 }
 
@@ -330,7 +344,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Rgb, Hsv};
+    use crate::{Hsv, Rgb};
     use angle::Deg;
     use test;
 
@@ -374,7 +388,11 @@ mod tests {
             let rgb = color.rgb.clone().linear();
             let hsv = color.hsv.clone().linear();
 
-            assert_relative_eq!(EncodedColor::<Hsv<_>, _>::from_color(&rgb), hsv, epsilon=1e-3);
+            assert_relative_eq!(
+                EncodedColor::<Hsv<_>, _>::from_color(&rgb),
+                hsv,
+                epsilon = 1e-3
+            );
         }
     }
 }

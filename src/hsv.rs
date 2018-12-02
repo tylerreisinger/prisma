@@ -10,10 +10,10 @@ use channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ColorChannel, PosNormalBoundedChannel,
     PosNormalChannelScalar,
 };
-use encoding::EncodableColor;
 use color;
 use color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
 use convert;
+use encoding::EncodableColor;
 use num_traits;
 use num_traits::cast;
 use rgb;
@@ -191,7 +191,8 @@ impl<T, A> EncodableColor for Hsv<T, A>
 where
     T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
-{}
+{
+}
 
 #[cfg(feature = "approx")]
 impl<T, A> approx::AbsDiffEq for Hsv<T, A>

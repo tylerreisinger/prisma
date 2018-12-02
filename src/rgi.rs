@@ -5,9 +5,9 @@ use approx;
 use channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar,
 };
-use encoding::EncodableColor;
 use color::{Bounded, Color, Flatten, FromTuple, Lerp};
 use convert::FromColor;
+use encoding::EncodableColor;
 use num_traits;
 use num_traits::Float;
 use rgb::Rgb;
@@ -60,7 +60,9 @@ where
     /// If red+green is greater than 1.0 or less than 0.0, `from_channels` will panic.
     pub fn from_channels(red: T, green: T, intensity: T) -> Self {
         let zero = num_traits::cast(0.0).unwrap();
-        if red + green > num_traits::cast(1.0).unwrap() || red + green < num_traits::cast(0.0).unwrap() {
+        if red + green > num_traits::cast(1.0).unwrap()
+            || red + green < num_traits::cast(0.0).unwrap()
+        {
             panic!("rgi channels must sum to exactly 1.0");
         }
         assert!(red >= zero);
@@ -213,10 +215,7 @@ where
     });
 }
 
-impl<T> EncodableColor for Rgi<T>
-    where
-        T: PosNormalChannelScalar + Float,
-{}
+impl<T> EncodableColor for Rgi<T> where T: PosNormalChannelScalar + Float {}
 
 #[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for Rgi<T>

@@ -37,10 +37,7 @@ where
     T: num_traits::Float,
 {
     pub fn new(alpha: T, beta: T) -> Self {
-        ChromaticityCoordinates {
-            alpha,
-            beta,
-        }
+        ChromaticityCoordinates { alpha, beta }
     }
 }
 

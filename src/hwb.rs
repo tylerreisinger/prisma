@@ -9,10 +9,10 @@ use channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
     PosNormalBoundedChannel, PosNormalChannelScalar,
 };
-use encoding::EncodableColor;
 use color;
 use color::{Color, FromTuple};
 use convert;
+use encoding::EncodableColor;
 use hsv;
 use num_traits;
 use rgb;
@@ -215,7 +215,8 @@ impl<T, A> EncodableColor for Hwb<T, A>
 where
     T: HwbBoundedChannelTraits + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
-{}
+{
+}
 
 #[cfg(feature = "approx")]
 impl<T, A> approx::AbsDiffEq for Hwb<T, A>

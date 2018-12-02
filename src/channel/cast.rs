@@ -1,4 +1,5 @@
 //! Defines ChannelFormatCast for converting between channel formats
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::cast_lossless))]
 
 use angle;
 use angle::Angle;
@@ -247,7 +248,8 @@ macro_rules! impl_channel_format_cast_for_angle {
             U: num_traits::Float,
         {
             fn cast(self) -> A {
-                let scalar: U = self.0.cast() * (A::period() / num_traits::cast(Self::period()).unwrap());
+                let scalar: U =
+                    self.0.cast() * (A::period() / num_traits::cast(Self::period()).unwrap());
                 A::new(scalar)
             }
         }

@@ -69,10 +69,7 @@ where
 {
     /// Construct a `YCbCr` from a `BareYCbCr` and model.
     pub fn from_color_and_model(ycbcr: BareYCbCr<T>, model: M) -> Self {
-        YCbCr {
-            ycbcr,
-            model,
-        }
+        YCbCr { ycbcr, model }
     }
 
     /// Construct a `YCbCr` from channel values and a model.
@@ -284,8 +281,8 @@ impl<T, M> EncodableColor for YCbCr<T, M>
 where
     T: NormalChannelScalar + PosNormalChannelScalar,
     M: YCbCrModel<T>,
-{}
-
+{
+}
 
 #[cfg(feature = "approx")]
 impl<T, M> approx::AbsDiffEq for YCbCr<T, M>
@@ -406,9 +403,9 @@ where
 }
 
 impl<T, M> FromYCbCr<YCbCr<T, M>> for Rgb<T>
-    where
-        T: NormalChannelScalar + PosNormalChannelScalar + num_traits::NumCast,
-        M: YCbCrModel<T>,
+where
+    T: NormalChannelScalar + PosNormalChannelScalar + num_traits::NumCast,
+    M: YCbCrModel<T>,
 {
     fn from_ycbcr(from: &YCbCr<T, M>, out_of_gamut_mode: YCbCrOutOfGamutMode) -> Rgb<T> {
         from.to_rgb(out_of_gamut_mode)

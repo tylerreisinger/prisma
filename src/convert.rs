@@ -1,12 +1,11 @@
-/// Traits and methods for converting between colors and representations
-
-use ycbcr::YCbCrOutOfGamutMode;
-use hsi::HsiOutOfGamutMode;
 use angle;
 use angle::{Angle, FromAngle};
 use color::PolarColor;
+use hsi::HsiOutOfGamutMode;
 use num_traits;
 use num_traits::Float;
+/// Traits and methods for converting between colors and representations
+use ycbcr::YCbCrOutOfGamutMode;
 
 /// Infallibly convert between two color models
 ///

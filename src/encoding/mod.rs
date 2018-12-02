@@ -71,8 +71,9 @@ pub mod encode;
 pub mod encoded_color;
 
 pub use self::encode::{
-    ChannelDecoder, ChannelEncoder, ColorEncoding, TranscodableColor,
-    LinearEncoding, SrgbEncoding, GammaEncoding};
+    ChannelDecoder, ChannelEncoder, ColorEncoding, GammaEncoding, LinearEncoding, SrgbEncoding,
+    TranscodableColor,
+};
 pub use self::encoded_color::{EncodedColor, LinearColor};
 
 /// A color that can be stored in an `EncodedColor` object.
@@ -81,7 +82,8 @@ pub trait EncodableColor: crate::Color {
     ///
     /// Specifically, `encoded_as` is a convenience wrapper over `EncodedColor::new()`.
     fn encoded_as<E>(self, encoding: E) -> EncodedColor<Self, E>
-        where E: ColorEncoding
+    where
+        E: ColorEncoding,
     {
         EncodedColor::new(self, encoding)
     }

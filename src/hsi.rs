@@ -8,10 +8,10 @@ use channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
     PosNormalBoundedChannel, PosNormalChannelScalar,
 };
-use encoding::EncodableColor;
 use color;
 use color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
-use convert::{FromColor, GetHue, FromHsi};
+use convert::{FromColor, FromHsi, GetHue};
+use encoding::EncodableColor;
 use num_traits;
 use rgb::Rgb;
 use std::f64::consts;
@@ -22,7 +22,7 @@ use std::slice;
 pub struct HsiTag;
 
 /// Defines methods for handling out-of-gamut transformations from Hsi to Rgb
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum HsiOutOfGamutMode {
     /// Simply clamp each channel to `[0,1]`
     Clip,
@@ -112,7 +112,8 @@ where
     }
     /// Returns whether the `Hsi` instance would be equivalent in `eHsi`
     pub fn is_same_as_ehsi(&self) -> bool {
-        let deg_hue = Deg::from_angle(self.hue().clone()) % Deg(num_traits::cast::<_, T>(120.0).unwrap());
+        let deg_hue =
+            Deg::from_angle(self.hue().clone()) % Deg(num_traits::cast::<_, T>(120.0).unwrap());
         let i_limit = num_traits::cast::<_, T>(2.0 / 3.0).unwrap()
             - (deg_hue - Deg(num_traits::cast::<_, T>(60.0).unwrap()))
                 .scalar()
@@ -205,10 +206,11 @@ where
 }
 
 impl<T, A> EncodableColor for Hsi<T, A>
-    where
-        T: PosNormalChannelScalar + num_traits::Float,
-        A: AngularChannelScalar + Angle<Scalar = T>,
-{}
+where
+    T: PosNormalChannelScalar + num_traits::Float,
+    A: AngularChannelScalar + Angle<Scalar = T>,
+{
+}
 
 #[cfg(feature = "approx")]
 impl<T, A> approx::AbsDiffEq for Hsi<T, A>
@@ -284,8 +286,8 @@ where
         let hue = Angle::normalize(hue_unnormal);
 
         let min = from.red().min(from.green().min(from.blue()));
-        let intensity =
-            num_traits::cast::<_, T>(1.0 / 3.0).unwrap() * (from.red() + from.green() + from.blue());
+        let intensity = num_traits::cast::<_, T>(1.0 / 3.0).unwrap()
+            * (from.red() + from.green() + from.blue());
         let saturation: T = if intensity != num_traits::cast::<_, T>(0.0).unwrap() {
             num_traits::cast::<_, T>(1.0).unwrap() - min / intensity
         } else {
@@ -297,9 +299,9 @@ where
 }
 
 impl<T, A> FromHsi<Hsi<T, A>> for Rgb<T>
-    where
-        T: PosNormalChannelScalar + num_traits::Float,
-        A: AngularChannelScalar + Angle<Scalar = T> + IntoAngle<Rad<T>, OutputScalar = T>,
+where
+    T: PosNormalChannelScalar + num_traits::Float,
+    A: AngularChannelScalar + Angle<Scalar = T> + IntoAngle<Rad<T>, OutputScalar = T>,
 {
     fn from_hsi(value: &Hsi<T, A>, out_of_gamut_mode: HsiOutOfGamutMode) -> Rgb<T> {
         let pi_over_3: T = num_traits::cast(consts::PI / 3.0).unwrap();
@@ -311,10 +313,17 @@ impl<T, A> FromHsi<Hsi<T, A>> for Rgb<T>
         let mut c1 = value.intensity() * (one - value.saturation());
         let mut c2 = value.intensity()
             * (one
-            + (value.saturation() * hue_frac.cos()) / (Angle::cos(Rad(pi_over_3) - hue_frac)));
+                + (value.saturation() * hue_frac.cos()) / (Angle::cos(Rad(pi_over_3) - hue_frac)));
         let mut c3 = num_traits::cast::<_, T>(3.0).unwrap() * value.intensity() - (c1 + c2);
 
-        to_rgb_out_of_gamut(value, &hue_frac, out_of_gamut_mode, &mut c1, &mut c2, &mut c3);
+        to_rgb_out_of_gamut(
+            value,
+            &hue_frac,
+            out_of_gamut_mode,
+            &mut c1,
+            &mut c2,
+            &mut c3,
+        );
 
         let turns_hue = Turns::from_angle(value.hue());
         if turns_hue < Turns(num_traits::cast(1.0 / 3.0).unwrap()) {
@@ -328,15 +337,14 @@ impl<T, A> FromHsi<Hsi<T, A>> for Rgb<T>
 }
 
 impl<T, A> Hsi<T, A>
-    where
-        T: PosNormalChannelScalar + num_traits::Float,
-        A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>> + fmt::Display,
+where
+    T: PosNormalChannelScalar + num_traits::Float,
+    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>> + fmt::Display,
 {
     pub fn to_rgb(&self, out_of_gamut_mode: HsiOutOfGamutMode) -> Rgb<T> {
         Rgb::from_hsi(self, out_of_gamut_mode)
     }
 }
-
 
 fn to_rgb_out_of_gamut<T, A>(
     color: &Hsi<T, A>,
@@ -397,8 +405,8 @@ fn to_rgb_out_of_gamut<T, A>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use rgb::Rgb;
     use color::Flatten;
+    use rgb::Rgb;
     use test;
 
     #[test]

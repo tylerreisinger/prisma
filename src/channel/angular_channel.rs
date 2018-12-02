@@ -44,7 +44,7 @@ where
     }
     fn clamp(&self, min: Self::Format, max: Self::Format) -> Self {
         if self.0 < min {
-            AngularChannel(max)
+            AngularChannel(min)
         } else if self.0 > max {
             AngularChannel(max)
         } else {

@@ -5,7 +5,7 @@
 use angle;
 use angle::*;
 use color;
-use num_traits::{cast, Float, PrimInt, NumCast, Zero};
+use num_traits::{cast, Float, NumCast, PrimInt, Zero};
 use std::ops;
 
 /// A scalar with no upper and/or lower bound

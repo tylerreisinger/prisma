@@ -1,6 +1,6 @@
 // There is lots of automatically generated code using tables of numbers
-#![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
-#![cfg_attr(feature = "cargo-clippy", allow(module_inception))]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal))]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 
 extern crate num_traits;
 #[cfg(any(feature = "approx", test))]
@@ -43,7 +43,9 @@ pub mod ycbcr;
 #[cfg(test)]
 pub mod test;
 
-pub use color::{Flatten, Color, Color3, Color4, HomogeneousColor, PolarColor, Lerp, FromTuple, Bounded, Invert};
+pub use color::{
+    Bounded, Color, Color3, Color4, Flatten, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor,
+};
 
 pub use ehsi::{eHsi, EHsiTag};
 pub use hsi::{Hsi, HsiTag};

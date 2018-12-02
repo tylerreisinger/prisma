@@ -10,11 +10,11 @@ use channel::{
     AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel, PosNormalBoundedChannel,
     PosNormalChannelScalar,
 };
-use encoding::EncodableColor;
 use chromaticity::ChromaticityCoordinates;
 use color;
 use color::{Color, FromTuple, HomogeneousColor};
 use convert;
+use encoding::EncodableColor;
 use hsl;
 use hsv;
 use hwb;
@@ -129,10 +129,7 @@ where
             * cast::<_, T>(0.5).unwrap()
             * (self.green() - self.blue());
 
-        ChromaticityCoordinates {
-            alpha,
-            beta,
-        }
+        ChromaticityCoordinates { alpha, beta }
     }
 }
 
@@ -207,10 +204,7 @@ where
         green:PosNormalBoundedChannel - 1, blue:PosNormalBoundedChannel - 2});
 }
 
-impl<T> EncodableColor for Rgb<T>
-    where
-        T: PosNormalChannelScalar,
-{}
+impl<T> EncodableColor for Rgb<T> where T: PosNormalChannelScalar {}
 
 #[cfg(feature = "approx")]
 impl<T> approx::AbsDiffEq for Rgb<T>

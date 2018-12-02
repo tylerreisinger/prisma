@@ -1,10 +1,11 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
-use channel::{FreeChannelScalar, PosNormalChannelScalar, ChannelFormatCast};
+use channel::{ChannelFormatCast, FreeChannelScalar, PosNormalChannelScalar};
 use color::Color;
 use encoding::{
-    ChannelDecoder, ChannelEncoder, ColorEncoding, EncodedColor, LinearEncoding, EncodableColor, TranscodableColor
+    ChannelDecoder, ChannelEncoder, ColorEncoding, EncodableColor, EncodedColor, LinearEncoding,
+    TranscodableColor,
 };
 use linalg::Matrix3;
 use num_traits;
@@ -36,7 +37,6 @@ pub trait ColorSpace<T> {
     /// Apply the forward transform to a 3-vector
     fn apply_transform(&self, vec: (T, T, T)) -> (T, T, T);
 }
-
 
 /// An object that can convert a color into XYZ
 pub trait ConvertToXyz<In> {
@@ -209,32 +209,32 @@ where
     E: ColorEncoding,
 {
     fn encode_channel<U>(&self, val: U) -> U
-        where
-            U: num_traits::Float,
+    where
+        U: num_traits::Float,
     {
         self.encoding.encode_channel(val)
     }
 }
 impl<'a, T, E> ChannelEncoder for &'a EncodedColorSpace<T, E>
-    where
-        T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
-        E: ColorEncoding,
+where
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
+    E: ColorEncoding,
 {
     fn encode_channel<U>(&self, val: U) -> U
-        where
-            U: num_traits::Float,
+    where
+        U: num_traits::Float,
     {
         self.encoding.encode_channel(val)
     }
 }
 impl<'a, T, E> ChannelEncoder for &'a mut EncodedColorSpace<T, E>
-    where
-        T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
-        E: ColorEncoding,
+where
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
+    E: ColorEncoding,
 {
     fn encode_channel<U>(&self, val: U) -> U
-        where
-            U: num_traits::Float,
+    where
+        U: num_traits::Float,
     {
         self.encoding.encode_channel(val)
     }
@@ -253,39 +253,41 @@ where
     }
 }
 impl<'a, T, E> ChannelDecoder for &'a EncodedColorSpace<T, E>
-    where
-        T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
-        E: ColorEncoding,
+where
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
+    E: ColorEncoding,
 {
     fn decode_channel<U>(&self, val: U) -> U
-        where
-            U: num_traits::Float,
+    where
+        U: num_traits::Float,
     {
         self.encoding.decode_channel(val)
     }
 }
 impl<'a, T, E> ChannelDecoder for &'a mut EncodedColorSpace<T, E>
-    where
-        T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
-        E: ColorEncoding,
+where
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
+    E: ColorEncoding,
 {
     fn decode_channel<U>(&self, val: U) -> U
-        where
-            U: num_traits::Float,
+    where
+        U: num_traits::Float,
     {
         self.encoding.decode_channel(val)
     }
 }
 impl<T, E> ColorEncoding for EncodedColorSpace<T, E>
-    where
-        T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
-        E: ColorEncoding,
-{}
+where
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
+    E: ColorEncoding,
+{
+}
 impl<'a, T, E> ColorEncoding for &'a EncodedColorSpace<T, E>
-    where
-        T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
-        E: ColorEncoding,
-{}
+where
+    T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
+    E: ColorEncoding,
+{
+}
 
 macro_rules! impl_color_space_body {
     () => {
@@ -331,7 +333,7 @@ macro_rules! impl_color_space {
         {
             impl_color_space_body!();
         }
-    }
+    };
 }
 
 impl_color_space!(EncodedColorSpace<T, E>);
@@ -352,9 +354,10 @@ macro_rules! impl_convert_xyz_body {
 
 macro_rules! impl_convert_xyz {
     ($typ:ty) => {
-        impl<T, C, E, EIn> ConvertToXyz<EncodedColor<C, EIn>> for $typ where
+        impl<T, C, E, EIn> ConvertToXyz<EncodedColor<C, EIn>> for $typ
+        where
             T: PosNormalChannelScalar + FreeChannelScalar + num_traits::Float,
-            C: TranscodableColor + Color<ChannelsTuple=(T, T, T)>,
+            C: TranscodableColor + Color<ChannelsTuple = (T, T, T)>,
             E: ColorEncoding,
             EIn: ColorEncoding,
         {
@@ -362,15 +365,16 @@ macro_rules! impl_convert_xyz {
         }
     };
     (ref $typ:ty) => {
-        impl<'a, T, C, E, EIn> ConvertToXyz<EncodedColor<C, EIn>> for &'a $typ where
+        impl<'a, T, C, E, EIn> ConvertToXyz<EncodedColor<C, EIn>> for &'a $typ
+        where
             T: PosNormalChannelScalar + FreeChannelScalar + num_traits::Float,
-            C: TranscodableColor + Color<ChannelsTuple=(T, T, T)>,
+            C: TranscodableColor + Color<ChannelsTuple = (T, T, T)>,
             E: ColorEncoding,
             EIn: ColorEncoding,
         {
             impl_convert_xyz_body!();
         }
-    }
+    };
 }
 
 impl_convert_xyz!(EncodedColorSpace<T, E>);
@@ -378,7 +382,8 @@ impl_convert_xyz!(ref EncodedColorSpace<T, E>);
 impl_convert_xyz!(Rc<EncodedColorSpace<T, E>>);
 impl_convert_xyz!(Arc<EncodedColorSpace<T, E>>);
 
-impl<T, E> ConvertFromXyz<EncodedColor<Rgb<T>, E>> for EncodedColorSpace<T, E> where
+impl<T, E> ConvertFromXyz<EncodedColor<Rgb<T>, E>> for EncodedColorSpace<T, E>
+where
     T: PosNormalChannelScalar + FreeChannelScalar + ChannelFormatCast<f64>,
     f64: ChannelFormatCast<T>,
     E: ColorEncoding + PartialEq + Clone,
@@ -386,8 +391,12 @@ impl<T, E> ConvertFromXyz<EncodedColor<Rgb<T>, E>> for EncodedColorSpace<T, E> w
     type InputColor = Xyz<T>;
 
     fn convert_from_xyz(&self, color: &Xyz<T>) -> EncodedColor<Rgb<T>, E> {
-        let (r, g, b) = self.get_inverse_xyz_transform().transform_vector(color.clone().to_tuple());
-        Rgb::from_channels(r, g, b).encoded_as(LinearEncoding::new()).encode(self.encoding.clone())
+        let (r, g, b) = self
+            .get_inverse_xyz_transform()
+            .transform_vector(color.clone().to_tuple());
+        Rgb::from_channels(r, g, b)
+            .encoded_as(LinearEncoding::new())
+            .encode(self.encoding.clone())
     }
 }
 
@@ -395,9 +404,9 @@ impl<T, E> ConvertFromXyz<EncodedColor<Rgb<T>, E>> for EncodedColorSpace<T, E> w
 mod test {
     use super::*;
     use color::*;
-    use color_space::NamedColorSpace;
     use color_space::presets::*;
     use color_space::primary::RgbPrimary;
+    use color_space::NamedColorSpace;
     use encoding::*;
     use linalg::Matrix3;
     use rgb::Rgb;
