@@ -2,7 +2,7 @@
 
 use channel::{FreeChannelScalar, PosNormalChannelScalar};
 use color_space::{EncodedColorSpace, RgbPrimary};
-use encoding::{ColorEncoding, SrgbEncoding};
+use encoding::SrgbEncoding;
 use num_traits;
 use white_point::{NamedWhitePoint, D65};
 

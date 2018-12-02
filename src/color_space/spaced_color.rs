@@ -6,13 +6,12 @@ use std::ops::{Deref, DerefMut};
 use num_traits;
 use angle::Angle;
 use encoding::{ColorEncoding, EncodableColor, EncodedColor, TranscodableColor};
-use channel::{AngularChannelScalar, PosNormalChannelScalar, FreeChannelScalar, ChannelFormatCast};
+use channel::{AngularChannelScalar, PosNormalChannelScalar, FreeChannelScalar};
 use color_space::{ColorSpace, ConvertToXyz, ConvertFromXyz};
 use convert::{FromColor, FromHsi, FromYCbCr};
 use crate::{Color, Color3, Color4, PolarColor, Lerp, Invert, Bounded, FromTuple, HomogeneousColor};
 use hsi::{HsiOutOfGamutMode, Hsi};
 use ycbcr::{YCbCrOutOfGamutMode, YCbCr, YCbCrModel};
-use xyz::Xyz;
 
 /// A device-dependent color with an associated color space and encoding
 ///

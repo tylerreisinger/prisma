@@ -11,7 +11,6 @@ use num_traits;
 use rgb::Rgb;
 use xyz::Xyz;
 
-use color_space::{SpacedColor, WithColorSpace};
 use color_space::primary::RgbPrimary;
 
 /// A color space that allows moving from device-dependent to device-independent spaces and back

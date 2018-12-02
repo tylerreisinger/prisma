@@ -7,8 +7,7 @@ use crate::{Bounded, Color, Color3, Color4, FromTuple, HomogeneousColor, Invert,
 use convert::{FromColor, FromHsi, FromYCbCr};
 use super::EncodableColor;
 use encoding::encode::{ColorEncoding, TranscodableColor, LinearEncoding};
-use crate::Rgb;
-use crate::channel::{ChannelFormatCast, PosNormalChannelScalar, AngularChannelScalar};
+use crate::channel::{PosNormalChannelScalar, AngularChannelScalar};
 use angle::Angle;
 use color_space::{ColorSpace, SpacedColor, WithColorSpace};
 
