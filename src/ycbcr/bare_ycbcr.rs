@@ -7,7 +7,7 @@ use channel::{
     PosNormalBoundedChannel, PosNormalChannelScalar,
 };
 use color::{Bounded, Color, Flatten, FromTuple, Invert, Lerp};
-use encoding::DeviceDependentColor;
+use encoding::EncodableColor;
 use num_traits;
 use std::fmt;
 use std::mem;
@@ -187,7 +187,7 @@ where
         cb:NormalBoundedChannel - 1, cr:NormalBoundedChannel - 2});
 }
 
-impl<T> DeviceDependentColor for BareYCbCr<T>
+impl<T> EncodableColor for BareYCbCr<T>
     where
         T: PosNormalChannelScalar + NormalChannelScalar,
 {}

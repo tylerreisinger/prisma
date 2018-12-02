@@ -6,10 +6,7 @@ use encoding::{ColorEncoding, SrgbEncoding};
 use num_traits;
 use white_point::{NamedWhitePoint, D65};
 
-pub trait NamedColorSpace<T> {
-    type Encoding: ColorEncoding;
-    fn get_color_space() -> EncodedColorSpace<T, Self::Encoding>;
-}
+use color_space::NamedColorSpace;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct sRgb;

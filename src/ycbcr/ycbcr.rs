@@ -5,7 +5,7 @@ use approx;
 use channel::{ChannelFormatCast, NormalChannelScalar, PosNormalChannelScalar};
 use color::{Bounded, Color, Flatten, FromTuple, Invert, Lerp};
 use convert::{FromColor, FromYCbCr};
-use encoding::DeviceDependentColor;
+use encoding::EncodableColor;
 use num_traits;
 use rgb::Rgb;
 use std::fmt;
@@ -280,7 +280,7 @@ where
     }
 }
 
-impl<T, M> DeviceDependentColor for YCbCr<T, M>
+impl<T, M> EncodableColor for YCbCr<T, M>
 where
     T: NormalChannelScalar + PosNormalChannelScalar,
     M: YCbCrModel<T>,

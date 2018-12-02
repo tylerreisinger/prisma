@@ -41,7 +41,7 @@
 //! ## Details:
 //!
 //! Encoding and decoding colors is primarily done through `EncodedColor`, though a lower level interface
-//! exists via the [`EncodableColor`](encode/struct.EncodableColor.html) trait. Only `Rgb` and `Rgba` colors
+//! exists via the [`TranscodableColor`](encode/struct.TranscodableColor.html) trait. Only `Rgb` and `Rgba` colors
 //! can have their encoding changed. This is due to the fact that gamma encodings are non-linear, and
 //! doing math to convert between models will not preserve the same decoding method. Thus, in order
 //! to change encodings of other device-dependent color models, you must first convert to Rgb, then
@@ -56,10 +56,10 @@
 //!
 //! Converting from sRGB encoding to linear and back:
 //! ```rust
-//! use prisma::encoding::{DeviceDependentColor, EncodedColor, SrgbEncoding};
+//! use prisma::encoding::{TranscodableColor, EncodableColor, SrgbEncoding};
 //! use prisma::Rgb;
 //!
-//! let srgb_color = Rgb::from_channels(200, 200, 200u8).encoded_as(SrgbEncoding::new());
+//! let srgb_color = Rgb::from_channels(200, 200, 200u8).srgb_encoded();
 //! let linear_color = srgb_color.decode();
 //! // Do some transformation
 //! let srgb_color = linear_color.encode(SrgbEncoding::new());
@@ -71,12 +71,12 @@ pub mod encode;
 pub mod encoded_color;
 
 pub use self::encode::{
-    ChannelDecoder, ChannelEncoder, ColorEncoding, EncodableColor,
+    ChannelDecoder, ChannelEncoder, ColorEncoding, TranscodableColor,
     LinearEncoding, SrgbEncoding, GammaEncoding};
 pub use self::encoded_color::{EncodedColor, LinearColor};
 
 /// A color that can be stored in an `EncodedColor` object.
-pub trait DeviceDependentColor: crate::Color {
+pub trait EncodableColor: crate::Color {
     /// Specify what encoding the color has. This does not actually encode anything
     ///
     /// Specifically, `encoded_as` is a convenience wrapper over `EncodedColor::new()`.

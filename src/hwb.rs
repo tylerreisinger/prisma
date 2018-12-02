@@ -9,7 +9,7 @@ use channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
     PosNormalBoundedChannel, PosNormalChannelScalar,
 };
-use encoding::DeviceDependentColor;
+use encoding::EncodableColor;
 use color;
 use color::{Color, FromTuple};
 use convert;
@@ -211,7 +211,7 @@ where
         whiteness:PosNormalBoundedChannel - 1, blackness:PosNormalBoundedChannel - 2});
 }
 
-impl<T, A> DeviceDependentColor for Hwb<T, A>
+impl<T, A> EncodableColor for Hwb<T, A>
 where
     T: HwbBoundedChannelTraits + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,

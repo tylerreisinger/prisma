@@ -5,7 +5,7 @@ use approx;
 use channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar,
 };
-use encoding::DeviceDependentColor;
+use encoding::EncodableColor;
 use color::{Bounded, Color, Flatten, FromTuple, Lerp};
 use convert::FromColor;
 use num_traits;
@@ -213,7 +213,7 @@ where
     });
 }
 
-impl<T> DeviceDependentColor for Rgi<T>
+impl<T> EncodableColor for Rgi<T>
     where
         T: PosNormalChannelScalar + Float,
 {}

@@ -8,7 +8,7 @@ use channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
     PosNormalBoundedChannel, PosNormalChannelScalar,
 };
-use encoding::DeviceDependentColor;
+use encoding::EncodableColor;
 use color;
 use color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
 use convert::{FromColor, GetHue, FromHsi};
@@ -204,10 +204,10 @@ where
         saturation:PosNormalBoundedChannel - 1, intensity:PosNormalBoundedChannel - 2});
 }
 
-impl<T, A> DeviceDependentColor for Hsi<T, A>
+impl<T, A> EncodableColor for Hsi<T, A>
     where
         T: PosNormalChannelScalar + num_traits::Float,
-        A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
+        A: AngularChannelScalar + Angle<Scalar = T>,
 {}
 
 #[cfg(feature = "approx")]

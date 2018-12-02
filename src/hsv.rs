@@ -10,7 +10,7 @@ use channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ColorChannel, PosNormalBoundedChannel,
     PosNormalChannelScalar,
 };
-use encoding::DeviceDependentColor;
+use encoding::EncodableColor;
 use color;
 use color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
 use convert;
@@ -187,7 +187,7 @@ where
         saturation:PosNormalBoundedChannel - 1, value:PosNormalBoundedChannel - 2});
 }
 
-impl<T, A> DeviceDependentColor for Hsv<T, A>
+impl<T, A> EncodableColor for Hsv<T, A>
 where
     T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,

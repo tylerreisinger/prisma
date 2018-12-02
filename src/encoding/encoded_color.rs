@@ -5,11 +5,12 @@ use hsi::{Hsi, HsiOutOfGamutMode};
 use ycbcr::{YCbCr, YCbCrOutOfGamutMode, YCbCrModel};
 use crate::{Bounded, Color, Color3, Color4, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor};
 use convert::{FromColor, FromHsi, FromYCbCr};
-use super::DeviceDependentColor;
-use encoding::encode::{ColorEncoding, EncodableColor, LinearEncoding};
+use super::EncodableColor;
+use encoding::encode::{ColorEncoding, TranscodableColor, LinearEncoding};
 use crate::Rgb;
 use crate::channel::{ChannelFormatCast, PosNormalChannelScalar, AngularChannelScalar};
 use angle::Angle;
+use color_space::{ColorSpace, SpacedColor, WithColorSpace};
 
 use std::fmt;
 use std::ops::{Deref, DerefMut};
@@ -29,7 +30,7 @@ pub type LinearColor<C> = EncodedColor<C, LinearEncoding>;
 
 impl<C, E> EncodedColor<C, E>
 where
-    C: Color + DeviceDependentColor,
+    C: Color + EncodableColor,
     E: ColorEncoding,
 {
     /// Construct a new `EncodedColor` from a color and an encoding.
@@ -68,15 +69,15 @@ impl<C, E> EncodedColor<C, E>
 
 }
 
-impl<T, E> EncodedColor<Rgb<T>, E>
-    where T: PosNormalChannelScalar + ChannelFormatCast<f64>,
-          f64: ChannelFormatCast<T>,
+impl<C, E> EncodedColor<C, E>
+    where
           E: ColorEncoding,
+          C: TranscodableColor,
 {
     /// Decode the color, making it linearly encoded
     ///
     /// Note: This only is implemented for Rgb. All other encoded colors must convert to Rgb first.
-    pub fn decode(self) -> EncodedColor<Rgb<T>, LinearEncoding> {
+    pub fn decode(self) -> EncodedColor<C, LinearEncoding> {
         let decoded_color = self.color.decode_color(&self.encoding);
         EncodedColor::new(decoded_color, LinearEncoding::new())
     }
@@ -84,7 +85,7 @@ impl<T, E> EncodedColor<Rgb<T>, E>
     /// Change the encoding of the color
     ///
     /// Note: This only is implemented for Rgb. All other encoded colors must convert to Rgb first.
-    pub fn transcode<Encoder>(self, new_encoding: Encoder) -> EncodedColor<Rgb<T>, Encoder>
+    pub fn transcode<Encoder>(self, new_encoding: Encoder) -> EncodedColor<C, Encoder>
         where
             Encoder: ColorEncoding,
     {
@@ -92,12 +93,12 @@ impl<T, E> EncodedColor<Rgb<T>, E>
         decoded_color.encode(new_encoding)
     }
 }
-impl<T> EncodedColor<Rgb<T>, LinearEncoding>
-    where T: PosNormalChannelScalar + ChannelFormatCast<f64>,
-          f64: ChannelFormatCast<T>,
+impl<C> EncodedColor<C, LinearEncoding>
+    where
+        C: TranscodableColor,
 {
     /// Encode a linear RGB color with `encoding`
-    pub fn encode<Encoder>(self, encoding: Encoder) -> EncodedColor<Rgb<T>, Encoder>
+    pub fn encode<Encoder>(self, encoding: Encoder) -> EncodedColor<C, Encoder>
         where Encoder: ColorEncoding
     {
         self.color.encode_color(&encoding).encoded_as(encoding)
@@ -106,7 +107,7 @@ impl<T> EncodedColor<Rgb<T>, LinearEncoding>
 
 impl<C, E> EncodedColor<C, E>
 where
-    C: Color + HomogeneousColor + DeviceDependentColor,
+    C: Color + HomogeneousColor + EncodableColor,
     E: ColorEncoding + PartialEq,
 {
     pub fn broadcast(value: C::ChannelFormat, encoding: E) -> Self {
@@ -116,7 +117,7 @@ where
 
 impl<C, E> EncodedColor<C, E>
 where
-    C: Color + FromTuple + DeviceDependentColor,
+    C: Color + FromTuple + EncodableColor,
     E: ColorEncoding + PartialEq,
 {
     pub fn from_tuple(values: C::ChannelsTuple, encoding: E) -> Self {
@@ -124,9 +125,20 @@ where
     }
 }
 
+impl<T, C, E, S> WithColorSpace<T, C, E, S> for EncodedColor<C, E>
+    where
+       C: EncodableColor,
+       S: ColorSpace<T>,
+       E: ColorEncoding
+{
+    fn with_color_space(self, space: S) -> SpacedColor<T, C, E, S> {
+        SpacedColor::new(self, space)
+    }
+}
+
 impl<C, E> Color for EncodedColor<C, E>
 where
-    C: Color + DeviceDependentColor,
+    C: Color + EncodableColor,
     E: ColorEncoding + PartialEq,
 {
     type Tag = C::Tag;
@@ -142,19 +154,19 @@ where
 
 impl<C, E> Color3 for EncodedColor<C, E>
     where
-        C: Color3 + DeviceDependentColor,
+        C: Color3 + EncodableColor,
         E: ColorEncoding + PartialEq,
 {}
 
 impl<C, E> Color4 for EncodedColor<C, E>
     where
-        C: Color4 + DeviceDependentColor,
+        C: Color4 + EncodableColor,
         E: ColorEncoding + PartialEq,
 {}
 
 impl<C, E> PolarColor for EncodedColor<C, E>
 where
-    C: Color + DeviceDependentColor + PolarColor,
+    C: Color + EncodableColor + PolarColor,
     E: ColorEncoding + PartialEq,
 {
     type Angular = C::Angular;
@@ -163,7 +175,7 @@ where
 
 impl<C, E> Lerp for EncodedColor<C, E>
 where
-    C: Color + Lerp + DeviceDependentColor,
+    C: Color + Lerp + EncodableColor,
     E: ColorEncoding + PartialEq,
 {
     type Position = C::Position;
@@ -178,7 +190,7 @@ where
 
 impl<C, E> Invert for EncodedColor<C, E>
 where
-    C: Color + Invert + DeviceDependentColor,
+    C: Color + Invert + EncodableColor,
     E: ColorEncoding + PartialEq,
 {
     fn invert(self) -> Self {
@@ -188,7 +200,7 @@ where
 
 impl<C, E> Bounded for EncodedColor<C, E>
 where
-    C: Color + Bounded + DeviceDependentColor,
+    C: Color + Bounded + EncodableColor,
     E: ColorEncoding + PartialEq,
 {
     fn normalize(self) -> Self {
@@ -199,13 +211,13 @@ where
     }
 }
 
-impl<C, E> DeviceDependentColor for EncodedColor<C, E>
-where C: DeviceDependentColor + EncodableColor,
+impl<C, E> EncodableColor for EncodedColor<C, E>
+where C: EncodableColor,
       E: ColorEncoding + PartialEq,
 {}
 
 impl<C, E> Deref for EncodedColor<C, E>
-where C: DeviceDependentColor,
+where C: EncodableColor,
       E: ColorEncoding,
 {
     type Target = C;
@@ -215,7 +227,7 @@ where C: DeviceDependentColor,
     }
 }
 impl<C, E> DerefMut for EncodedColor<C, E>
-    where C: DeviceDependentColor,
+    where C: EncodableColor,
           E: ColorEncoding,
 {
     fn deref_mut(&mut self) -> &mut C {
@@ -225,9 +237,9 @@ impl<C, E> DerefMut for EncodedColor<C, E>
 
 impl<C, E, C2> FromColor<EncodedColor<C2, E>> for EncodedColor<C, E>
     where
-        C: Color + FromColor<C2> + DeviceDependentColor,
+        C: Color + FromColor<C2> + EncodableColor,
         E: ColorEncoding,
-        C2: DeviceDependentColor,
+        C2: EncodableColor,
 {
     fn from_color(from: &EncodedColor<C2, E>) -> Self {
         EncodedColor::new(FromColor::from_color(from.color()), from.encoding.clone())
@@ -236,7 +248,7 @@ impl<C, E, C2> FromColor<EncodedColor<C2, E>> for EncodedColor<C, E>
 
 impl<C, E, T, A> FromHsi<EncodedColor<Hsi<T, A>, E>> for EncodedColor<C, E>
     where
-        C: Color + DeviceDependentColor + FromHsi<Hsi<T, A>>,
+        C: Color + EncodableColor + FromHsi<Hsi<T, A>>,
         E: ColorEncoding,
         T: PosNormalChannelScalar + num_traits::Float,
         A: AngularChannelScalar + Angle<Scalar = T>,
@@ -247,7 +259,7 @@ impl<C, E, T, A> FromHsi<EncodedColor<Hsi<T, A>, E>> for EncodedColor<C, E>
 }
 impl<C, E, T, M> FromYCbCr<EncodedColor<YCbCr<T, M>, E>> for EncodedColor<C, E>
     where
-        C: Color + DeviceDependentColor + FromYCbCr<YCbCr<T, M>>,
+        C: Color + EncodableColor + FromYCbCr<YCbCr<T, M>>,
         E: ColorEncoding,
         T: PosNormalChannelScalar + num_traits::Float,
         M: YCbCrModel<T>,
@@ -260,7 +272,7 @@ impl<C, E, T, M> FromYCbCr<EncodedColor<YCbCr<T, M>, E>> for EncodedColor<C, E>
 #[cfg(feature = "approx")]
 impl<C, E> approx::AbsDiffEq for EncodedColor<C, E>
 where
-    C: Color + DeviceDependentColor + approx::AbsDiffEq,
+    C: Color + EncodableColor + approx::AbsDiffEq,
     E: ColorEncoding + PartialEq,
 {
     type Epsilon = C::Epsilon;
@@ -275,7 +287,7 @@ where
 #[cfg(feature = "approx")]
 impl<C, E> approx::RelativeEq for EncodedColor<C, E>
 where
-    C: Color + DeviceDependentColor + approx::RelativeEq,
+    C: Color + EncodableColor + approx::RelativeEq,
     E: ColorEncoding + PartialEq,
 {
     fn default_max_relative() -> Self::Epsilon {
@@ -295,7 +307,7 @@ where
 #[cfg(feature = "approx")]
 impl<C, E> approx::UlpsEq for EncodedColor<C, E>
 where
-    C: Color + DeviceDependentColor + approx::UlpsEq,
+    C: Color + EncodableColor + approx::UlpsEq,
     E: ColorEncoding + PartialEq,
 {
     fn default_max_ulps() -> u32 {

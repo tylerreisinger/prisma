@@ -4,13 +4,14 @@ use std::sync::Arc;
 use channel::{FreeChannelScalar, PosNormalChannelScalar, ChannelFormatCast};
 use color::Color;
 use encoding::{
-    ChannelDecoder, ChannelEncoder, ColorEncoding, EncodedColor, LinearEncoding, DeviceDependentColor,
+    ChannelDecoder, ChannelEncoder, ColorEncoding, EncodedColor, LinearEncoding, EncodableColor, TranscodableColor
 };
 use linalg::Matrix3;
 use num_traits;
 use rgb::Rgb;
 use xyz::Xyz;
 
+use color_space::{SpacedColor, WithColorSpace};
 use color_space::primary::RgbPrimary;
 
 /// A color space that allows moving from device-dependent to device-independent spaces and back
@@ -37,7 +38,8 @@ pub trait ColorSpace<T> {
     fn apply_transform(&self, vec: (T, T, T)) -> (T, T, T);
 }
 
-/// An object that can convert into XYZ
+
+/// An object that can convert a color into XYZ
 pub trait ConvertToXyz<In> {
     /// The type to output. Always some form of Xyz<T>
     type OutputColor: Color;
@@ -45,7 +47,7 @@ pub trait ConvertToXyz<In> {
     /// Convert `color` into the XYZ space
     fn convert_to_xyz(&self, color: &In) -> Self::OutputColor;
 }
-/// An object that can convert out of XYZ
+/// An object that can convert a color out of XYZ
 pub trait ConvertFromXyz<Out> {
     type InputColor: Color;
 
@@ -323,19 +325,28 @@ impl_color_space!(&EncodedColorSpace<T, E>);
 impl_color_space!(Rc<EncodedColorSpace<T, E>>);
 impl_color_space!(Arc<EncodedColorSpace<T, E>>);
 
-impl<T, E, EIn> ConvertToXyz<EncodedColor<Rgb<T>, EIn>> for EncodedColorSpace<T, E> where
-    T: PosNormalChannelScalar + FreeChannelScalar + ChannelFormatCast<f64>,
-    f64: ChannelFormatCast<T>,
-    E: ColorEncoding,
-    EIn: ColorEncoding,
-{
-    type OutputColor = Xyz<T>;
-    fn convert_to_xyz(&self, color: &EncodedColor<Rgb<T>, EIn>) -> Self::OutputColor {
-        let linear_color = color.clone().decode();
-        let (x, y, z) = self.get_xyz_transform().transform_vector(linear_color.to_tuple());
-        Xyz::from_channels(x, y, z)
+macro_rules! impl_convert_xyz {
+    ($typ:ty) => {
+        impl<T, C, E, EIn> ConvertToXyz<EncodedColor<C, EIn>> for $typ where
+            T: PosNormalChannelScalar + FreeChannelScalar + num_traits::Float,
+            C: TranscodableColor + Color<ChannelsTuple=(T, T, T)>,
+            E: ColorEncoding,
+            EIn: ColorEncoding,
+        {
+            type OutputColor = Xyz<T>;
+            fn convert_to_xyz(&self, color: &EncodedColor<C, EIn>) -> Self::OutputColor {
+                let linear_color = color.clone().decode();
+                let (x, y, z) = self.get_xyz_transform().transform_vector(linear_color.to_tuple());
+                Xyz::from_channels(x, y, z)
+            }
+        }
     }
 }
+
+impl_convert_xyz!(EncodedColorSpace<T, E>);
+impl_convert_xyz!(&EncodedColorSpace<T, E>);
+impl_convert_xyz!(Rc<EncodedColorSpace<T, E>>);
+impl_convert_xyz!(Arc<EncodedColorSpace<T, E>>);
 
 impl<T, E> ConvertFromXyz<EncodedColor<Rgb<T>, E>> for EncodedColorSpace<T, E> where
     T: PosNormalChannelScalar + FreeChannelScalar + ChannelFormatCast<f64>,
@@ -354,6 +365,7 @@ impl<T, E> ConvertFromXyz<EncodedColor<Rgb<T>, E>> for EncodedColorSpace<T, E> w
 mod test {
     use super::*;
     use color::*;
+    use color_space::NamedColorSpace;
     use color_space::presets::*;
     use color_space::primary::RgbPrimary;
     use encoding::*;
@@ -361,6 +373,20 @@ mod test {
     use rgb::Rgb;
     use white_point::{NamedWhitePoint, D65};
     use xyz::Xyz;
+
+    #[test]
+    fn test_convert_to_xyz() {
+        let rgb = Rgb::from_channels(0.0, 0.0, 0.0f32).encoded_as(SrgbEncoding);
+        let space = sRgb::get_color_space();
+        let xyz = space.convert_to_xyz(&rgb);
+
+        assert_eq!(xyz.x(), 0.0);
+        assert_eq!(xyz.y(), 0.0);
+        assert_eq!(xyz.z(), 0.0);
+
+        let rgb2 = space.convert_from_xyz(&xyz);
+        assert_eq!(rgb, rgb2);
+    }
 
     #[test]
     fn test_to_xyz() {

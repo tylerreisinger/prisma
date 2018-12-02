@@ -83,3 +83,6 @@ pub trait Bounded {
     /// Return true if the value is normalized
     fn is_normalized(&self) -> bool;
 }
+
+/// A color which must have a space specified in order to uniquely represent a color
+pub trait DeviceDependentColor: Color {}

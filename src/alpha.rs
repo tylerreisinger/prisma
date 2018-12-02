@@ -7,7 +7,7 @@ use ycbcr::{YCbCr, YCbCrOutOfGamutMode, YCbCrModel};
 use channel::{ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar, AngularChannelScalar, NormalChannelScalar};
 use color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor, Color3, Color4};
 use convert::{FromColor, FromHsi, FromYCbCr};
-use encoding::DeviceDependentColor;
+use encoding::EncodableColor;
 use hsi::{Hsi, HsiOutOfGamutMode};
 use num_traits;
 use std::fmt;
@@ -195,10 +195,10 @@ where
     type Cartesian = InnerColor::Cartesian;
 }
 
-impl<T, InnerColor> DeviceDependentColor for Alpha<T, InnerColor>
+impl<T, InnerColor> EncodableColor for Alpha<T, InnerColor>
 where
     T: PosNormalChannelScalar,
-    InnerColor: DeviceDependentColor,
+    InnerColor: EncodableColor,
 {}
 
 impl<T, InnerColor, InnerColor2> FromColor<Alpha<T, InnerColor2>> for Alpha<T, InnerColor>

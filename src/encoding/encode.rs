@@ -7,6 +7,7 @@ use color::Color;
 use num_traits;
 use rgb::{Rgb, Rgba};
 use std::fmt;
+use super::EncodableColor;
 
 /// An object that can encode a color from a linear encoding to a different encoding
 ///
@@ -32,7 +33,7 @@ pub trait ChannelDecoder {
 /// Because of the non-linear nature of encodings, only Rgb can have its encoding changed. The other
 /// device-dependent colors can come from an encoding, and may be stored in `EncodedColor`, but
 /// they must go through Rgb for that encoding to change.
-pub trait EncodableColor: Color {
+pub trait TranscodableColor: Color + EncodableColor {
     /// The color type used internally to do conversions. This will always have floating-point channels
     type IntermediateColor;
     fn encode_color<Encoder>(self, enc: &Encoder) -> Self
@@ -51,10 +52,10 @@ pub trait ColorEncoding: ChannelEncoder + ChannelDecoder + Sized + Clone {}
 /// sRGB features a small linear region at the lowest values, and then transitions to
 /// a $`\gamma`$ of 2.4.
 #[derive(Clone, Debug, PartialEq)]
-pub struct SrgbEncoding {}
+pub struct SrgbEncoding;
 /// A linear encoding scheme
 #[derive(Clone, Debug, PartialEq)]
-pub struct LinearEncoding {}
+pub struct LinearEncoding;
 /// A gamma encoding scheme with a given value for $`\gamma`$
 #[derive(Clone, Debug, PartialEq)]
 pub struct GammaEncoding<T>(pub T);
@@ -210,7 +211,7 @@ where
     }
 }
 
-impl<T> EncodableColor for Rgb<T>
+impl<T> TranscodableColor for Rgb<T>
 where
     T: PosNormalChannelScalar + ChannelFormatCast<f64>,
     f64: ChannelFormatCast<T>,
@@ -247,7 +248,7 @@ where
     }
 }
 
-impl<T> EncodableColor for Rgba<T>
+impl<T> TranscodableColor for Rgba<T>
     where
         T: PosNormalChannelScalar + ChannelFormatCast<f64>,
         f64: ChannelFormatCast<T>,
@@ -278,7 +279,7 @@ mod test {
     use super::*;
     use color::*;
     use rgb::Rgb;
-    use encoding::DeviceDependentColor;
+    use encoding::EncodableColor;
 
     #[test]
     fn test_gamma_encoding() {

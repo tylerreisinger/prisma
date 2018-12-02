@@ -10,7 +10,7 @@ use channel::{
     AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel, PosNormalBoundedChannel,
     PosNormalChannelScalar,
 };
-use encoding::DeviceDependentColor;
+use encoding::EncodableColor;
 use chromaticity::ChromaticityCoordinates;
 use color;
 use color::{Color, FromTuple, HomogeneousColor};
@@ -207,7 +207,7 @@ where
         green:PosNormalBoundedChannel - 1, blue:PosNormalBoundedChannel - 2});
 }
 
-impl<T> DeviceDependentColor for Rgb<T>
+impl<T> EncodableColor for Rgb<T>
     where
         T: PosNormalChannelScalar,
 {}
