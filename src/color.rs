@@ -41,6 +41,7 @@ pub trait Flatten: Color {
     fn as_slice(&self) -> &[Self::ScalarFormat];
 }
 
+// TODO: Move broadcast to its own trait, and implement this for the various wrappers that take extra args
 /// A color only having one type of channel
 pub trait HomogeneousColor: Color {
     /// The scalar type of each channel

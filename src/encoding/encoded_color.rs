@@ -106,7 +106,7 @@ impl<T> EncodedColor<Rgb<T>, LinearEncoding>
 
 impl<C, E> EncodedColor<C, E>
 where
-    C: Color + EncodableColor + HomogeneousColor + DeviceDependentColor,
+    C: Color + HomogeneousColor + DeviceDependentColor,
     E: ColorEncoding + PartialEq,
 {
     pub fn broadcast(value: C::ChannelFormat, encoding: E) -> Self {
@@ -116,7 +116,7 @@ where
 
 impl<C, E> EncodedColor<C, E>
 where
-    C: Color + EncodableColor + FromTuple + DeviceDependentColor,
+    C: Color + FromTuple + DeviceDependentColor,
     E: ColorEncoding + PartialEq,
 {
     pub fn from_tuple(values: C::ChannelsTuple, encoding: E) -> Self {
@@ -126,7 +126,7 @@ where
 
 impl<C, E> Color for EncodedColor<C, E>
 where
-    C: Color + EncodableColor,
+    C: Color + DeviceDependentColor,
     E: ColorEncoding + PartialEq,
 {
     type Tag = C::Tag;
@@ -142,19 +142,19 @@ where
 
 impl<C, E> Color3 for EncodedColor<C, E>
     where
-        C: Color3 + EncodableColor,
+        C: Color3 + DeviceDependentColor,
         E: ColorEncoding + PartialEq,
 {}
 
 impl<C, E> Color4 for EncodedColor<C, E>
     where
-        C: Color4 + EncodableColor,
+        C: Color4 + DeviceDependentColor,
         E: ColorEncoding + PartialEq,
 {}
 
 impl<C, E> PolarColor for EncodedColor<C, E>
 where
-    C: Color + EncodableColor + PolarColor,
+    C: Color + DeviceDependentColor + PolarColor,
     E: ColorEncoding + PartialEq,
 {
     type Angular = C::Angular;
@@ -163,20 +163,22 @@ where
 
 impl<C, E> Lerp for EncodedColor<C, E>
 where
-    C: Color + EncodableColor + Lerp + DeviceDependentColor,
-    E: ColorEncoding + PartialEq + fmt::Debug,
+    C: Color + Lerp + DeviceDependentColor,
+    E: ColorEncoding + PartialEq,
 {
     type Position = C::Position;
 
     fn lerp(&self, right: &Self, pos: Self::Position) -> Self {
-        assert_eq!(self.encoding, right.encoding);
+        if self.encoding != right.encoding {
+            panic!("Tried to interpolate between two different color encodings")
+        }
         EncodedColor::new(self.color.lerp(&right.color(), pos), self.encoding.clone())
     }
 }
 
 impl<C, E> Invert for EncodedColor<C, E>
 where
-    C: Color + EncodableColor + Invert + DeviceDependentColor,
+    C: Color + Invert + DeviceDependentColor,
     E: ColorEncoding + PartialEq,
 {
     fn invert(self) -> Self {
@@ -186,7 +188,7 @@ where
 
 impl<C, E> Bounded for EncodedColor<C, E>
 where
-    C: Color + EncodableColor + Bounded + DeviceDependentColor,
+    C: Color + Bounded + DeviceDependentColor,
     E: ColorEncoding + PartialEq,
 {
     fn normalize(self) -> Self {

@@ -2,9 +2,13 @@
 
 #[cfg(feature = "approx")]
 use approx;
-use channel::{ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar};
-use color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor};
+use angle::Angle;
+use ycbcr::{YCbCr, YCbCrOutOfGamutMode, YCbCrModel};
+use channel::{ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar, AngularChannelScalar, NormalChannelScalar};
+use color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor, Color3, Color4};
+use convert::{FromColor, FromHsi, FromYCbCr};
 use encoding::DeviceDependentColor;
+use hsi::{Hsi, HsiOutOfGamutMode};
 use num_traits;
 use std::fmt;
 use std::marker::PhantomData;
@@ -84,6 +88,12 @@ where
         (self.color.to_tuple(), self.alpha.0)
     }
 }
+
+impl<T, InnerColor> Color4 for Alpha<T, InnerColor>
+    where
+        T: PosNormalChannelScalar,
+        InnerColor: Color3,
+{}
 
 impl<T, InnerColor> FromTuple for Alpha<T, InnerColor>
 where
@@ -190,6 +200,37 @@ where
     T: PosNormalChannelScalar,
     InnerColor: DeviceDependentColor,
 {}
+
+impl<T, InnerColor, InnerColor2> FromColor<Alpha<T, InnerColor2>> for Alpha<T, InnerColor>
+where
+    T: PosNormalChannelScalar,
+    InnerColor: Color + FromColor<InnerColor2>,
+    InnerColor2: Color,
+{
+    fn from_color(from: &Alpha<T, InnerColor2>) -> Self {
+        Alpha::from_color_and_alpha(InnerColor::from_color(from.color()), from.alpha())
+    }
+}
+impl<T, InnerColor, A> FromHsi<Alpha<T, Hsi<T, A>>> for Alpha<T, InnerColor>
+    where
+        T: PosNormalChannelScalar,
+        InnerColor: Color + FromHsi<Hsi<T, A>>,
+        A: AngularChannelScalar + Angle,
+{
+    fn from_hsi(from: &Alpha<T, Hsi<T, A>>, out_of_gamut_mode: HsiOutOfGamutMode) -> Self {
+        Alpha::from_color_and_alpha(InnerColor::from_hsi(from.color(), out_of_gamut_mode), from.alpha())
+    }
+}
+impl<T, InnerColor, M> FromYCbCr<Alpha<T, YCbCr<T, M>>> for Alpha<T, InnerColor>
+    where
+        T: PosNormalChannelScalar + NormalChannelScalar,
+        InnerColor: Color + FromYCbCr<YCbCr<T, M>>,
+        M: YCbCrModel<T>
+{
+    fn from_ycbcr(from: &Alpha<T, YCbCr<T, M>>, out_of_gamut_mode: YCbCrOutOfGamutMode) -> Self {
+        Alpha::from_color_and_alpha(InnerColor::from_ycbcr(from.color(), out_of_gamut_mode), from.alpha())
+    }
+}
 
 
 #[cfg(feature = "approx")]

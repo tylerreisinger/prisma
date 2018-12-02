@@ -22,6 +22,7 @@ use std::slice;
 pub struct HsiTag;
 
 /// Defines methods for handling out-of-gamut transformations from Hsi to Rgb
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum HsiOutOfGamutMode {
     /// Simply clamp each channel to `[0,1]`
     Clip,

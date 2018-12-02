@@ -21,6 +21,7 @@ use ycbcr::YCbCr;
 ///
 /// These are used by the `to_rgb` method. Using `TryFromColor` will instead
 /// return `None` any time an out of gamut value is produced.
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum YCbCrOutOfGamutMode {
     /// Return the exact result of the transformation.
     ///
