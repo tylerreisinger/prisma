@@ -116,7 +116,7 @@ where
     /// Equivalent to constructing the `YCbCr` object directly:
     ///
     /// ```rust
-    /// # use prisma::ycbcr::*;
+    /// # use prisma::ycbcr::{BareYCbCr, JpegModel, YCbCrJpeg};
     /// let c = BareYCbCr::from_channels(0.5, 0.3, 0.2).with_model(JpegModel);
     /// assert_eq!(c, YCbCrJpeg::from_channels(0.5, 0.3, 0.2));
     /// ```

@@ -67,8 +67,8 @@
 
 use num_traits::Float;
 
-pub mod encode;
-pub mod encoded_color;
+mod encode;
+mod encoded_color;
 
 pub use self::encode::{
     ChannelDecoder, ChannelEncoder, ColorEncoding, GammaEncoding, LinearEncoding, SrgbEncoding,

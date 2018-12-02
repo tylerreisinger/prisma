@@ -29,10 +29,13 @@
 //! `type Yiq<T> = YCbCr<T, YiqModel>`, but provides some convenience methods to mask
 //! the fact that it shares an implementation with YCbCr.
 
-pub mod bare_ycbcr;
-pub mod model;
-pub mod ycbcr;
+mod bare_ycbcr;
+mod model;
+mod ycbcr;
 
 pub use self::bare_ycbcr::{BareYCbCr, YCbCrOutOfGamutMode, YCbCrTag};
-pub use self::model::*;
-pub use self::ycbcr::*;
+pub use self::model::{
+    build_transform, Bt709Model, Canonicalize, CustomYCbCrModel, JpegModel, StandardShift,
+    UnitModel, YCbCrModel, YCbCrShift, YCbCrTransform, YiqModel,
+};
+pub use self::ycbcr::{YCbCr, YCbCrBt709, YCbCrCustom, YCbCrJpeg, Yiq};
