@@ -1,3 +1,5 @@
+//! The CIE XYZ device-independent color space
+
 #[cfg(feature = "approx")]
 use approx;
 use channel::{ChannelCast, ChannelFormatCast, ColorChannel, FreeChannelScalar, PosFreeChannel};
@@ -6,8 +8,36 @@ use std::fmt;
 use std::mem;
 use std::slice;
 
+/// A unit struct uniquely identifying `Xyz` in a generic context
 pub struct XyzTag;
 
+/// The CIE XYZ device-independent color space
+///
+/// The XYZ color space was defined by the *International Commission on Illumination* (CIE) in 1931
+/// to be able to describe color human vision.
+/// It was developed from a series of experiments to map the human perceptual response to light. A
+/// set of "color matching" functions were developed, and from these the XYZ space is defined.
+/// XYZ forms an authoritative definition of perceived colors, and is thus used widely in many fields
+/// where accurate color representation and conversion are needed.
+///
+/// XYZ is the "parent" device independent color space from which all other color spaces are defined.
+/// All device-dependent color spaces are defined by a set of (generally three) primaries defined
+/// in XYZ plus a white point defining the viewing conditions. The transformation from RGB to XYZ
+/// can be represented in a 3x3 matrix of values, which when multiplied against a vector of `(R, G, B)`
+/// produces a vector of `(X, Y, Z)`.
+///
+/// While XYZ is authoritative, it is not generally the most convenient space to do manipulations in.
+/// The Y of XYZ is luminance whereas X and Z are both linearly independent responses to color, but
+/// do not map neatly to an observable color. XYZ is also not perceptually uniform.
+///
+/// For perceptual uniformity, CIE defined two further spaces that are transformations of XYZ:
+/// LAV and LUV. These are non-linearly derived from XYZ, and both are approximately perceptually uniform,
+/// although with different properties. See [`Lab`](struct.Lab.html) and [`Luv`](struct.Luv.html)
+/// for more details on those color spaces.
+///
+/// XYZ coordinates are not technically bounded in any range, and the visible region of the space is not
+/// a simple shape. Many combinations of XYZ will correspond to no representable color and are therefore
+/// "imaginary" to humans.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Xyz<T> {
@@ -20,6 +50,7 @@ impl<T> Xyz<T>
 where
     T: FreeChannelScalar,
 {
+    /// Construct a new `Xyz` instance from `x`, `y` and `z`
     pub fn from_channels(x: T, y: T, z: T) -> Self {
         Xyz {
             x: PosFreeChannel::new(x),
@@ -30,30 +61,39 @@ where
 
     impl_color_color_cast_square!(Xyz { x, y, z }, chan_traits = { FreeChannelScalar });
 
+    /// Returns the `X` value
     pub fn x(&self) -> T {
         self.x.0.clone()
     }
+    /// Returns the `Y` value
     pub fn y(&self) -> T {
         self.y.0.clone()
     }
+    /// Returns the `Z` value
     pub fn z(&self) -> T {
         self.z.0.clone()
     }
+    /// Returns a mutable reference to the `X` value
     pub fn x_mut(&mut self) -> &mut T {
         &mut self.x.0
     }
+    /// Returns a mutable reference to the `Y` value
     pub fn y_mut(&mut self) -> &mut T {
         &mut self.y.0
     }
+    /// Returns a mutable reference to the `Z` value
     pub fn z_mut(&mut self) -> &mut T {
         &mut self.z.0
     }
+    /// Set the `X` value
     pub fn set_x(&mut self, val: T) {
         self.x.0 = val;
     }
+    /// Set the `Y` value
     pub fn set_y(&mut self, val: T) {
         self.y.0 = val;
     }
+    /// Set the `Z` value
     pub fn set_z(&mut self, val: T) {
         self.z.0 = val;
     }

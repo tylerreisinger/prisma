@@ -7,6 +7,7 @@ use std::fmt;
 use std::mem;
 use std::ops;
 
+/// A 3x3 matrix used for linear color transformations
 #[derive(Copy, Debug, PartialEq)]
 pub struct Matrix3<T> {
     pub m: [T; 9],

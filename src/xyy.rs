@@ -1,3 +1,5 @@
+//! The xyY device-independent chromaticity space
+
 #![allow(non_snake_case)]
 #[cfg(feature = "approx")]
 use approx;
@@ -13,8 +15,43 @@ use std::mem;
 use std::slice;
 use xyz::Xyz;
 
+/// A unit struct uniquely identifying `XyY` in a generic context
 pub struct XyYTag;
 
+/// The xyY device-independent chromaticity space
+///
+/// xyY is a chromaticity transformation of XYZ, defined by a *relative* amount of `X`, `Y` and `Z`.
+/// It is a direct analog to the `rgI` model for `Rgb`, but without being bound to a specific
+/// `Rgb` space (see [`Rgi`](struct.Rgi.html)). xyY carries along the absolute luminosity to allow
+/// a reconstruction of the XYZ value. xy is often plotted together in what is often referred to as the
+/// "horseshoe diagram" which is used to show the gamut of various RGB color spaces.
+///
+/// The `x` and `y` components here are not absolute `X` and `Y` as in XYZ, but rather the
+/// ratio of each to the sum. That is:
+///
+/// ```math
+/// \begin{aligned}
+/// x &= \frac{X}{X+Y+Z} \\
+/// y &= \frac{Y}{X+Y+Z} \\
+/// z &= \frac{Z}{X+Y+Z} \\
+/// x+y+z &= 1
+/// \end{aligned}
+/// ```
+///
+/// The value of `z` is implicit given that `x + y + z = 1` thus `z` can be computed via `x = 1 - x - y`.
+///
+/// XyY can be converted back to XYZ as follows:
+///
+/// ```math
+/// \begin{aligned}
+/// X &= \frac{Y}{y}x \\
+/// Y &= Y \\
+/// Z &= \frac{Y}{y}(1-x-y)
+/// \end{aligned}
+/// ```
+///
+/// Prisma uses xy chromaticity coordinates in the specification of primaries. Together with a
+/// reference white point, this can uniquely define a RGB space.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct XyY<T> {
@@ -27,6 +64,12 @@ impl<T> XyY<T>
 where
     T: FreeChannelScalar + num_traits::Float + PosNormalChannelScalar,
 {
+    /// Construct an `XyY` instance from `x`, `y` and `Y`
+    ///
+    /// Panics:
+    /// ========
+    /// `from_channels` will panic if `x + y` is greater than 1 or less than zero, or if either
+    /// `x` or `y` are negative.
     pub fn from_channels(x: T, y: T, Y: T) -> Self {
         let zero = num_traits::cast(0.0).unwrap();
         if x + y > num_traits::cast(1.0).unwrap() || x + y < zero {
@@ -45,37 +88,65 @@ where
     impl_color_color_cast_square!(XyY {x, y, Y}, chan_traits={FreeChannelScalar,
         PosNormalChannelScalar});
 
+    /// Returns the `x` chromaticity value
     pub fn x(&self) -> T {
         self.x.0.clone()
     }
+    /// Returns the `y` chromaticity value
     pub fn y(&self) -> T {
         self.y.0.clone()
     }
+    /// Returns the `z` chromaticity value
+    ///
+    /// The `z` chromaticity value is computed from `x` and `y` based on the fact `x + y + z = 1`.
     pub fn z(&self) -> T {
         num_traits::cast::<_, T>(1.0).unwrap() - self.x() - self.y()
     }
+    /// Returns the luminosity `Y`
     pub fn Y(&self) -> T {
         self.Y.0.clone()
     }
+    /// Returns a mutable reference to the luminosity `Y`
     pub fn Y_mut(&mut self) -> &mut T {
         &mut self.Y.0
     }
+    /// Set the `x` value, rescaling `y` to maintain `x + y + z = 1`
+    ///
+    /// Panics:
+    /// =======
+    /// Panics if x is greater than one or less than zero
     pub fn set_x(&mut self, val: T) {
         let (x, y, _) = Self::rescale_channels(val, self.y(), self.z());
         self.x.0 = x;
         self.y.0 = y;
     }
+    /// Set the `y` value, rescaling `x` to maintain `x + y + z = 1`
+    ///
+    /// Panics:
+    /// =======
+    /// Panics if x is greater than one or less than zero
     pub fn set_y(&mut self, val: T) {
         let (y, x, _) = Self::rescale_channels(val, self.x(), self.z());
         self.x.0 = x;
         self.y.0 = y;
     }
+    /// Set the implicit `z` value, rescaling `x` and `y` to maintain `x + y + z = 1`
+    ///
+    /// Panics:
+    /// =======
+    /// Panics if x is greater than one or less than zero
     pub fn set_z(&mut self, val: T) {
         let (_, x, y) = Self::rescale_channels(val, self.x(), self.y());
         self.x.0 = x;
         self.y.0 = y;
     }
 
+    /// Rescale `c2` and `c3` based on a fixed `primary` to maintain the property `x + y + z = 1`
+    ///
+    /// Panics:
+    /// =======
+    ///
+    /// Panics if `primary` is greater than one or less than zero
     fn rescale_channels(primary: T, c2: T, c3: T) -> (T, T, T) {
         if primary > PosNormalBoundedChannel::max_bound()
             || primary < PosNormalBoundedChannel::min_bound()

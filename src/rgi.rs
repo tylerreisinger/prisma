@@ -22,7 +22,7 @@ pub struct RgiTag;
 /// rgI is defined by a *relative* red amount, relative green amount and intensity. The rgI color
 /// model is used to keep the color intensity relatively invariant (that is, only the color matters,
 /// not how white or black it is), with the caveat that its parent RGB is not perceptually uniform. It is a
-/// device-dependent relative to the [`xyY`](../xyy/struct.XyY.html) CIE space.
+/// device-dependent relative to the [`xyY`](struct.XyY.html) CIE space.
 ///
 /// The `r` and `g` components here are not absolute red and green like in RGB, but rather the
 /// ratio of red or green to the sum of RGB. That is:

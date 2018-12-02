@@ -1,4 +1,4 @@
-// All data taken from www.brucelindbloom.com.
+/// Defines the named standard illuminants for both 2 and 10 degree observers
 
 use xyy::XyY;
 use xyz::Xyz;
