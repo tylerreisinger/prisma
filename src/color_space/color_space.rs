@@ -288,6 +288,32 @@ impl<'a, T, E> ColorEncoding for &'a EncodedColorSpace<T, E>
         E: ColorEncoding,
 {}
 
+macro_rules! impl_color_space_body {
+    () => {
+        fn red_primary(&self) -> RgbPrimary<T> {
+        self.red_primary.clone()
+        }
+        fn green_primary(&self) -> RgbPrimary<T> {
+        self.green_primary.clone()
+        }
+        fn blue_primary(&self) -> RgbPrimary<T> {
+        self.blue_primary.clone()
+        }
+        fn white_point(&self) -> Xyz<T> {
+        self.white_point.clone()
+        }
+        fn get_xyz_transform(&self) -> &Matrix3<T> {
+        &self.xyz_transform
+        }
+        fn get_inverse_xyz_transform(&self) -> &Matrix3<T> {
+        &self.inv_transform
+        }
+        fn apply_transform(&self, vec: (T, T, T)) -> (T, T, T) {
+        self.get_xyz_transform().transform_vector(vec)
+        }
+    }
+}
+
 macro_rules! impl_color_space {
     ($typ: ty) => {
         impl<T, E> ColorSpace<T> for $typ
@@ -295,35 +321,35 @@ macro_rules! impl_color_space {
             T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
             E: ColorEncoding,
         {
-            fn red_primary(&self) -> RgbPrimary<T> {
-                self.red_primary.clone()
-            }
-            fn green_primary(&self) -> RgbPrimary<T> {
-                self.green_primary.clone()
-            }
-            fn blue_primary(&self) -> RgbPrimary<T> {
-                self.blue_primary.clone()
-            }
-            fn white_point(&self) -> Xyz<T> {
-                self.white_point.clone()
-            }
-            fn get_xyz_transform(&self) -> &Matrix3<T> {
-                &self.xyz_transform
-            }
-            fn get_inverse_xyz_transform(&self) -> &Matrix3<T> {
-                &self.inv_transform
-            }
-            fn apply_transform(&self, vec: (T, T, T)) -> (T, T, T) {
-                self.get_xyz_transform().transform_vector(vec)
-            }
+            impl_color_space_body!();
+        }
+    };
+    (ref $typ:ty) => {
+        impl<'a, T, E> ColorSpace<T> for &'a $typ
+        where
+            T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar,
+            E: ColorEncoding,
+        {
+            impl_color_space_body!();
         }
     }
 }
 
 impl_color_space!(EncodedColorSpace<T, E>);
-impl_color_space!(&EncodedColorSpace<T, E>);
+impl_color_space!(ref EncodedColorSpace<T, E>);
 impl_color_space!(Rc<EncodedColorSpace<T, E>>);
 impl_color_space!(Arc<EncodedColorSpace<T, E>>);
+
+macro_rules! impl_convert_xyz_body {
+    () => {
+        type OutputColor = Xyz<T>;
+        fn convert_to_xyz(&self, color: &EncodedColor<C, EIn>) -> Self::OutputColor {
+            let linear_color = color.clone().decode();
+            let (x, y, z) = self.get_xyz_transform().transform_vector(linear_color.to_tuple());
+            Xyz::from_channels(x, y, z)
+        }
+    }
+}
 
 macro_rules! impl_convert_xyz {
     ($typ:ty) => {
@@ -333,18 +359,23 @@ macro_rules! impl_convert_xyz {
             E: ColorEncoding,
             EIn: ColorEncoding,
         {
-            type OutputColor = Xyz<T>;
-            fn convert_to_xyz(&self, color: &EncodedColor<C, EIn>) -> Self::OutputColor {
-                let linear_color = color.clone().decode();
-                let (x, y, z) = self.get_xyz_transform().transform_vector(linear_color.to_tuple());
-                Xyz::from_channels(x, y, z)
-            }
+            impl_convert_xyz_body!();
+        }
+    };
+    (ref $typ:ty) => {
+        impl<'a, T, C, E, EIn> ConvertToXyz<EncodedColor<C, EIn>> for &'a $typ where
+            T: PosNormalChannelScalar + FreeChannelScalar + num_traits::Float,
+            C: TranscodableColor + Color<ChannelsTuple=(T, T, T)>,
+            E: ColorEncoding,
+            EIn: ColorEncoding,
+        {
+            impl_convert_xyz_body!();
         }
     }
 }
 
 impl_convert_xyz!(EncodedColorSpace<T, E>);
-impl_convert_xyz!(&EncodedColorSpace<T, E>);
+impl_convert_xyz!(ref EncodedColorSpace<T, E>);
 impl_convert_xyz!(Rc<EncodedColorSpace<T, E>>);
 impl_convert_xyz!(Arc<EncodedColorSpace<T, E>>);
 

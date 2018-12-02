@@ -169,7 +169,7 @@ impl<T> Lab<T>
 where
     T: FreeChannelScalar,
 {
-    #[allow(clippy::many_single_char_names)]
+    #![cfg_attr(feature = "cargo-clippy", allow(many_single_char_names))]
     pub fn from_xyz(from: &Xyz<T>, wp: &Xyz<T>) -> Lab<T> {
         let x = from.x() / wp.x();
         let y = from.y() / wp.y();

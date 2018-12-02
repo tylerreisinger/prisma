@@ -1,6 +1,6 @@
 // There is lots of automatically generated code using tables of numbers
-#![allow(clippy::unreadable_literal)]
-#![allow(clippy::module_inception)]
+#![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
+#![cfg_attr(feature = "cargo-clippy", allow(module_inception))]
 
 extern crate num_traits;
 #[cfg(any(feature = "approx", test))]
