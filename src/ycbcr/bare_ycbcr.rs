@@ -14,6 +14,7 @@ use std::mem;
 use std::slice;
 
 use rgb::Rgb;
+use tags::YCbCrTag;
 use ycbcr::model::YCbCrModel;
 use ycbcr::YCbCr;
 
@@ -33,9 +34,6 @@ pub enum YCbCrOutOfGamutMode {
     /// For example, -0.2 would go to 0.0 and 2.0 would go to 1.
     Clip,
 }
-
-/// A unit struct for identifying and constraining YCbCr colors in generic code.
-pub struct YCbCrTag;
 
 /// A YCbCr color that does not know its model.
 ///

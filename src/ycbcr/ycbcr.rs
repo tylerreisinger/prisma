@@ -9,8 +9,9 @@ use encoding::EncodableColor;
 use num_traits;
 use rgb::Rgb;
 use std::fmt;
+use tags::YCbCrTag;
 
-use ycbcr::bare_ycbcr::{BareYCbCr, YCbCrOutOfGamutMode, YCbCrTag};
+use ycbcr::bare_ycbcr::{BareYCbCr, YCbCrOutOfGamutMode};
 use ycbcr::model::{
     Bt709Model, Canonicalize, CustomYCbCrModel, JpegModel, UnitModel, YCbCrModel, YiqModel,
 };

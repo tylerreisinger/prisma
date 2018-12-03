@@ -19,8 +19,7 @@ use rgb;
 use std::fmt;
 use std::mem;
 use std::slice;
-
-pub struct HwbTag;
+use tags::HwbTag;
 
 /// The HWB device-dependent polar color model
 ///

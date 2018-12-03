@@ -13,10 +13,8 @@ use num_traits;
 use std::fmt;
 use std::mem;
 use std::slice;
+use tags::XyYTag;
 use xyz::Xyz;
-
-/// A unit struct uniquely identifying `XyY` in a generic context
-pub struct XyYTag;
 
 /// The xyY device-independent chromaticity space
 ///

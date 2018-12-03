@@ -14,6 +14,7 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::mem;
 use std::slice;
+use tags::LmsTag;
 use xyz::Xyz;
 
 /// A model for transforming from XYZ to LMS and back
@@ -23,9 +24,6 @@ pub trait LmsModel<T>: Clone + PartialEq {
     /// Get the conversion matrix to convert from LMS to XYZ
     fn inverse_transform() -> Matrix3<T>;
 }
-
-/// A unit struct uniquely identifying `Lms` values in a generic context
-pub struct LmsTag;
 
 /// The `LMS` cone response device-independent color space
 ///

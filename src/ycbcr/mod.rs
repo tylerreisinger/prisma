@@ -33,7 +33,7 @@ mod bare_ycbcr;
 mod model;
 mod ycbcr;
 
-pub use self::bare_ycbcr::{BareYCbCr, YCbCrOutOfGamutMode, YCbCrTag};
+pub use self::bare_ycbcr::{BareYCbCr, YCbCrOutOfGamutMode};
 pub use self::model::{
     build_transform, Bt709Model, Canonicalize, CustomYCbCrModel, JpegModel, StandardShift,
     UnitModel, YCbCrModel, YCbCrShift, YCbCrTransform, YiqModel,

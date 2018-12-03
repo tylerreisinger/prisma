@@ -16,6 +16,7 @@ mod linalg;
 
 pub mod color_space;
 pub mod encoding;
+pub mod tags;
 pub mod white_point;
 
 mod alpha;
@@ -47,21 +48,21 @@ pub use color::{
     Invert, Lerp, PolarColor,
 };
 
-pub use alpha::{Alpha, AlphaTag};
+pub use alpha::Alpha;
 pub use chromaticity::ChromaticityCoordinates;
 pub use convert::{FromColor, FromHsi, FromYCbCr};
-pub use ehsi::{eHsi, EHsiTag};
-pub use hsi::{Hsi, HsiOutOfGamutMode, HsiTag};
-pub use hsl::{Hsl, HslTag, Hsla};
-pub use hsv::{Hsv, HsvTag, Hsva};
-pub use hwb::{Hwb, HwbBoundedChannelTraits, HwbTag, Hwba};
-pub use lab::{Lab, LabTag};
-pub use lchab::{Lchab, LchabTag};
-pub use lchuv::{Lchuv, LchuvTag};
+pub use ehsi::eHsi;
+pub use hsi::{Hsi, HsiOutOfGamutMode};
+pub use hsl::{Hsl, Hsla};
+pub use hsv::{Hsv, Hsva};
+pub use hwb::{Hwb, HwbBoundedChannelTraits, Hwba};
+pub use lab::Lab;
+pub use lchab::Lchab;
+pub use lchuv::Lchuv;
 pub use linalg::Matrix3;
 //pub use lms::{Lms, LmsBradford, LmsCam2002, LmsCam97s, LmsModel, LmsTag, Bradford, CieCam97s, CieCam2002};
-pub use luv::{Luv, LuvTag};
-pub use rgb::{Rgb, RgbTag, Rgba};
-pub use rgi::{Rgi, RgiTag};
-pub use xyy::{XyY, XyYTag};
-pub use xyz::{Xyz, XyzTag};
+pub use luv::Luv;
+pub use rgb::{Rgb, Rgba};
+pub use rgi::Rgi;
+pub use xyy::XyY;
+pub use xyz::Xyz;

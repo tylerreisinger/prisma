@@ -20,8 +20,7 @@ use std::fmt;
 use std::mem;
 use std::ops;
 use std::slice;
-
-pub struct HslTag;
+use tags::HslTag;
 
 //TODO: Consider adding an `HCL` constructor and conversion
 /// The HSL device-dependent polar color model

@@ -14,8 +14,7 @@ use rgb::Rgb;
 use std::fmt;
 use std::mem;
 use std::slice;
-
-pub struct RgiTag;
+use tags::RgiTag;
 
 /// The rgI device-dependent chromaticity color model
 ///

@@ -23,9 +23,7 @@ use num_traits::cast;
 use std::fmt;
 use std::mem;
 use std::slice;
-
-/// A marker type to identify Rgb colors in a generic context.
-pub struct RgbTag;
+use tags::RgbTag;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]

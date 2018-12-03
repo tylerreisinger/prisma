@@ -19,8 +19,7 @@ use rgb::Rgb;
 use std::fmt;
 use std::mem;
 use std::slice;
-
-pub struct EHsiTag;
+use tags::EHsiTag;
 
 /// The eHSI device-dependent polar color model
 ///

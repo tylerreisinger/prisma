@@ -18,8 +18,7 @@ use std::f64::consts;
 use std::fmt;
 use std::mem;
 use std::slice;
-
-pub struct HsiTag;
+use tags::HsiTag;
 
 /// Defines methods for handling out-of-gamut transformations from Hsi to Rgb
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]

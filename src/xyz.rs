@@ -7,9 +7,7 @@ use color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Lerp};
 use std::fmt;
 use std::mem;
 use std::slice;
-
-/// A unit struct uniquely identifying `Xyz` in a generic context
-pub struct XyzTag;
+use tags::XyzTag;
 
 /// The CIE XYZ device-independent color space
 ///

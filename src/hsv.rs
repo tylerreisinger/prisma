@@ -21,8 +21,7 @@ use std::fmt;
 use std::mem;
 use std::ops;
 use std::slice;
-
-pub struct HsvTag;
+use tags::HsvTag;
 
 /// The HSV device-dependent polar color model
 ///

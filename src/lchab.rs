@@ -15,8 +15,7 @@ use num_traits;
 use std::fmt;
 use std::mem;
 use std::slice;
-
-pub struct LchabTag;
+use tags::LchabTag;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]

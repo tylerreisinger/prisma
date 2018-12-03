@@ -15,13 +15,10 @@ use encoding::EncodableColor;
 use hsi::{Hsi, HsiOutOfGamutMode};
 use num_traits;
 use std::fmt;
-use std::marker::PhantomData;
 use std::mem;
 use std::slice;
+use tags::AlphaTag;
 use ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
-
-/// A tag type uniquely identifying the `Alpha` type
-pub struct AlphaTag<T>(pub PhantomData<T>);
 
 /// A wrapper around a color with an alpha channel
 ///

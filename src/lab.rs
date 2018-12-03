@@ -9,9 +9,8 @@ use num_traits;
 use std::fmt;
 use std::mem;
 use std::slice;
+use tags::LabTag;
 use xyz::Xyz;
-
-pub struct LabTag;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]

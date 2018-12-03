@@ -10,9 +10,8 @@ use num_traits;
 use std::fmt;
 use std::mem;
 use std::slice;
+use tags::LuvTag;
 use xyz::Xyz;
-
-pub struct LuvTag;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
