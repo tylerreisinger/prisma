@@ -11,6 +11,7 @@ Presently, the following color models are supported:
 * **Hsi**
 * **eHsi**
 * **Hwb**
+* **YCbCr (YIQ, YUV)**
 * **XYZ**
 * **XYy**
 * **Luv**
@@ -19,4 +20,4 @@ Presently, the following color models are supported:
 * **Lch(uv)**
 * **Lms**
 
-Further documentation coming soon!
+Further documentation coming soon! For now you can poke around the source documentation or generate the docs with `cargo rustdoc -- --html-in-header katex.html`
