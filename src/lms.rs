@@ -1,3 +1,8 @@
+//! The LMS cone response device-independent color space
+//!
+//! [`Lms`](struct.Lms.html) aims to represent the cone responses of human vision. See the struct
+//! level documentation for more information.
+
 #[cfg(feature = "approx")]
 use approx;
 use channel::{ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar};
@@ -11,13 +16,30 @@ use std::mem;
 use std::slice;
 use xyz::Xyz;
 
+/// A model for transforming from XYZ to LMS and back
 pub trait LmsModel<T>: Clone + PartialEq {
+    /// Get the conversion matrix to convert from XYZ to LMS
     fn forward_transform() -> Matrix3<T>;
+    /// Get the conversion matrix to convert from LMS to XYZ
     fn inverse_transform() -> Matrix3<T>;
 }
 
+/// A unit struct uniquely identifying `Lms` values in a generic context
 pub struct LmsTag;
 
+/// The `LMS` cone response device-independent color space
+///
+/// `LMS` is a device-independent color space created to map to the average response of the three
+/// cones in the human eye. There is no single `LMS` space, but rather several different models defining
+/// a transformation from `XYZ` to `LMS`. `LMS` is well suited for use in chromatic adaptation as well
+/// as for simulating the effects of color blindness in humans. `LMS` is also widely used in "color
+/// adaptation models" such as CIECAM2002.
+///
+/// `LMS` is a linear transformation from `XYZ`, and each model is defined by a matrix `M` that
+/// multiplies a `XYZ` value to produce an `LMS` value.
+///
+/// Note that presently, the `Model` type parameter to `LMS` must be data-less. This may be changed
+/// in the future if a use case arises.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Lms<T, Model> {
@@ -27,15 +49,21 @@ pub struct Lms<T, Model> {
     model: PhantomData<Model>,
 }
 
+/// The `LMS` transform defined in the CIECAM2002 color adaptation model
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct CieCam2002;
+/// The `LMS` transform defined in the CIECAM97s color adaptation model
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct CieCam97s;
+/// The Bradford `LMS` transform
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Bradford;
 
+/// An `LMS` space using the [`CieCam2002`](struct.CieCam2002.html) model
 pub type LmsCam2002<T> = Lms<T, CieCam2002>;
+/// An `LMS` space using the [`CieCam97s`](struct.CieCam97s.html) model
 pub type LmsCam97s<T> = Lms<T, CieCam97s>;
+/// An `LMS` space using the [`Bradford`](struct.Bradford.html) model
 pub type LmsBradford<T> = Lms<T, Bradford>;
 
 impl<T, Model> Lms<T, Model>
@@ -43,6 +71,7 @@ where
     T: FreeChannelScalar,
     Model: LmsModel<T>,
 {
+    /// Construct an `LMS` instance from `l`, `m` and `s`
     pub fn from_channels(l: T, m: T, s: T) -> Self {
         Lms {
             l: FreeChannel::new(l),
@@ -52,6 +81,7 @@ where
         }
     }
 
+    /// Cast the channel representation type
     pub fn color_cast<TOut>(&self) -> Lms<TOut, Model>
     where
         T: ChannelFormatCast<TOut>,
@@ -65,30 +95,39 @@ where
         }
     }
 
+    /// Returns the `L` value
     pub fn l(&self) -> T {
         self.l.0.clone()
     }
+    /// Returns the `M` value
     pub fn m(&self) -> T {
         self.m.0.clone()
     }
+    /// Returns the `S` value
     pub fn s(&self) -> T {
         self.s.0.clone()
     }
+    /// Returns a mutable reference to the `L` value
     pub fn l_mut(&mut self) -> &mut T {
         &mut self.l.0
     }
+    /// Returns a mutable reference to the `M` value
     pub fn m_mut(&mut self) -> &mut T {
         &mut self.m.0
     }
+    /// Returns a mutable reference to the `S` value
     pub fn s_mut(&mut self) -> &mut T {
         &mut self.s.0
     }
+    /// Set the `L` value
     pub fn set_l(&mut self, val: T) {
         self.l.0 = val;
     }
+    /// Set the `M` value
     pub fn set_m(&mut self, val: T) {
         self.m.0 = val;
     }
+    /// Set the `S` value
     pub fn set_s(&mut self, val: T) {
         self.s.0 = val;
     }
