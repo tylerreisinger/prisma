@@ -36,6 +36,20 @@ use tags::XyzTag;
 /// XYZ coordinates are not technically bounded in any range, and the visible region of the space is not
 /// a simple shape. Many combinations of XYZ will correspond to no representable color and are therefore
 /// "imaginary" to humans.
+///
+/// ## Standard Observer
+///
+/// XYZ is actually a family of spaces, each constructed from a set of color matching functions. Currently
+/// there are two different "standard observers" defined by the CIE, which are the color matching functions
+/// obtained from experiments that represent the average human eye response at a given field of view.
+/// The $`2^{\circ}`$ standard observer is by far the most widely used, and is defined using only the
+/// center-most 2 degrees of vision. SRgb and the majority of other used color spaces are defined
+/// against this standard observer. A later $`10^{\circ}`$ standard observer was created representing a
+/// larger field of view. These two standard observers differ in their color matching functions by
+/// a modest but not insignificant amount, and XYZ using one is not compatible with XYZ using the other.
+/// While $`10^{\circ}`$ standard observer is recommended for use in many applications using more
+/// than about $`4^{\circ}`$ of
+/// vision, the $`2^{\circ}`$ standard observer is still much more widely used in practice.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Xyz<T> {

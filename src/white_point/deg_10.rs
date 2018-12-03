@@ -1,3 +1,5 @@
+//! The named standard illuminants used with the 10 degree standard observer
+
 use channel::{FreeChannelScalar, PosNormalChannelScalar};
 use num_traits::{cast, Float};
 use white_point::NamedWhitePoint;
