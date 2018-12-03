@@ -25,7 +25,7 @@ impl<T> Luv<T>
 where
     T: FreeChannelScalar,
 {
-    pub fn from_channels(L: T, u: T, v: T) -> Self {
+    pub fn new(L: T, u: T, v: T) -> Self {
         Luv {
             L: PosFreeChannel::new(L),
             u: FreeChannel::new(u),
@@ -85,7 +85,7 @@ where
     T: FreeChannelScalar,
 {
     fn from_tuple(values: (T, T, T)) -> Self {
-        Luv::from_channels(values.0, values.1, values.2)
+        Luv::new(values.0, values.1, values.2)
     }
 }
 
@@ -94,7 +94,7 @@ where
     T: FreeChannelScalar,
 {
     fn normalize(self) -> Self {
-        Luv::from_channels(self.L.normalize().0, self.u(), self.v())
+        Luv::new(self.L.normalize().0, self.u(), self.v())
     }
     fn is_normalized(&self) -> bool {
         self.L.is_normalized()
@@ -188,7 +188,7 @@ where
         let u = num_traits::cast::<_, T>(13.0).unwrap() * L * (u_prime - ur_prime);
         let v = num_traits::cast::<_, T>(13.0).unwrap() * L * (v_prime - vr_prime);
 
-        Luv::from_channels(L, u, v)
+        Luv::new(L, u, v)
     }
 
     pub fn to_xyz(&self, wp: &Xyz<T>) -> Xyz<T> {
@@ -225,7 +225,7 @@ where
 
         let Z = X * a + b;
 
-        Xyz::from_channels(X, Y, Z)
+        Xyz::new(X, Y, Z)
     }
 
     fn compute_Y(L: T) -> T {
@@ -264,7 +264,7 @@ mod test {
 
     #[test]
     fn test_construct() {
-        let c1 = Luv::from_channels(82.00, -40.0, 60.0);
+        let c1 = Luv::new(82.00, -40.0, 60.0);
         assert_relative_eq!(c1.L(), 82.00);
         assert_relative_eq!(c1.u(), -40.0);
         assert_relative_eq!(c1.v(), 60.0);
@@ -274,77 +274,77 @@ mod test {
 
     #[test]
     fn test_lerp() {
-        let c1 = Luv::from_channels(30.0, 120.0, -50.0);
-        let c2 = Luv::from_channels(80.0, -90.0, 20.0);
+        let c1 = Luv::new(30.0, 120.0, -50.0);
+        let c2 = Luv::new(80.0, -90.0, 20.0);
         assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
         assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
         assert_relative_eq!(c2.lerp(&c1, 0.0), c2);
-        assert_relative_eq!(c1.lerp(&c2, 0.5), Luv::from_channels(55.0, 15.0, -15.0));
-        assert_relative_eq!(c1.lerp(&c2, 0.25), Luv::from_channels(42.5, 67.5, -32.5));
+        assert_relative_eq!(c1.lerp(&c2, 0.5), Luv::new(55.0, 15.0, -15.0));
+        assert_relative_eq!(c1.lerp(&c2, 0.25), Luv::new(42.5, 67.5, -32.5));
     }
 
     #[test]
     fn test_normalize() {
-        let c1 = Luv::from_channels(120.0, -60.0, 30.0);
+        let c1 = Luv::new(120.0, -60.0, 30.0);
         assert!(c1.is_normalized());
         assert_relative_eq!(c1.normalize(), c1);
-        let c2 = Luv::from_channels(-62.0, 111.11, -500.0);
+        let c2 = Luv::new(-62.0, 111.11, -500.0);
         assert!(!c2.is_normalized());
-        assert_relative_eq!(c2.normalize(), Luv::from_channels(0.0, 111.11, -500.0));
+        assert_relative_eq!(c2.normalize(), Luv::new(0.0, 111.11, -500.0));
         assert_relative_eq!(c2.normalize().normalize(), c2.normalize());
     }
 
     #[test]
     fn test_flatted() {
-        let c1 = Luv::from_channels(92.0, -32.0, 70.0);
+        let c1 = Luv::new(92.0, -32.0, 70.0);
         assert_eq!(c1.as_slice(), &[92.0, -32.0, 70.0]);
         assert_relative_eq!(Luv::from_slice(c1.as_slice()), c1);
     }
 
     #[test]
     fn test_from_xyz() {
-        let c1 = Xyz::from_channels(0.5, 0.5, 0.5);
+        let c1 = Xyz::new(0.5, 0.5, 0.5);
         let t1 = Luv::from_xyz(&c1, &D65::get_xyz());
         assert_relative_eq!(
             t1,
-            Luv::from_channels(76.0693, 12.5457, 5.2885),
+            Luv::new(76.0693, 12.5457, 5.2885),
             epsilon = 1e-4
         );
         assert_relative_eq!(t1.to_xyz(&D65::get_xyz()), c1, epsilon = 1e-4);
 
-        let c2 = Xyz::from_channels(0.33, 0.67, 1.0);
+        let c2 = Xyz::new(0.33, 0.67, 1.0);
         let t2 = Luv::from_xyz(&c2, &D50::get_xyz());
         assert_relative_eq!(
             t2,
-            Luv::from_channels(85.5039, -122.8324, -41.5728),
+            Luv::new(85.5039, -122.8324, -41.5728),
             epsilon = 1e-4
         );
         assert_relative_eq!(t2.to_xyz(&D50::get_xyz()), c2, epsilon = 1e-4);
 
-        let c3 = Xyz::from_channels(0.0, 0.0, 0.0);
+        let c3 = Xyz::new(0.0, 0.0, 0.0);
         let t3 = Luv::from_xyz(&c3, &D65::get_xyz());
-        assert_relative_eq!(t3, Luv::from_channels(0.0, 0.0, 0.0), epsilon = 1e-4);
+        assert_relative_eq!(t3, Luv::new(0.0, 0.0, 0.0), epsilon = 1e-4);
         assert_relative_eq!(t3.to_xyz(&D65::get_xyz()), c3, epsilon = 1e-4);
 
         let c4 = D75::get_xyz();
         let t4 = Luv::from_xyz(&c4, &D75::get_xyz());
-        assert_relative_eq!(t4, Luv::from_channels(100.0, 0.0, 0.0), epsilon = 1e-4);
+        assert_relative_eq!(t4, Luv::new(100.0, 0.0, 0.0), epsilon = 1e-4);
         assert_relative_eq!(t4.to_xyz(&D75::get_xyz()), c4, epsilon = 1e-4);
 
-        let c5 = Xyz::from_channels(0.72, 0.565, 0.37);
+        let c5 = Xyz::new(0.72, 0.565, 0.37);
         let t5 = Luv::from_xyz(&c5, &D75::get_xyz());
         assert_relative_eq!(
             t5,
-            Luv::from_channels(79.8975, 89.2637, 36.2923),
+            Luv::new(79.8975, 89.2637, 36.2923),
             epsilon = 1e-4
         );
         assert_relative_eq!(t5.to_xyz(&D75::get_xyz()), c5, epsilon = 1e-4);
 
-        let c6 = Xyz::from_channels(0.22, 0.565, 0.87);
+        let c6 = Xyz::new(0.22, 0.565, 0.87);
         let t6 = Luv::from_xyz(&c6, &A::get_xyz());
         assert_relative_eq!(
             t6,
-            Luv::from_channels(79.8975, -185.0166, -77.3701),
+            Luv::new(79.8975, -185.0166, -77.3701),
             epsilon = 1e-4
         );
         assert_relative_eq!(t6.to_xyz(&A::get_xyz()), c6, epsilon = 1e-4);
@@ -352,38 +352,38 @@ mod test {
 
     #[test]
     fn test_to_xyz() {
-        let c1 = Luv::from_channels(50.0, 0.0, 0.0);
+        let c1 = Luv::new(50.0, 0.0, 0.0);
         let t1 = c1.to_xyz(&D65::get_xyz());
         assert_relative_eq!(
             t1,
-            Xyz::from_channels(0.175064, 0.184187, 0.200548),
+            Xyz::new(0.175064, 0.184187, 0.200548),
             epsilon = 1e-4
         );
         assert_relative_eq!(Luv::from_xyz(&t1, &D65::get_xyz()), c1, epsilon = 1e-4);
 
-        let c2 = Luv::from_channels(62.5, 50.0, -50.0);
+        let c2 = Luv::new(62.5, 50.0, -50.0);
         let t2 = c2.to_xyz(&D50::get_xyz());
         assert_relative_eq!(
             t2,
-            Xyz::from_channels(0.442536, 0.309910, 0.482665),
+            Xyz::new(0.442536, 0.309910, 0.482665),
             epsilon = 1e-4
         );
         assert_relative_eq!(Luv::from_xyz(&t2, &D50::get_xyz()), c2, epsilon = 1e-4);
 
-        let c3 = Luv::from_channels(35.0, 72.5, 0.0);
+        let c3 = Luv::new(35.0, 72.5, 0.0);
         let t3 = c3.to_xyz(&D75::get_xyz());
         assert_relative_eq!(
             t3,
-            Xyz::from_channels(0.147161, 0.084984, 0.082072),
+            Xyz::new(0.147161, 0.084984, 0.082072),
             epsilon = 1e-4
         );
         assert_relative_eq!(Luv::from_xyz(&t3, &D75::get_xyz()), c3, epsilon = 1e-4);
 
-        let c4 = Luv::from_channels(78.9, -30.0, -75.0);
+        let c4 = Luv::new(78.9, -30.0, -75.0);
         let t4 = c4.to_xyz(&D65::get_xyz());
         assert_relative_eq!(
             t4,
-            Xyz::from_channels(0.525544, 0.547551, 1.243412),
+            Xyz::new(0.525544, 0.547551, 1.243412),
             epsilon = 1e-4
         );
         assert_relative_eq!(Luv::from_xyz(&t4, &D65::get_xyz()), c4, epsilon = 1e-4);
@@ -391,11 +391,11 @@ mod test {
 
     #[test]
     fn test_color_cast() {
-        let c1 = Luv::from_channels(55.5, 88.8, -22.2);
+        let c1 = Luv::new(55.5, 88.8, -22.2);
         assert_relative_eq!(c1.color_cast(), c1);
         assert_relative_eq!(
             c1.color_cast(),
-            Luv::from_channels(55.5f32, 88.8f32, -22.2f32),
+            Luv::new(55.5f32, 88.8f32, -22.2f32),
             epsilon = 1e-5
         );
         assert_relative_eq!(c1.color_cast::<f32>().color_cast(), c1, epsilon = 1e-5);

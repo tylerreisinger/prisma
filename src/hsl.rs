@@ -57,7 +57,7 @@ where
     A: AngularChannelScalar,
 {
     /// Construct an `Hsl` instance from hue, saturation and lightness
-    pub fn from_channels(hue: A, saturation: T, lightness: T) -> Self {
+    pub fn new(hue: A, saturation: T, lightness: T) -> Self {
         Hsl {
             hue: AngularChannel::new(hue),
             saturation: PosNormalBoundedChannel::new(saturation),
@@ -128,7 +128,7 @@ where
     A: AngularChannelScalar,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        Hsl::from_channels(values.0, values.1, values.2)
+        Hsl::new(values.0, values.1, values.2)
     }
 }
 
@@ -287,27 +287,27 @@ where
         match hue_seg {
             0 => {
                 let g = chroma * (hue_frac_t - one_half) + from.lightness();
-                Rgb::from_channels(channel_max, g, channel_min)
+                Rgb::new(channel_max, g, channel_min)
             }
             1 => {
                 let r = chroma * (one_half - hue_frac_t) + from.lightness();
-                Rgb::from_channels(r, channel_max, channel_min)
+                Rgb::new(r, channel_max, channel_min)
             }
             2 => {
                 let b = chroma * (hue_frac_t - one_half) + from.lightness();
-                Rgb::from_channels(channel_min, channel_max, b)
+                Rgb::new(channel_min, channel_max, b)
             }
             3 => {
                 let g = chroma * (one_half - hue_frac_t) + from.lightness();
-                Rgb::from_channels(channel_min, g, channel_max)
+                Rgb::new(channel_min, g, channel_max)
             }
             4 => {
                 let r = chroma * (hue_frac_t - one_half) + from.lightness();
-                Rgb::from_channels(r, channel_min, channel_max)
+                Rgb::new(r, channel_min, channel_max)
             }
             5 => {
                 let b = chroma * (one_half - hue_frac_t) + from.lightness();
-                Rgb::from_channels(channel_max, channel_min, b)
+                Rgb::new(channel_max, channel_min, b)
             }
             _ => unreachable!(),
         }
@@ -327,14 +327,14 @@ mod test {
 
     #[test]
     fn test_construct() {
-        let c1 = Hsl::from_channels(Deg(90.0), 0.5, 0.25);
+        let c1 = Hsl::new(Deg(90.0), 0.5, 0.25);
         assert_eq!(c1.hue(), Deg(90.0));
         assert_eq!(c1.saturation(), 0.5);
         assert_eq!(c1.lightness(), 0.25);
         assert_eq!(c1.to_tuple(), (Deg(90.0), 0.5, 0.25));
         assert_eq!(Hsl::from_tuple(c1.to_tuple()), c1);
 
-        let c2 = Hsl::from_channels(Rad(consts::PI), 0.20f32, 0.90f32);
+        let c2 = Hsl::new(Rad(consts::PI), 0.20f32, 0.90f32);
         assert_eq!(c2.hue(), Rad(consts::PI));
         assert_eq!(c2.saturation(), 0.2);
         assert_eq!(c2.lightness(), 0.90);
@@ -353,22 +353,22 @@ mod test {
 
     #[test]
     fn test_invert() {
-        let c1 = Hsl::from_channels(Deg(100f32), 0.77f32, 0.5);
+        let c1 = Hsl::new(Deg(100f32), 0.77f32, 0.5);
         assert_relative_eq!(c1.clone().invert().invert(), c1);
-        assert_relative_eq!(c1.invert(), Hsl::from_channels(Deg(280f32), 0.23f32, 0.5));
+        assert_relative_eq!(c1.invert(), Hsl::new(Deg(280f32), 0.23f32, 0.5));
 
-        let c2 = Hsl::from_channels(Turns(0.10), 0.11, 0.55);
+        let c2 = Hsl::new(Turns(0.10), 0.11, 0.55);
         assert_relative_eq!(c2.clone().invert().invert(), c2);
-        assert_relative_eq!(c2.invert(), Hsl::from_channels(Turns(0.60), 0.89, 0.45));
+        assert_relative_eq!(c2.invert(), Hsl::new(Turns(0.60), 0.89, 0.45));
     }
 
     #[test]
     fn test_lerp() {
-        let c1 = Hsl::from_channels(Turns(0.2), 0.25, 0.80);
-        let c2 = Hsl::from_channels(Turns(0.8), 0.75, 0.30);
+        let c1 = Hsl::new(Turns(0.2), 0.25, 0.80);
+        let c2 = Hsl::new(Turns(0.8), 0.75, 0.30);
         assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
         assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
-        assert_relative_eq!(c1.lerp(&c2, 0.5), Hsl::from_channels(Turns(0.0), 0.5, 0.55));
+        assert_relative_eq!(c1.lerp(&c2, 0.5), Hsl::new(Turns(0.0), 0.5, 0.55));
     }
 
     #[test]
@@ -385,11 +385,8 @@ mod test {
 
     #[test]
     fn test_color_cast() {
-        let c1 = Hsl::from_channels(Deg(90.0), 0.23, 0.45);
-        assert_relative_eq!(
-            c1.color_cast(),
-            Hsl::from_channels(Turns(0.25f32), 0.23f32, 0.45f32)
-        );
+        let c1 = Hsl::new(Deg(90.0), 0.23, 0.45);
+        assert_relative_eq!(c1.color_cast(), Hsl::new(Turns(0.25f32), 0.23f32, 0.45f32));
         assert_relative_eq!(c1.color_cast(), c1, epsilon = 1e-7);
         assert_relative_eq!(
             c1.color_cast::<f32, Rad<f32>>().color_cast(),

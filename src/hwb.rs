@@ -54,7 +54,7 @@ where
     A: AngularChannelScalar,
 {
     /// Construct a `Hwb` instance from hue, whiteness and blackness
-    pub fn from_channels(hue: A, whiteness: T, blackness: T) -> Self {
+    pub fn new(hue: A, whiteness: T, blackness: T) -> Self {
         Hwb {
             hue: AngularChannel::new(hue),
             whiteness: PosNormalBoundedChannel::new(whiteness),
@@ -152,7 +152,7 @@ where
     A: AngularChannelScalar,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        Hwb::from_channels(values.0, values.1, values.2)
+        Hwb::new(values.0, values.1, values.2)
     }
 }
 
@@ -310,27 +310,27 @@ where
         match hue_seg {
             0 => {
                 let g = channel_max - max_less_whiteness * (one - hue_frac_t);
-                rgb::Rgb::from_channels(channel_max, g, channel_min)
+                rgb::Rgb::new(channel_max, g, channel_min)
             }
             1 => {
                 let r = channel_max - max_less_whiteness * hue_frac_t;
-                rgb::Rgb::from_channels(r, channel_max, channel_min)
+                rgb::Rgb::new(r, channel_max, channel_min)
             }
             2 => {
                 let b = channel_max - max_less_whiteness * (one - hue_frac_t);
-                rgb::Rgb::from_channels(channel_min, channel_max, b)
+                rgb::Rgb::new(channel_min, channel_max, b)
             }
             3 => {
                 let g = channel_max - max_less_whiteness * hue_frac_t;
-                rgb::Rgb::from_channels(channel_min, g, channel_max)
+                rgb::Rgb::new(channel_min, g, channel_max)
             }
             4 => {
                 let r = channel_max - max_less_whiteness * (one - hue_frac_t);
-                rgb::Rgb::from_channels(r, channel_min, channel_max)
+                rgb::Rgb::new(r, channel_min, channel_max)
             }
             5 => {
                 let b = channel_max - max_less_whiteness * hue_frac_t;
-                rgb::Rgb::from_channels(channel_max, channel_min, b)
+                rgb::Rgb::new(channel_max, channel_min, b)
             }
             _ => unreachable!(),
         }
@@ -346,7 +346,7 @@ where
         let one: T = num_traits::cast(1.0).unwrap();
         let blackness = one - from.value();
         let whiteness = (one - from.saturation()) * from.value();
-        Hwb::from_channels(from.hue(), whiteness, blackness)
+        Hwb::new(from.hue(), whiteness, blackness)
     }
 }
 
@@ -363,7 +363,7 @@ where
         let value = one - c.blackness();
         let saturation = one - c.whiteness() / (value + epsilon);
 
-        hsv::Hsv::from_channels(c.hue(), saturation, value)
+        hsv::Hsv::new(c.hue(), saturation, value)
     }
 }
 
@@ -379,79 +379,79 @@ mod test {
 
     #[test]
     fn test_construct() {
-        let c1 = Hwb::from_channels(Deg(210.0), 0.75, 0.25);
+        let c1 = Hwb::new(Deg(210.0), 0.75, 0.25);
         assert_eq!(c1.hue(), Deg(210.0));
         assert_eq!(c1.whiteness(), 0.75);
         assert_eq!(c1.blackness(), 0.25);
         assert_eq!(c1.to_tuple(), (Deg(210.0), 0.75, 0.25));
 
-        let c2 = Hwb::from_channels(Turns(0.75f32), 0.50f32, 0.66);
+        let c2 = Hwb::new(Turns(0.75f32), 0.50f32, 0.66);
         assert_eq!(c2.hue(), Turns(0.75));
         assert_eq!(c2.whiteness(), 0.50);
         assert_eq!(c2.blackness(), 0.66);
 
         let c3 = Hwb::from_tuple((Rad(2.0), 0.30, 0.10));
-        assert_eq!(c3, Hwb::from_channels(Rad(2.0), 0.30, 0.10));
+        assert_eq!(c3, Hwb::new(Rad(2.0), 0.30, 0.10));
         assert_eq!(Hwb::from_tuple(c3.clone().to_tuple()), c3);
 
-        let mut c4 = Hwb::from_channels(Turns(0.11), 0.22, 0.33);
+        let mut c4 = Hwb::new(Turns(0.11), 0.22, 0.33);
         let blk = c4.blackness();
         c4.set_whiteness(blk);
         c4.set_hue(Turns(0.29));
         c4.set_blackness(0.55);
-        assert_relative_eq!(c4, Hwb::from_channels(Turns(0.29), 0.33, 0.55));
+        assert_relative_eq!(c4, Hwb::new(Turns(0.29), 0.33, 0.55));
     }
 
     #[test]
     fn test_rescale() {
-        let c1 = Hwb::from_channels(Deg(60.0), 0.3, 0.4);
+        let c1 = Hwb::new(Deg(60.0), 0.3, 0.4);
         assert!(!c1.wb_needs_rescaled());
         assert_eq!(c1.rescale_wb(), c1);
 
-        let c2 = Hwb::from_channels(Deg(90.0), 1.0, 1.0);
+        let c2 = Hwb::new(Deg(90.0), 1.0, 1.0);
         assert!(c2.wb_needs_rescaled());
         assert_relative_eq!(
             c2.rescale_wb(),
-            Hwb::from_channels(Deg(90.0), 0.5, 0.5),
+            Hwb::new(Deg(90.0), 0.5, 0.5),
             epsilon = 1e-6
         );
 
-        let c3 = Hwb::from_channels(Rad(1.0), 0.75, 0.9);
+        let c3 = Hwb::new(Rad(1.0), 0.75, 0.9);
         assert!(c3.wb_needs_rescaled());
         assert_relative_eq!(
             c3.rescale_wb(),
-            Hwb::from_channels(Rad(1.0), 0.45454545, 0.54545454),
+            Hwb::new(Rad(1.0), 0.45454545, 0.54545454),
             epsilon = 1e-6
         );
     }
 
     #[test]
     fn test_invert() {
-        let c1 = Hwb::from_channels(Deg(55.5), 0.6, 0.9);
-        assert_relative_eq!(c1.invert(), Hwb::from_channels(Deg(235.5), 0.4, 0.1));
+        let c1 = Hwb::new(Deg(55.5), 0.6, 0.9);
+        assert_relative_eq!(c1.invert(), Hwb::new(Deg(235.5), 0.4, 0.1));
 
-        let c2 = Hwb::from_channels(Deg(330.0), 0.5, 0.2);
-        assert_relative_eq!(c2.invert(), Hwb::from_channels(Deg(150.0), 0.5, 0.8));
+        let c2 = Hwb::new(Deg(330.0), 0.5, 0.2);
+        assert_relative_eq!(c2.invert(), Hwb::new(Deg(150.0), 0.5, 0.8));
     }
 
     #[test]
     fn test_normalize() {
-        let c1 = Hwb::from_channels(Deg(100.0), 0.99, 0.20);
+        let c1 = Hwb::new(Deg(100.0), 0.99, 0.20);
         assert_relative_eq!(c1.normalize(), c1);
         assert!(c1.is_normalized());
 
-        let c2 = Hwb::from_channels(Deg(500.0), 2.50, -1.50);
-        assert_relative_eq!(c2.normalize(), Hwb::from_channels(Deg(140.0), 1.0, 0.0));
+        let c2 = Hwb::new(Deg(500.0), 2.50, -1.50);
+        assert_relative_eq!(c2.normalize(), Hwb::new(Deg(140.0), 1.0, 0.0));
         assert!(!c2.is_normalized());
 
-        let c3 = Hwb::from_channels(Deg(360.0), -0.20, 0.55);
-        assert_relative_eq!(c3.normalize(), Hwb::from_channels(Deg(0.0), 0.0, 0.55));
+        let c3 = Hwb::new(Deg(360.0), -0.20, 0.55);
+        assert_relative_eq!(c3.normalize(), Hwb::new(Deg(0.0), 0.0, 0.55));
         assert!(!c3.is_normalized());
     }
 
     #[test]
     fn test_flatten() {
-        let c1 = Hwb::from_channels(Turns(0.55), 0.43, 0.11);
+        let c1 = Hwb::new(Turns(0.55), 0.43, 0.11);
         assert_eq!(c1.as_slice(), &[0.55, 0.43, 0.11]);
         assert_eq!(c1, Hwb::from_slice(c1.as_slice()));
     }
@@ -542,11 +542,11 @@ mod test {
 
     #[test]
     fn test_cast() {
-        let c1 = Hwb::from_channels(Deg(120.0_f32), 0.5_f32, 0.3);
+        let c1 = Hwb::new(Deg(120.0_f32), 0.5_f32, 0.3);
         assert_relative_eq!(c1.color_cast::<f64, Rad<f64>>().color_cast(), c1);
         assert_relative_eq!(
             c1.color_cast(),
-            Hwb::from_channels(Turns(0.3333), 0.5, 0.3),
+            Hwb::new(Turns(0.3333), 0.5, 0.3),
             epsilon = 1e-3
         );
     }

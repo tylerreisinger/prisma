@@ -56,7 +56,7 @@ where
     A: AngularChannelScalar,
 {
     /// Construct an Hsv instance from hue, saturation and value
-    pub fn from_channels(hue: A, saturation: T, value: T) -> Self {
+    pub fn new(hue: A, saturation: T, value: T) -> Self {
         Hsv {
             hue: AngularChannel::new(hue),
             saturation: PosNormalBoundedChannel::new(saturation),
@@ -136,7 +136,7 @@ where
     A: AngularChannelScalar,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        Hsv::from_channels(values.0, values.1, values.2)
+        Hsv::new(values.0, values.1, values.2)
     }
 }
 
@@ -277,27 +277,27 @@ where
         match hue_seg {
             0 => {
                 let g = from.value() * (one - from.saturation() * (one - hue_frac_t));
-                rgb::Rgb::from_channels(channel_max, g, channel_min)
+                rgb::Rgb::new(channel_max, g, channel_min)
             }
             1 => {
                 let r = from.value() * (one - from.saturation() * hue_frac_t);
-                rgb::Rgb::from_channels(r, channel_max, channel_min)
+                rgb::Rgb::new(r, channel_max, channel_min)
             }
             2 => {
                 let b = from.value() * (one - from.saturation() * (one - hue_frac_t));
-                rgb::Rgb::from_channels(channel_min, channel_max, b)
+                rgb::Rgb::new(channel_min, channel_max, b)
             }
             3 => {
                 let g = from.value() * (one - from.saturation() * hue_frac_t);
-                rgb::Rgb::from_channels(channel_min, g, channel_max)
+                rgb::Rgb::new(channel_min, g, channel_max)
             }
             4 => {
                 let r = from.value() * (one - from.saturation() * (one - hue_frac_t));
-                rgb::Rgb::from_channels(r, channel_min, channel_max)
+                rgb::Rgb::new(r, channel_min, channel_max)
             }
             5 => {
                 let b = from.value() * (one - from.saturation() * hue_frac_t);
-                rgb::Rgb::from_channels(channel_max, channel_min, b)
+                rgb::Rgb::new(channel_max, channel_min, b)
             }
             _ => unreachable!(),
         }
@@ -317,16 +317,16 @@ mod test {
 
     #[test]
     fn test_construct() {
-        let c1 = Hsv::from_channels(Deg(50.0), 0.5, 0.3);
+        let c1 = Hsv::new(Deg(50.0), 0.5, 0.3);
 
         assert_ulps_eq!(c1.hue(), Deg(50.0));
         assert_ulps_eq!(c1.saturation(), 0.5);
         assert_ulps_eq!(c1.value(), 0.3);
 
-        let mut c2 = Hsv::from_channels(Turns(0.9), 0.5, 0.75);
+        let mut c2 = Hsv::new(Turns(0.9), 0.5, 0.75);
         assert_ulps_eq!(c2.hue(), Turns(0.9));
         c2.set_saturation(0.33);
-        assert_ulps_eq!(c2, Hsv::from_channels(Turns(0.9), 0.33, 0.75));
+        assert_ulps_eq!(c2, Hsv::new(Turns(0.9), 0.33, 0.75));
 
         let c3 = Hsv::from_tuple((Deg(50.0), 0.33, 0.66));
         assert_eq!(c3.to_tuple(), (Deg(50.0), 0.33, 0.66));
@@ -334,51 +334,42 @@ mod test {
 
     #[test]
     fn test_invert() {
-        let c1 = Hsv::from_channels(Deg(30.0), 0.3, 0.6);
-        assert_ulps_eq!(c1.invert(), Hsv::from_channels(Deg(210.0), 0.7, 0.4));
+        let c1 = Hsv::new(Deg(30.0), 0.3, 0.6);
+        assert_ulps_eq!(c1.invert(), Hsv::new(Deg(210.0), 0.7, 0.4));
 
-        let c2 = Hsv::from_channels(Deg(320.0), 0.5, 0.0);
-        assert_ulps_eq!(c2.invert(), Hsv::from_channels(Deg(140.0), 0.5, 1.0));
+        let c2 = Hsv::new(Deg(320.0), 0.5, 0.0);
+        assert_ulps_eq!(c2.invert(), Hsv::new(Deg(140.0), 0.5, 1.0));
     }
 
     #[test]
     fn test_lerp() {
-        let c1 = Hsv::from_channels(Rad(0.5), 0.0, 0.25);
-        let c2 = Hsv::from_channels(Rad(1.5), 0.5, 0.25);
+        let c1 = Hsv::new(Rad(0.5), 0.0, 0.25);
+        let c2 = Hsv::new(Rad(1.5), 0.5, 0.25);
         assert_ulps_eq!(c1.lerp(&c2, 0.0), c1);
         assert_ulps_eq!(c1.lerp(&c2, 1.0), c2);
-        assert_ulps_eq!(
-            c1.lerp(&c2, 0.25),
-            Hsv::from_channels(Rad(0.75), 0.125, 0.25)
-        );
-        assert_ulps_eq!(
-            c1.lerp(&c2, 0.75),
-            Hsv::from_channels(Rad(1.25), 0.375, 0.25)
-        );
+        assert_ulps_eq!(c1.lerp(&c2, 0.25), Hsv::new(Rad(0.75), 0.125, 0.25));
+        assert_ulps_eq!(c1.lerp(&c2, 0.75), Hsv::new(Rad(1.25), 0.375, 0.25));
 
-        let c3 = Hsv::from_channels(Deg(320.0), 0.0, 1.0);
-        let c4 = Hsv::from_channels(Deg(100.0), 1.0, 0.0);
+        let c3 = Hsv::new(Deg(320.0), 0.0, 1.0);
+        let c4 = Hsv::new(Deg(100.0), 1.0, 0.0);
         assert_ulps_eq!(c3.lerp(&c4, 0.0), c3);
         assert_ulps_eq!(c3.lerp(&c4, 1.0).normalize(), c4);
-        assert_ulps_eq!(
-            c3.lerp(&c4, 0.5).normalize(),
-            Hsv::from_channels(Deg(30.0), 0.5, 0.5)
-        );
+        assert_ulps_eq!(c3.lerp(&c4, 0.5).normalize(), Hsv::new(Deg(30.0), 0.5, 0.5));
     }
 
     #[test]
     fn test_normalize() {
-        let c1 = Hsv::from_channels(Deg(-120.0), 0.25, 0.75);
+        let c1 = Hsv::new(Deg(-120.0), 0.25, 0.75);
         assert!(!c1.is_normalized());
-        assert_ulps_eq!(c1.normalize(), Hsv::from_channels(Deg(240.0), 0.25, 0.75));
+        assert_ulps_eq!(c1.normalize(), Hsv::new(Deg(240.0), 0.25, 0.75));
 
-        let c2 = Hsv::from_channels(Turns(11.25), -1.11, 1.11);
-        assert_ulps_eq!(c2.normalize(), Hsv::from_channels(Turns(0.25), 0.0, 1.0));
+        let c2 = Hsv::new(Turns(11.25), -1.11, 1.11);
+        assert_ulps_eq!(c2.normalize(), Hsv::new(Turns(0.25), 0.0, 1.0));
     }
 
     #[test]
     fn test_flatten() {
-        let c1 = Hsv::from_channels(Turns(0.5), 0.3, 0.2);
+        let c1 = Hsv::new(Turns(0.5), 0.3, 0.2);
         assert_eq!(c1.as_slice(), &[0.5, 0.3, 0.2]);
         assert_eq!(c1, Hsv::from_slice(c1.as_slice()));
     }
@@ -391,15 +382,15 @@ mod test {
             assert_relative_eq!(item.hsv.get_chroma(), item.chroma, epsilon = 1e-3);
         }
 
-        let c1 = Hsv::from_channels(Deg(100.0), 0.5, 0.5);
+        let c1 = Hsv::new(Deg(100.0), 0.5, 0.5);
         assert_ulps_eq!(c1.get_chroma(), 0.25);
         assert_relative_eq!(
-            Hsv::from_channels(Deg(240.50), 0.316, 0.721).get_chroma(),
+            Hsv::new(Deg(240.50), 0.316, 0.721).get_chroma(),
             0.228,
             epsilon = 1e-3
         );
         assert_relative_eq!(
-            Hsv::from_channels(Deg(120.0), 0.0, 0.0).get_chroma(),
+            Hsv::new(Deg(120.0), 0.0, 0.0).get_chroma(),
             0.0,
             epsilon = 1e-3
         );
@@ -407,18 +398,12 @@ mod test {
 
     #[test]
     fn test_get_hue() {
+        assert_ulps_eq!(Hsv::new(Deg(120.0), 0.25, 0.75).get_hue(), Deg(120.0));
         assert_ulps_eq!(
-            Hsv::from_channels(Deg(120.0), 0.25, 0.75).get_hue(),
-            Deg(120.0)
-        );
-        assert_ulps_eq!(
-            Hsv::from_channels(Deg(180.0_f32), 0.35, 0.55).get_hue(),
+            Hsv::new(Deg(180.0_f32), 0.35, 0.55).get_hue(),
             Rad(consts::PI)
         );
-        assert_ulps_eq!(
-            Hsv::from_channels(Turns(0.0), 0.00, 0.00).get_hue(),
-            Rad(0.0)
-        );
+        assert_ulps_eq!(Hsv::new(Turns(0.0), 0.00, 0.00).get_hue(), Rad(0.0));
     }
 
     #[test]
@@ -433,20 +418,17 @@ mod test {
 
     #[test]
     fn test_cast() {
-        let c1 = Hsv::from_channels(Deg(180.0_f32), 0.5_f32, 0.3);
+        let c1 = Hsv::new(Deg(180.0_f32), 0.5_f32, 0.3);
         assert_relative_eq!(
             c1.color_cast(),
-            Hsv::from_channels(Rad(consts::PI), 0.5_f32, 0.3),
+            Hsv::new(Rad(consts::PI), 0.5_f32, 0.3),
             epsilon = 1e-6
         );
 
-        let c2 = Hsv::from_channels(Deg(55.0), 0.3, 0.2);
-        assert_relative_eq!(
-            c2.color_cast(),
-            Hsv::from_channels(Deg(55.0_f32), 0.3_f32, 0.2_f32)
-        );
+        let c2 = Hsv::new(Deg(55.0), 0.3, 0.2);
+        assert_relative_eq!(c2.color_cast(), Hsv::new(Deg(55.0_f32), 0.3_f32, 0.2_f32));
 
-        let c3 = Hsv::from_channels(Rad(2.0), 0.88, 0.66);
+        let c3 = Hsv::new(Rad(2.0), 0.88, 0.66);
         assert_relative_eq!(c3.color_cast(), c3);
     }
 }

@@ -302,7 +302,7 @@ mod test {
 
     #[test]
     fn test_construct() {
-        let c1 = Rgba::from_color_and_alpha(Rgb::from_channels(30u8, 120u8, 255u8), 222u8);
+        let c1 = Rgba::from_color_and_alpha(Rgb::new(30u8, 120u8, 255u8), 222u8);
         assert_eq!(c1.alpha(), 222u8);
         assert_eq!(c1.color().red(), 30u8);
         assert_eq!(c1.color().green(), 120u8);
@@ -311,16 +311,15 @@ mod test {
         assert_eq!(ic1, (30u8, 120, 255));
         assert_eq!(a, 222u8);
 
-        let mut c2 =
-            Hsva::from_color_and_alpha(Hsv::from_channels(Deg(0.3f32), 0.66, 0.9), 0.25f32);
+        let mut c2 = Hsva::from_color_and_alpha(Hsv::new(Deg(0.3f32), 0.66, 0.9), 0.25f32);
         assert_eq!(c2.alpha(), 0.25f32);
-        assert_ulps_eq!(*c2.color(), Hsv::from_channels(Deg(0.3f32), 0.66, 0.9));
+        assert_ulps_eq!(*c2.color(), Hsv::new(Deg(0.3f32), 0.66, 0.9));
         assert_eq!(c2, Hsva::from_tuple(((Deg(0.3f32), 0.66f32, 0.9), 0.25)));
         *c2.alpha_mut() = 0.75;
         *c2.color_mut().saturation_mut() = 0.01;
         assert_ulps_eq!(
             c2,
-            Hsva::from_color_and_alpha(Hsv::from_channels(Deg(0.3f32), 0.01, 0.9), 0.75f32)
+            Hsva::from_color_and_alpha(Hsv::new(Deg(0.3f32), 0.01, 0.9), 0.75f32)
         );
 
         let (c, a) = c2.clone().decompose();
@@ -330,61 +329,59 @@ mod test {
         let c3 = Rgba::broadcast(50u8);
         assert_eq!(c3, Rgba::from_tuple(((50u8, 50, 50), 50)));
 
-        let c4 = Rgba::from_color_and_alpha(Rgb::from_channels(0.2, 0.6, 0.99), 0.05);
+        let c4 = Rgba::from_color_and_alpha(Rgb::new(0.2, 0.6, 0.99), 0.05);
         assert_relative_eq!(
             c4.clamp(0.25, 0.75),
-            Rgba::from_color_and_alpha(Rgb::from_channels(0.25, 0.6, 0.75), 0.25)
+            Rgba::from_color_and_alpha(Rgb::new(0.25, 0.6, 0.75), 0.25)
         );
     }
 
     #[test]
     fn test_invert() {
-        let c1 = Rgba::from_color_and_alpha(Rgb::from_channels(30u8, 255u8, 200u8), 155u8);
+        let c1 = Rgba::from_color_and_alpha(Rgb::new(30u8, 255u8, 200u8), 155u8);
         assert_eq!(c1.clone().invert().invert(), c1);
         assert_eq!(
             c1.invert(),
-            Rgba::from_color_and_alpha(Rgb::from_channels(225u8, 0, 55), 100u8)
+            Rgba::from_color_and_alpha(Rgb::new(225u8, 0, 55), 100u8)
         );
 
-        let c2 =
-            Hsva::from_color_and_alpha(Hsv::from_channels(Deg(120.0f32), 0.3f32, 0.85), 0.3f32);
+        let c2 = Hsva::from_color_and_alpha(Hsv::new(Deg(120.0f32), 0.3f32, 0.85), 0.3f32);
         assert_relative_eq!(c2.clone().invert().invert(), c2, epsilon = 1e-6);
         assert_relative_eq!(
             c2.invert(),
-            Hsva::from_color_and_alpha(Hsv::from_channels(Deg(300.0f32), 0.7f32, 0.15), 0.7f32),
+            Hsva::from_color_and_alpha(Hsv::new(Deg(300.0f32), 0.7f32, 0.15), 0.7f32),
             epsilon = 1e-4
         );
     }
 
     #[test]
     fn test_lerp() {
-        let c1 = Rgba::from_color_and_alpha(Rgb::from_channels(120u8, 200, 0), 150);
-        let c2 = Rgba::from_color_and_alpha(Rgb::from_channels(250u8, 100, 220), 55);
+        let c1 = Rgba::from_color_and_alpha(Rgb::new(120u8, 200, 0), 150);
+        let c2 = Rgba::from_color_and_alpha(Rgb::new(250u8, 100, 220), 55);
         assert_eq!(c1.lerp(&c2, 0.0), c1);
         assert_eq!(c1.lerp(&c2, 1.0), c2);
         assert_eq!(
             c1.lerp(&c2, 0.5),
-            Rgba::from_color_and_alpha(Rgb::from_channels(185u8, 150, 110), 102)
+            Rgba::from_color_and_alpha(Rgb::new(185u8, 150, 110), 102)
         );
 
-        let c3 = Hsva::from_color_and_alpha(Hsv::from_channels(Deg(60.0), 0.25, 0.55), 0.95);
-        let c4 = Hsva::from_color_and_alpha(Hsv::from_channels(Deg(340.0), 0.95, 0.0), 0.25);
+        let c3 = Hsva::from_color_and_alpha(Hsv::new(Deg(60.0), 0.25, 0.55), 0.95);
+        let c4 = Hsva::from_color_and_alpha(Hsv::new(Deg(340.0), 0.95, 0.0), 0.25);
         assert_relative_eq!(c3.lerp(&c4, 0.0), c3);
         assert_relative_eq!(c3.lerp(&c4, 1.0), c4);
         assert_relative_eq!(
             c3.lerp(&c4, 0.25),
-            Hsva::from_color_and_alpha(Hsv::from_channels(Deg(40.0), 0.425, 0.41250), 0.7750)
+            Hsva::from_color_and_alpha(Hsv::new(Deg(40.0), 0.425, 0.41250), 0.7750)
         );
     }
 
     #[test]
     fn test_flatten() {
-        let c1 = Rgba::from_color_and_alpha(Rgb::from_channels(100u8, 50, 175), 254);
+        let c1 = Rgba::from_color_and_alpha(Rgb::new(100u8, 50, 175), 254);
         assert_eq!(c1.as_slice(), &[100u8, 50, 175, 254]);
         assert_eq!(Rgba::from_slice(c1.as_slice()), c1);
 
-        let c2 =
-            Hsva::from_color_and_alpha(Hsv::from_channels(Turns(0.5f32), 0.77f32, 0.5), 0.8765);
+        let c2 = Hsva::from_color_and_alpha(Hsv::new(Turns(0.5f32), 0.77f32, 0.5), 0.8765);
         assert_eq!(c2.as_slice(), &[0.5f32, 0.77, 0.5, 0.8765]);
         assert_eq!(Hsva::from_slice(c2.as_slice()), c2);
     }

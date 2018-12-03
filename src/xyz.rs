@@ -63,7 +63,7 @@ where
     T: FreeChannelScalar,
 {
     /// Construct a new `Xyz` instance from `x`, `y` and `z`
-    pub fn from_channels(x: T, y: T, z: T) -> Self {
+    pub fn new(x: T, y: T, z: T) -> Self {
         Xyz {
             x: PosFreeChannel::new(x),
             y: PosFreeChannel::new(y),
@@ -132,7 +132,7 @@ where
     T: FreeChannelScalar,
 {
     fn from_tuple(values: (T, T, T)) -> Self {
-        Xyz::from_channels(values.0, values.1, values.2)
+        Xyz::new(values.0, values.1, values.2)
     }
 }
 
@@ -222,14 +222,14 @@ mod test {
 
     #[test]
     fn test_construction() {
-        let c1 = Xyz::from_channels(0.5, 1.2, 0.9);
+        let c1 = Xyz::new(0.5, 1.2, 0.9);
         assert_eq!(c1.x(), 0.5);
         assert_eq!(c1.y(), 1.2);
         assert_eq!(c1.z(), 0.9);
         assert_eq!(c1.clone().to_tuple(), (0.5, 1.2, 0.9));
         assert_relative_eq!(Xyz::from_tuple(c1.clone().to_tuple()), c1);
 
-        let c2 = Xyz::from_channels(0.5, -0.4, 0.3);
+        let c2 = Xyz::new(0.5, -0.4, 0.3);
         assert_eq!(c2.x(), 0.5);
         assert_eq!(c2.y(), -0.4);
         assert_eq!(c2.z(), 0.3);
@@ -245,37 +245,37 @@ mod test {
 
     #[test]
     fn test_lerp() {
-        let c1 = Xyz::from_channels(0.8, 0.2, 1.5);
-        let c2 = Xyz::from_channels(0.1, 0.7, 0.3);
+        let c1 = Xyz::new(0.8, 0.2, 1.5);
+        let c2 = Xyz::new(0.1, 0.7, 0.3);
         assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
         assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
-        assert_relative_eq!(c1.lerp(&c2, 0.5), Xyz::from_channels(0.45, 0.45, 0.9));
-        assert_relative_eq!(c1.lerp(&c2, 0.25), Xyz::from_channels(0.625, 0.325, 1.2));
+        assert_relative_eq!(c1.lerp(&c2, 0.5), Xyz::new(0.45, 0.45, 0.9));
+        assert_relative_eq!(c1.lerp(&c2, 0.25), Xyz::new(0.625, 0.325, 1.2));
     }
 
     #[test]
     fn test_normalize() {
-        let c1 = Xyz::from_channels(1e6, -2e7, 8e-5);
+        let c1 = Xyz::new(1e6, -2e7, 8e-5);
         assert!(!c1.is_normalized());
-        assert_relative_eq!(c1.normalize(), Xyz::from_channels(1e6, 0.0, 8e-5));
+        assert_relative_eq!(c1.normalize(), Xyz::new(1e6, 0.0, 8e-5));
 
-        let c2 = Xyz::from_channels(1.0, 0.0, 1.0);
+        let c2 = Xyz::new(1.0, 0.0, 1.0);
         assert!(c2.is_normalized());
         assert_relative_eq!(c2.normalize(), c2);
     }
 
     #[test]
     fn test_flatten() {
-        let c1 = Xyz::from_channels(0.4, 0.7, 1.0);
+        let c1 = Xyz::new(0.4, 0.7, 1.0);
         assert_eq!(c1.as_slice(), &[0.4, 0.7, 1.0]);
         assert_relative_eq!(Xyz::from_slice(c1.as_slice()), c1);
     }
 
     #[test]
     fn test_color_cast() {
-        let c1 = Xyz::from_channels(0.5, 1.0, 0.8);
+        let c1 = Xyz::new(0.5, 1.0, 0.8);
         assert_relative_eq!(c1.color_cast(), c1);
-        assert_relative_eq!(c1.color_cast(), Xyz::from_channels(0.5f32, 1.0, 0.8));
+        assert_relative_eq!(c1.color_cast(), Xyz::new(0.5f32, 1.0, 0.8));
     }
 
 }

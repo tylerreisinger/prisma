@@ -307,7 +307,7 @@ mod tests {
     #[test]
     fn test_with_color_space() {
         let srgb: EncodedColorSpace<f32, _> = sRgb::get_color_space();
-        let rgb1 = Rgb::from_channels(0.5, 0.75, 1.0f32)
+        let rgb1 = Rgb::new(0.5, 0.75, 1.0f32)
             .srgb_encoded()
             .with_color_space(&srgb);
 

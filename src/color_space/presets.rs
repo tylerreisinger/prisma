@@ -4,7 +4,7 @@ use channel::{FreeChannelScalar, PosNormalChannelScalar};
 use color_space::{EncodedColorSpace, RgbPrimary};
 use encoding::SrgbEncoding;
 use num_traits;
-use white_point::{NamedWhitePoint, D65};
+use white_point::{WhitePoint, D65};
 
 use color_space::NamedColorSpace;
 
@@ -31,7 +31,7 @@ where
                 num_traits::cast(0.150).unwrap(),
                 num_traits::cast(0.060).unwrap(),
             ),
-            D65::get_xyz(),
+            D65.get_xyz(),
             SrgbEncoding::new(),
         )
     }

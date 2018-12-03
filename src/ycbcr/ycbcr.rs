@@ -56,10 +56,10 @@ where
     /// This method does not take a model parameter, and is only usable for
     /// colors where the model is a stateless type implementing UnitModel. For such types,
     /// it sets the model to `M::unit_value()`.
-    /// For colors that have a stateful model, the `from_channels_and_model` method
+    /// For colors that have a stateful model, the `new_and_model` method
     /// should be used instead.
-    pub fn from_channels(y: T, cb: T, cr: T) -> Self {
-        YCbCr::from_channels_and_model(y, cb, cr, M::unit_value())
+    pub fn new(y: T, cb: T, cr: T) -> Self {
+        YCbCr::new_and_model(y, cb, cr, M::unit_value())
     }
 }
 
@@ -74,9 +74,9 @@ where
     }
 
     /// Construct a `YCbCr` from channel values and a model.
-    pub fn from_channels_and_model(y: T, cb: T, cr: T, model: M) -> Self {
+    pub fn new_and_model(y: T, cb: T, cr: T, model: M) -> Self {
         YCbCr {
-            ycbcr: BareYCbCr::from_channels(y, cb, cr),
+            ycbcr: BareYCbCr::new(y, cb, cr),
             model,
         }
     }
@@ -223,7 +223,7 @@ where
     M: YCbCrModel<T> + UnitModel<T>,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        YCbCr::from_channels(values.0, values.1, values.2)
+        YCbCr::new(values.0, values.1, values.2)
     }
 }
 
@@ -274,7 +274,7 @@ where
     }
 
     fn from_slice(vals: &[T]) -> Self {
-        YCbCr::from_channels(vals[0].clone(), vals[1].clone(), vals[2].clone())
+        YCbCr::new(vals[0].clone(), vals[1].clone(), vals[2].clone())
     }
 }
 
@@ -430,14 +430,10 @@ mod test {
             epsilon = 1e-6
         );
 
-        let c1: YCbCrCustom<_> = YCbCr::from_channels_and_model(0.5, 0.2, 0.3, &model);
+        let c1: YCbCrCustom<_> = YCbCr::new_and_model(0.5, 0.2, 0.3, &model);
         let t1 = c1.to_rgb(YCbCrOutOfGamutMode::Preserve);
 
-        assert_relative_eq!(
-            t1,
-            Rgb::from_channels(0.9206, 0.216932, 0.8544),
-            epsilon = 1e-5
-        );
+        assert_relative_eq!(t1, Rgb::new(0.9206, 0.216932, 0.8544), epsilon = 1e-5);
         assert_relative_eq!(
             YCbCr::<_, &CustomYCbCrModel>::from_rgb_and_model(&t1, &model),
             c1,
@@ -447,21 +443,21 @@ mod test {
 
     #[test]
     fn test_yiq() {
-        let c1 = Yiq::from_channels(0.0, 0.0, 0.0);
+        let c1 = Yiq::new(0.0, 0.0, 0.0);
         let t1 = Rgb::from_ycbcr(&c1, YCbCrOutOfGamutMode::Preserve);
-        assert_relative_eq!(t1, Rgb::from_channels(0.0, 0.0, 0.0), epsilon = 1e-3);
+        assert_relative_eq!(t1, Rgb::new(0.0, 0.0, 0.0), epsilon = 1e-3);
         assert_relative_eq!(c1, Yiq::from_rgb(&t1), epsilon = 1e-3);
 
-        let c2 = Yiq::from_channels(1.0, 0.0, 0.0);
+        let c2 = Yiq::new(1.0, 0.0, 0.0);
         let t2 = Rgb::from_ycbcr(&c2, YCbCrOutOfGamutMode::Preserve);
-        assert_relative_eq!(t2, Rgb::from_channels(1.0, 1.0, 1.0), epsilon = 1e-3);
+        assert_relative_eq!(t2, Rgb::new(1.0, 1.0, 1.0), epsilon = 1e-3);
         assert_relative_eq!(c2, Yiq::from_rgb(&t2), epsilon = 1e-3);
 
-        let c3 = Yiq::from_channels(0.25, 0.5, 0.0);
+        let c3 = Yiq::new(0.25, 0.5, 0.0);
         let t3 = c3.to_rgb(YCbCrOutOfGamutMode::Preserve);
         assert_relative_eq!(
             t3,
-            Rgb::from_channels(0.5347446, 0.1689848, -0.0794421),
+            Rgb::new(0.5347446, 0.1689848, -0.0794421),
             epsilon = 1e-3
         );
         assert_relative_eq!(c3, Yiq::from_rgb(&t3), epsilon = 1e-3);
@@ -469,23 +465,23 @@ mod test {
 
     #[test]
     fn test_canonicalize() {
-        let c1 = YCbCrJpeg::from_channels(1.0, 1.0, -1.0);
+        let c1 = YCbCrJpeg::new(1.0, 1.0, -1.0);
         assert_eq!(c1.to_canonical_representation(), (1.0, 0.436, -0.615));
 
-        let c2 = Yiq::from_channels(1.0, 1.0, -1.0);
+        let c2 = Yiq::new(1.0, 1.0, -1.0);
         assert_eq!(c2.to_canonical_representation(), (1.0, 0.5957, -0.5226));
     }
 
     #[test]
     fn test_construct() {
-        let c1 = YCbCrJpeg::from_channels(0.75, 0.44, 0.21);
+        let c1 = YCbCrJpeg::new(0.75, 0.44, 0.21);
         assert_eq!(c1.luma(), 0.75);
         assert_eq!(c1.cb(), 0.44);
         assert_eq!(c1.cr(), 0.21);
         assert_eq!(c1.to_tuple(), (0.75, 0.44, 0.21));
         assert_eq!(YCbCrJpeg::from_tuple(c1.to_tuple()), c1);
 
-        let c2 = YCbCrJpeg::from_channels(0.20, 0.21, 0.33);
+        let c2 = YCbCrJpeg::new(0.20, 0.21, 0.33);
         assert_eq!(c2.luma(), 0.20);
         assert_eq!(c2.cb(), 0.21);
         assert_eq!(c2.cr(), 0.33);
@@ -494,63 +490,54 @@ mod test {
     }
     #[test]
     fn test_invert() {
-        let c1 = YCbCrJpeg::from_channels(0.33, 0.55, 0.88);
+        let c1 = YCbCrJpeg::new(0.33, 0.55, 0.88);
         assert_relative_eq!(c1.invert().invert(), c1, epsilon = 1e-6);
         assert_relative_eq!(
             c1.invert(),
-            YCbCrJpeg::from_channels(0.67, -0.55, -0.88),
+            YCbCrJpeg::new(0.67, -0.55, -0.88),
             epsilon = 1e-6
         );
 
-        let c2 = YCbCrJpeg::from_channels(0.2, -0.2, 1.0);
+        let c2 = YCbCrJpeg::new(0.2, -0.2, 1.0);
         assert_relative_eq!(c2.invert().invert(), c2, epsilon = 1e-6);
-        assert_relative_eq!(c2.invert(), YCbCrJpeg::from_channels(0.8, 0.2, -1.0));
+        assert_relative_eq!(c2.invert(), YCbCrJpeg::new(0.8, 0.2, -1.0));
 
-        let c3 = YCbCrJpeg::from_channels(200u8, 170u8, 50u8);
+        let c3 = YCbCrJpeg::new(200u8, 170u8, 50u8);
         assert_eq!(c3.invert().invert(), c3);
-        assert_eq!(c3.invert(), YCbCrJpeg::from_channels(55u8, 85u8, 205u8));
+        assert_eq!(c3.invert(), YCbCrJpeg::new(55u8, 85u8, 205u8));
     }
 
     #[test]
     fn test_lerp() {
-        let c1 = YCbCrJpeg::from_channels(0.7, -0.4, 0.7);
-        let c2 = YCbCrJpeg::from_channels(0.3, 0.2, -0.8);
+        let c1 = YCbCrJpeg::new(0.7, -0.4, 0.7);
+        let c2 = YCbCrJpeg::new(0.3, 0.2, -0.8);
         assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
         assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
-        assert_relative_eq!(
-            c1.lerp(&c2, 0.5),
-            YCbCrJpeg::from_channels(0.5, -0.1, -0.05)
-        );
-        assert_relative_eq!(
-            c1.lerp(&c2, 0.25),
-            YCbCrJpeg::from_channels(0.6, -0.25, 0.325)
-        );
+        assert_relative_eq!(c1.lerp(&c2, 0.5), YCbCrJpeg::new(0.5, -0.1, -0.05));
+        assert_relative_eq!(c1.lerp(&c2, 0.25), YCbCrJpeg::new(0.6, -0.25, 0.325));
 
-        let c3 = YCbCrJpeg::from_channels(100u8, 210, 25);
-        let c4 = YCbCrJpeg::from_channels(200u8, 70, 150);
+        let c3 = YCbCrJpeg::new(100u8, 210, 25);
+        let c4 = YCbCrJpeg::new(200u8, 70, 150);
         assert_eq!(c3.lerp(&c4, 0.0), c3);
         assert_eq!(c3.lerp(&c4, 1.0), c4);
-        assert_eq!(
-            c3.lerp(&c4, 0.5),
-            YCbCrJpeg::from_channels(150u8, 140u8, 87)
-        );
+        assert_eq!(c3.lerp(&c4, 0.5), YCbCrJpeg::new(150u8, 140u8, 87));
     }
 
     #[test]
     fn test_normalize() {
-        let c1 = YCbCrJpeg::from_channels(-0.2, -1.3, 1.2);
+        let c1 = YCbCrJpeg::new(-0.2, -1.3, 1.2);
         assert!(!c1.is_normalized());
-        assert_eq!(c1.normalize(), YCbCrJpeg::from_channels(0.0, -1.0, 1.0));
+        assert_eq!(c1.normalize(), YCbCrJpeg::new(0.0, -1.0, 1.0));
         assert_eq!(c1.normalize().normalize(), c1.normalize());
 
-        let c2 = YCbCrJpeg::from_channels(0.8, -0.8, 0.3);
+        let c2 = YCbCrJpeg::new(0.8, -0.8, 0.3);
         assert!(c2.is_normalized());
         assert_eq!(c2.normalize(), c2);
     }
 
     #[test]
     fn test_flatten() {
-        let c1 = YCbCrJpeg::from_channels(0.2, -0.3, 0.45);
+        let c1 = YCbCrJpeg::new(0.2, -0.3, 0.45);
         assert_eq!(c1.as_slice(), &[0.2, -0.3, 0.45]);
         assert_eq!(YCbCrJpeg::from_slice(c1.as_slice()), c1);
     }
@@ -577,69 +564,69 @@ mod test {
             assert_relative_eq!(rgb, item.rgb, epsilon = 1e-4);
         }
 
-        let c1 = Rgb::from_channels(255u8, 255, 255);
+        let c1 = Rgb::new(255u8, 255, 255);
         let y1 = YCbCrJpeg::from_rgb(&c1);
         assert_eq!(y1.luma(), 255u8);
         assert_eq!(y1.cb(), 128);
         assert_eq!(y1.cr(), 128);
         assert_eq!(Rgb::try_from_color(&y1).unwrap(), c1);
 
-        let c2 = Rgb::from_channels(0.5, 0.5, 0.5);
+        let c2 = Rgb::new(0.5, 0.5, 0.5);
         let y2 = YCbCrJpeg::from_rgb_and_model(&c2, JpegModel);
-        assert_relative_eq!(y2, YCbCrJpeg::from_channels(0.5, 0.0, 0.0), epsilon = 1e-6);
+        assert_relative_eq!(y2, YCbCrJpeg::new(0.5, 0.0, 0.0), epsilon = 1e-6);
         assert_relative_eq!(Rgb::try_from_color(&y2).unwrap(), c2, epsilon = 1e-6);
     }
 
     #[test]
     fn test_to_rgb() {
-        let c1 = YCbCrJpeg::from_channels(1.0, 0.0, 0.0);
+        let c1 = YCbCrJpeg::new(1.0, 0.0, 0.0);
         let r1 = Rgb::try_from_color(&c1).unwrap();
         assert_relative_eq!(r1.red(), 1.0);
         assert_relative_eq!(r1.green(), 1.0);
         assert_relative_eq!(r1.blue(), 1.0);
 
-        let c2 = YCbCrJpeg::from_channels(1.0, 1.0, 1.0);
+        let c2 = YCbCrJpeg::new(1.0, 1.0, 1.0);
         assert_eq!(Rgb::try_from_color(&c2), None);
         let r2 = c2.to_rgb(YCbCrOutOfGamutMode::Clip);
         assert_relative_eq!(r2.red(), 1.0);
         assert_relative_eq!(r2.green(), 0.0);
         assert_relative_eq!(r2.blue(), 1.0);
 
-        let c3 = YCbCrJpeg::from_channels(0.0, 0.0, 0.0);
+        let c3 = YCbCrJpeg::new(0.0, 0.0, 0.0);
         let r3 = Rgb::try_from_color(&c3).unwrap();
         assert_relative_eq!(r3.red(), 0.0);
         assert_relative_eq!(r3.green(), 0.0);
         assert_relative_eq!(r3.blue(), 0.0);
 
-        let c4 = YCbCrJpeg::from_channels(0.5, 1.0, 1.0);
+        let c4 = YCbCrJpeg::new(0.5, 1.0, 1.0);
         assert_eq!(Rgb::try_from_color(&c4), None);
         let r4 = c4.to_rgb(YCbCrOutOfGamutMode::Clip);
         assert_relative_eq!(r4.red(), 1.0);
         assert_relative_eq!(r4.green(), 0.0);
         assert_relative_eq!(r4.blue(), 1.0);
 
-        let c5 = YCbCrJpeg::from_channels(50u8, 100, 150);
+        let c5 = YCbCrJpeg::new(50u8, 100, 150);
         let r5 = Rgb::try_from_color(&c5).unwrap();
-        assert_eq!(r5, Rgb::from_channels(80u8, 43, 0));
+        assert_eq!(r5, Rgb::new(80u8, 43, 0));
     }
     */
 
     #[test]
     fn test_color_cast() {
-        let c1 = YCbCrJpeg::from_channels(0.65f32, -0.3, 0.5);
+        let c1 = YCbCrJpeg::new(0.65f32, -0.3, 0.5);
         assert_relative_eq!(c1.color_cast(), c1);
         assert_relative_eq!(
             c1.color_cast(),
-            YCbCrJpeg::from_channels(0.65, -0.3, 0.5),
+            YCbCrJpeg::new(0.65, -0.3, 0.5),
             epsilon = 1e-6
         );
-        assert_eq!(c1.color_cast(), YCbCrJpeg::from_channels(166u8, 89, 191));
+        assert_eq!(c1.color_cast(), YCbCrJpeg::new(166u8, 89, 191));
 
-        let c2 = YCbCrJpeg::from_channels(100u8, 200u8, 100u8);
+        let c2 = YCbCrJpeg::new(100u8, 200u8, 100u8);
 
         assert_relative_eq!(
             c2.color_cast(),
-            YCbCrJpeg::from_channels(0.39215686f32, 0.56862745f32, -0.21568627f32)
+            YCbCrJpeg::new(0.39215686f32, 0.56862745f32, -0.21568627f32)
         );
     }
 }

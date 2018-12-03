@@ -350,7 +350,7 @@ mod tests {
 
     #[test]
     fn test_encode_as() {
-        let c1 = Rgb::from_channels(0.5, 0.5, 0.5);
+        let c1 = Rgb::new(0.5, 0.5, 0.5);
         let e1 = c1.clone().encoded_as(LinearEncoding {});
 
         assert_eq!(&c1, e1.color());
@@ -360,13 +360,13 @@ mod tests {
 
         assert_eq!(e1, e2);
 
-        let c3 = Rgb::from_channels(0.25, 0.5, 0.75).linear().invert();
-        assert_eq!(c3, Rgb::from_channels(0.75, 0.5, 0.25).linear());
+        let c3 = Rgb::new(0.25, 0.5, 0.75).linear().invert();
+        assert_eq!(c3, Rgb::new(0.75, 0.5, 0.25).linear());
     }
 
     #[test]
     fn test_deref() {
-        let mut e1 = Rgb::from_channels(1.0, 0.0, 0.5).srgb_encoded();
+        let mut e1 = Rgb::new(1.0, 0.0, 0.5).srgb_encoded();
 
         assert_eq!(e1.red(), 1.0);
         assert_eq!(e1.green(), 0.0);
@@ -377,7 +377,7 @@ mod tests {
         *e1.blue_mut() = 0.33;
         assert_eq!(e1.blue(), 0.33);
 
-        let e2 = Hsv::from_channels(Deg(180.0), 0.5, 0.25).srgb_encoded();
+        let e2 = Hsv::new(Deg(180.0), 0.5, 0.25).srgb_encoded();
         assert_eq!(e2.hue(), e2.color().hue());
         assert_eq!(e2.hue(), Deg(180.0));
     }
