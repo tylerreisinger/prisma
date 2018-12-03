@@ -16,10 +16,20 @@ pub trait FromColor<From> {
     /// Construct `Self` from `from`
     fn from_color(from: &From) -> Self;
 }
+/// Convert from Hsi to another color model
+///
+/// This is a separate trait as Hsi can go out of gamut. This trait accepts an enum describing how to
+/// handle out of gamut colors.
 pub trait FromHsi<From> {
+    /// Construct `Self` from `from`, describing what to do if the color is out of gamut for `Self`
     fn from_hsi(from: &From, out_of_gamut_mode: HsiOutOfGamutMode) -> Self;
 }
+/// Convert from YCbCr to another color model
+///
+/// This is a separate trait as YCbCr can go out of gamut. This trait accepts an enum describing how to
+/// handle out of gamut colors.
 pub trait FromYCbCr<From> {
+    /// Construct `Self` from `from`, describing what to do if the color is out of gamut for `Self`
     fn from_ycbcr(from: &From, out_of_gamut_mode: YCbCrOutOfGamutMode) -> Self;
 }
 

@@ -41,6 +41,7 @@ pub struct Hwb<T, A = Deg<T>> {
     pub blackness: PosNormalBoundedChannel<T>,
 }
 
+/// Combination of traits used to bound `T` in `Hwb`
 pub trait HwbBoundedChannelTraits: PosNormalChannelScalar + num_traits::Float {}
 
 impl<T> HwbBoundedChannelTraits for T where T: PosNormalChannelScalar + num_traits::Float {}
@@ -200,7 +201,7 @@ where
 
 impl<T, A> color::Flatten for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits + num_traits::Float,
+    T: HwbBoundedChannelTraits,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
 {
     type ScalarFormat = T;
@@ -212,7 +213,7 @@ where
 
 impl<T, A> EncodableColor for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits + num_traits::Float,
+    T: HwbBoundedChannelTraits,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
 {
 }
@@ -281,7 +282,7 @@ where
 
 impl<T, A> convert::GetChroma for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits + num_traits::Float,
+    T: HwbBoundedChannelTraits,
     A: AngularChannelScalar,
 {
     type ChromaType = T;
@@ -293,7 +294,7 @@ where
 
 impl<T, A> convert::FromColor<Hwb<T, A>> for rgb::Rgb<T>
 where
-    T: HwbBoundedChannelTraits + num_traits::Float,
+    T: HwbBoundedChannelTraits,
     A: AngularChannelScalar,
 {
     fn from_color(from: &Hwb<T, A>) -> Self {
