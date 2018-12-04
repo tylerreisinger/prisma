@@ -297,7 +297,7 @@ where
             L,
             chroma,
             <A as Angle>::normalize(hue),
-            from.white_point.clone(),
+            from.white_point().clone(),
         )
     }
 }

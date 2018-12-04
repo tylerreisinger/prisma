@@ -2,6 +2,7 @@ use angle::{Angle, FromAngle, Rad};
 use convert::{GetChroma, GetHue};
 use num_traits;
 
+// TODO: Improve this module
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 /// A pair of chromaticity coordinates $`\alpha`$ and $`\beta`$
 ///
@@ -28,7 +29,9 @@ use num_traits;
 ///
 ///
 pub struct ChromaticityCoordinates<T> {
+    /// The alpha chromaticity coordinate
     pub alpha: T,
+    /// The alpha chromaticity coordinate
     pub beta: T,
 }
 
@@ -36,6 +39,7 @@ impl<T> ChromaticityCoordinates<T>
 where
     T: num_traits::Float,
 {
+    /// Construct a new `ChromaticityCoordinates` instance
     pub fn new(alpha: T, beta: T) -> Self {
         ChromaticityCoordinates { alpha, beta }
     }

@@ -48,6 +48,7 @@ pub struct Hsv<T, A = Deg<T>> {
     value: PosNormalBoundedChannel<T>,
 }
 
+/// An `Hsv` value with an alpha channel
 pub type Hsva<T, A> = Alpha<T, Hsv<T, A>>;
 
 impl<T, A> Hsv<T, A>
@@ -73,33 +74,39 @@ where
         chan_traits = { PosNormalChannelScalar }
     );
 
-    /// Return the hue scalar
+    /// Returns the hue scalar
     pub fn hue(&self) -> A {
         self.hue.0.clone()
     }
-    /// Return the saturation scalar
+    /// Returns the saturation scalar
     pub fn saturation(&self) -> T {
         self.saturation.0.clone()
     }
-    /// Return the value scalar
+    /// Returns the value scalar
     pub fn value(&self) -> T {
         self.value.0.clone()
     }
+    /// Returns a mutable reference to the hue channel scalar
     pub fn hue_mut(&mut self) -> &mut A {
         &mut self.hue.0
     }
+    /// Returns a mutable reference to the saturation channel scalar
     pub fn saturation_mut(&mut self) -> &mut T {
         &mut self.saturation.0
     }
+    /// Returns a mutable reference to the value channel scalar
     pub fn value_mut(&mut self) -> &mut T {
         &mut self.value.0
     }
+    /// Set the hue channel value
     pub fn set_hue(&mut self, val: A) {
         self.hue.0 = val;
     }
+    /// Set the saturation channel value
     pub fn set_saturation(&mut self, val: T) {
         self.saturation.0 = val;
     }
+    /// Set the value channel value
     pub fn set_value(&mut self, val: T) {
         self.value.0 = val;
     }

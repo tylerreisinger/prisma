@@ -226,6 +226,7 @@ where
     E: ColorEncoding + PartialEq,
     T: PosNormalChannelScalar + FreeChannelScalar + num_traits::Float,
 {
+    /// Convert `Self` into an `Xyz` value
     pub fn to_xyz(&self) -> <S as ConvertToXyz<EncodedColor<C, E>>>::OutputColor {
         self.space.convert_to_xyz(&self.color)
     }
@@ -238,6 +239,7 @@ where
     E: ColorEncoding + PartialEq,
     T: PartialEq + Clone,
 {
+    /// Construct `Self` from an `Xyz` value and a color space
     pub fn from_xyz(
         from: &<S as ConvertFromXyz<EncodedColor<C, E>>>::InputColor,
         space: S,

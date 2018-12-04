@@ -8,6 +8,7 @@ use white_point::{WhitePoint, D65};
 
 use color_space::NamedColorSpace;
 
+/// The sRgb color space
 #[derive(Clone, Debug, PartialEq)]
 pub struct sRgb;
 

@@ -37,7 +37,9 @@ pub trait PolarColor: Color {
 pub trait Flatten: Color {
     /// The scalar type of each channel
     type ScalarFormat;
+    /// Return `Self` constructed from `values`
     fn from_slice(values: &[Self::ScalarFormat]) -> Self;
+    /// Return a slice representation of `Self`
     fn as_slice(&self) -> &[Self::ScalarFormat];
 }
 

@@ -100,6 +100,7 @@ where
     pub fn intensity(&self) -> T {
         self.intensity.0.clone()
     }
+    /// Returns a mutable reference to the intensity scalar
     pub fn intensity_mut(&mut self) -> &mut T {
         &mut self.intensity.0
     }
@@ -130,6 +131,7 @@ where
         self.red.0 = red;
         self.green.0 = green;
     }
+    /// Set the intensity value
     pub fn set_intensity(&mut self, val: T) {
         self.intensity.0 = val;
     }

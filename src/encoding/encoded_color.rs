@@ -108,6 +108,7 @@ where
     C: Color + HomogeneousColor + EncodableColor,
     E: ColorEncoding + PartialEq,
 {
+    /// Construct a new `EncodedColor` with all channels set to `value` and with `encoding`
     pub fn broadcast(value: C::ChannelFormat, encoding: E) -> Self {
         EncodedColor::new(C::broadcast(value), encoding)
     }
@@ -118,6 +119,7 @@ where
     C: Color + FromTuple + EncodableColor,
     E: ColorEncoding + PartialEq,
 {
+    /// Construct a new `EncodedColor` from a tuple of channels and an encoding
     pub fn from_tuple(values: C::ChannelsTuple, encoding: E) -> Self {
         EncodedColor::new(C::from_tuple(values), encoding)
     }

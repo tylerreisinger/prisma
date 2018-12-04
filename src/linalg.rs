@@ -10,6 +10,7 @@ use std::ops;
 /// A 3x3 matrix used for linear color transformations
 #[derive(Copy, Debug, PartialEq)]
 pub struct Matrix3<T> {
+    /// An array containing the cell values
     pub m: [T; 9],
 }
 
@@ -31,16 +32,19 @@ impl<T> Matrix3<T>
 where
     T: num_traits::Num + Copy + num_traits::Zero + num_traits::NumCast,
 {
+    /// Construct a new `Matrix3` from a list of values (row major)
     #[inline]
     pub fn new(values: [T; 9]) -> Self {
         Matrix3 { m: values }
     }
 
+    /// Construct a new `Matrix3` with all zero entries
     #[inline]
     pub fn zero() -> Self {
         Matrix3 { m: [T::zero(); 9] }
     }
 
+    /// Construct an identity matrix
     #[inline]
     pub fn identity() -> Self {
         let one = num_traits::cast(1.0).unwrap();
@@ -48,20 +52,24 @@ where
         Matrix3::new([one, zero, zero, zero, one, zero, zero, zero, one])
     }
 
+    /// Construct a new `Matrix3` with all values set to `val`
     #[inline]
     pub fn broadcast(val: T) -> Self {
         Matrix3 { m: [val; 9] }
     }
 
+    /// Return a slice to the elements in the matrix
     #[inline]
     pub fn as_slice(&self) -> &[T] {
         &self.m
     }
     #[inline]
+    /// Return a mutable slice to the elements in the matrix
     pub fn as_slice_mut(&mut self) -> &mut [T] {
         &mut self.m
     }
     #[inline]
+    /// Return a nine element tuple containing the elements
     pub fn to_tuple(self) -> (T, T, T, T, T, T, T, T, T) {
         unsafe {
             (
@@ -78,6 +86,7 @@ where
         }
     }
 
+    /// Compute the determinant of the matrix
     #[inline]
     pub fn determinant(&self) -> T {
         let (a, b, c, d, e, f, g, h, i) = self.clone().to_tuple();
@@ -85,6 +94,7 @@ where
         a * e * i + b * f * g + c * d * h - c * e * g - b * d * i - a * f * h
     }
 
+    /// Transpose the matrix
     #[inline]
     pub fn transpose(self) -> Self {
         let (a, b, c, d, e, f, g, h, i) = self.to_tuple();
@@ -94,6 +104,9 @@ where
         }
     }
 
+    /// Compute the inverse of the matrix
+    ///
+    /// None is returned if the matrix is singular (determinant = 0)
     #[inline]
     pub fn inverse(self) -> Option<Self> {
         let det = self.determinant();
@@ -118,6 +131,7 @@ where
         }
     }
 
+    /// Transform a vector using `self`
     #[inline]
     pub fn transform_vector<U>(&self, vec: (U, U, U)) -> (U, U, U)
     where

@@ -81,33 +81,39 @@ where
         chan_traits = { PosNormalChannelScalar }
     );
 
-    /// The red channel scalar
+    /// Returns the red channel scalar
     pub fn red(&self) -> T {
         self.red.0.clone()
     }
-    /// The green channel scalar
+    /// Returns the green channel scalar
     pub fn green(&self) -> T {
         self.green.0.clone()
     }
-    /// The blue channel scalar
+    /// Returns the blue channel scalar
     pub fn blue(&self) -> T {
         self.blue.0.clone()
     }
+    /// Returns a mutable reference to the red channel scalar
     pub fn red_mut(&mut self) -> &mut T {
         &mut self.red.0
     }
+    /// Returns a mutable reference to the green channel scalar
     pub fn green_mut(&mut self) -> &mut T {
         &mut self.green.0
     }
+    /// Returns a mutable reference to the blue channel scalar
     pub fn blue_mut(&mut self) -> &mut T {
         &mut self.blue.0
     }
+    /// Set the red channel value
     pub fn set_red(&mut self, val: T) {
         self.red.0 = val;
     }
+    /// Set the green channel value
     pub fn set_green(&mut self, val: T) {
         self.green.0 = val;
     }
+    /// Set the blue channel value
     pub fn set_blue(&mut self, val: T) {
         self.blue.0 = val;
     }

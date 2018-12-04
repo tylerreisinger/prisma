@@ -17,6 +17,7 @@ use ycbcr::YCbCr;
 /// padding onto the components of a color. The shift allows for such
 /// ranges to be modeled generically.
 pub trait YCbCrShift<T> {
+    /// Return a tuple of shifts for each component
     fn get_shift() -> (T, T, T);
 }
 
@@ -30,6 +31,7 @@ pub trait YCbCrTransform {
 
 /// An object that can transform from YCbCr to Rgb and back.
 pub trait YCbCrModel<T>: Clone + PartialEq + YCbCrTransform {
+    /// The shift type used by the `YCbCrModel`
     type Shift: YCbCrShift<T>;
     /// Return a shift to be added to each channel after conversion.
     fn shift(&self) -> (T, T, T);

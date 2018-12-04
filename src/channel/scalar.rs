@@ -45,9 +45,13 @@ pub trait AngularChannelScalar:
 where
     Self::Scalar: Float,
 {
+    /// The minimum unique value
     fn min_bound() -> Self;
+    /// The maximum unique value, equal to the period of the angular unit
     fn max_bound() -> Self;
+    /// Returns if the angle is in the normal range
     fn is_normalized(&self) -> bool;
+    /// Normalize the angle into its normal range
     fn normalize(self) -> Self;
 }
 
@@ -96,16 +100,24 @@ impl_traits_for_angle!(ArcSeconds);
 
 /// A bounded scalar that only takes positive values
 pub trait PosNormalChannelScalar: BoundedChannelScalar {
+    /// The minimum "in-range" value
     fn min_bound() -> Self;
+    /// The maximum "in-range" value
     fn max_bound() -> Self;
+    /// Returns if the value is in the normal range
     fn is_normalized(&self) -> bool;
+    /// Normalizes the value into the normal range
     fn normalize(self) -> Self;
 }
 /// A bounded scalar that has positive and negative values
 pub trait NormalChannelScalar: BoundedChannelScalar {
+    /// The minimum "in-range" value
     fn min_bound() -> Self;
+    /// The maximum "in-range" value
     fn max_bound() -> Self;
+    /// Returns if the value is in the normal range
     fn is_normalized(&self) -> bool;
+    /// Normalizes the value into the normal range
     fn normalize(self) -> Self;
 }
 

@@ -91,21 +91,27 @@ where
     pub fn intensity(&self) -> T {
         self.intensity.0.clone()
     }
+    /// Returns a mutable reference to the hue scalar
     pub fn hue_mut(&mut self) -> &mut A {
         &mut self.hue.0
     }
+    /// Returns a mutable reference to the saturation scalar
     pub fn saturation_mut(&mut self) -> &mut T {
         &mut self.saturation.0
     }
+    /// Returns a mutable reference to the intensity scalar
     pub fn intensity_mut(&mut self) -> &mut T {
         &mut self.intensity.0
     }
+    /// Set the hue channel value
     pub fn set_hue(&mut self, val: A) {
         self.hue.0 = val;
     }
+    /// Set the saturation channel value
     pub fn set_saturation(&mut self, val: T) {
         self.saturation.0 = val;
     }
+    /// Set the intensity channel value
     pub fn set_intensity(&mut self, val: T) {
         self.intensity.0 = val;
     }
@@ -340,6 +346,7 @@ where
     T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>> + fmt::Display,
 {
+    /// Convert an `Hsi` value to an `Rgb`value with `out_of_gamut_mode` specifying how to handle out-of-gamut output
     pub fn to_rgb(&self, out_of_gamut_mode: HsiOutOfGamutMode) -> Rgb<T> {
         Rgb::from_hsi(self, out_of_gamut_mode)
     }

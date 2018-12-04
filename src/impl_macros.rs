@@ -186,6 +186,7 @@ macro_rules! impl_color_color_cast_square {
      phantom={$($phantom:ident),*},
         types={$($ts:ident),*}) =>
     {
+        /// Convert the internal channel scalar format
         pub fn color_cast<TOut>(&self) -> $name<TOut, $($ts),*>
             where T: ChannelFormatCast<TOut>,
                   TOut: $($chan_traits +)*
@@ -205,6 +206,7 @@ macro_rules! impl_color_color_cast_square {
 
 macro_rules! impl_color_color_cast_angular {
     ($name:ident {$($fields:ident),*}, chan_traits={$($chan_traits:ident),*}) => {
+        /// Convert the internal channel scalar format
         pub fn color_cast<TOut, AOut>(&self) -> $name<TOut, AOut>
             where T: ChannelFormatCast<TOut>,
                   A: ChannelFormatCast<AOut>,

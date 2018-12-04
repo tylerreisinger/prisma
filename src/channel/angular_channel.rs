@@ -23,6 +23,7 @@ impl<T> AngularChannel<T>
 where
     T: Angle,
 {
+    /// Construct a new `AngularChannel`
     pub fn new(val: T) -> Self {
         AngularChannel(val)
     }

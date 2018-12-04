@@ -36,9 +36,11 @@ pub trait ChannelDecoder {
 pub trait TranscodableColor: Color + EncodableColor {
     /// The color type used internally to do conversions. This will always have floating-point channels
     type IntermediateColor;
+    /// Encode `self` using the encoder `enc`
     fn encode_color<Encoder>(self, enc: &Encoder) -> Self
     where
         Encoder: ChannelEncoder;
+    /// Decode `self` using the decoder `dec`
     fn decode_color<Decoder>(self, dec: &Decoder) -> Self
     where
         Decoder: ChannelDecoder;
@@ -61,6 +63,7 @@ pub struct LinearEncoding;
 pub struct GammaEncoding<T>(pub T);
 
 impl SrgbEncoding {
+    /// Construct a new SrgbEncoding
     pub fn new() -> Self {
         SrgbEncoding {}
     }
@@ -120,6 +123,7 @@ impl fmt::Display for SrgbEncoding {
 }
 
 impl LinearEncoding {
+    /// Construct a new `LinearEncoding`
     pub fn new() -> Self {
         LinearEncoding {}
     }
@@ -161,10 +165,11 @@ impl<T> GammaEncoding<T>
 where
     T: num_traits::Float,
 {
+    /// Construct a new `GammaEncoding`
     pub fn new(val: T) -> Self {
         GammaEncoding(val)
     }
-
+    /// Return the gamma exponent value
     pub fn exponent(&self) -> T {
         self.0
     }
@@ -260,7 +265,7 @@ where
         Encoder: ChannelEncoder,
     {
         let alpha = self.alpha();
-        let inner_color = self.color.encode_color(enc);
+        let inner_color = self.color().encode_color(enc);
         Rgba::from_color_and_alpha(inner_color, alpha)
     }
 
@@ -269,7 +274,7 @@ where
         Decoder: ChannelDecoder,
     {
         let alpha = self.alpha();
-        let inner_color = self.color.decode_color(dec);
+        let inner_color = self.color().decode_color(dec);
         Rgba::from_color_and_alpha(inner_color, alpha)
     }
 }

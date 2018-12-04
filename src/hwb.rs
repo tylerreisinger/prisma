@@ -46,6 +46,7 @@ pub trait HwbBoundedChannelTraits: PosNormalChannelScalar + num_traits::Float {}
 
 impl<T> HwbBoundedChannelTraits for T where T: PosNormalChannelScalar + num_traits::Float {}
 
+/// An `Hwb` value with an alpha channel
 pub type Hwba<T, A> = Alpha<T, Hwb<T, A>>;
 
 impl<T, A> Hwb<T, A>
@@ -83,21 +84,27 @@ where
     pub fn blackness(&self) -> T {
         self.blackness.0.clone()
     }
+    /// Returns a mutable reference to the hue channel scalar
     pub fn hue_mut(&mut self) -> &mut A {
         &mut self.hue.0
     }
+    /// Returns a mutable reference to the white channel scalar
     pub fn whiteness_mut(&mut self) -> &mut T {
         &mut self.whiteness.0
     }
+    /// Returns a mutable reference to the black channel scalar
     pub fn blackness_mut(&mut self) -> &mut T {
         &mut self.blackness.0
     }
+    /// Set the hue channel value
     pub fn set_hue(&mut self, val: A) {
         self.hue.0 = val;
     }
+    /// Set the whiteness channel value
     pub fn set_whiteness(&mut self, val: T) {
         self.whiteness.0 = val;
     }
+    /// Set the blackness channel value
     pub fn set_blackness(&mut self, val: T) {
         self.blackness.0 = val;
     }

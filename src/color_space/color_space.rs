@@ -40,7 +40,7 @@ pub trait ColorSpace<T> {
 
 /// An object that can convert a color into XYZ
 pub trait ConvertToXyz<In> {
-    /// The type to output. Always some form of Xyz<T>
+    /// The type to output. Always some form of `Xyz`
     type OutputColor: Color;
 
     /// Convert `color` into the XYZ space
@@ -48,6 +48,7 @@ pub trait ConvertToXyz<In> {
 }
 /// An object that can convert a color out of XYZ
 pub trait ConvertFromXyz<Out> {
+    /// The color type converted from. Always some form of `Xyz`
     type InputColor: Color;
 
     /// Convert `color` out of the XYZ space

@@ -7,7 +7,9 @@ use num_traits;
 
 /// Convert between channel formats
 pub trait ChannelFormatCast<Out>: Sized {
+    /// Cast the channel scalar type
     fn cast(self) -> Out;
+    /// Cast the channel scalar type, optionally rescaling the range
     fn cast_with_rescale(self, _: f64, _: f64) -> Out {
         Self::cast(self)
     }
@@ -15,6 +17,7 @@ pub trait ChannelFormatCast<Out>: Sized {
 
 macro_rules! impl_cast_with_rescale_flt_to_int {
     ($from:ty, $to:ty) => {
+        /// Cast the channel scalar, optionally rescaling the range
         fn cast_with_rescale(self, min: f64, max: f64) -> $to {
             let range: $from = (max - min) as $from;
             let scaled_self = (self - (min as $from)) / range;
@@ -25,6 +28,7 @@ macro_rules! impl_cast_with_rescale_flt_to_int {
 
 macro_rules! impl_cast_with_rescale_int_to_flt {
     ($from:ty, $to:ty) => {
+        /// Cast the channel scalar, optionally rescaling the range
         fn cast_with_rescale(self, min: f64, max: f64) -> $to {
             let out: $to = self.cast();
             let range = (max - min) as $to;

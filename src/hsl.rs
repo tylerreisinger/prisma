@@ -49,6 +49,7 @@ pub struct Hsl<T, A = Deg<T>> {
     lightness: PosNormalBoundedChannel<T>,
 }
 
+/// An `Hsl` value with an alpha channel
 pub type Hsla<T, A> = Alpha<T, Hsl<T, A>>;
 
 impl<T, A> Hsl<T, A>
@@ -74,33 +75,39 @@ where
         chan_traits = { PosNormalChannelScalar }
     );
 
-    /// Return the hue scalar
+    /// Returns the hue scalar
     pub fn hue(&self) -> A {
         self.hue.0.clone()
     }
-    /// Return the saturation scalar
+    /// Returns the saturation scalar
     pub fn saturation(&self) -> T {
         self.saturation.0.clone()
     }
-    /// Return the lightness scalar
+    /// Returns the lightness scalar
     pub fn lightness(&self) -> T {
         self.lightness.0.clone()
     }
+    /// Returns a mutable reference to the hue scalar
     pub fn hue_mut(&mut self) -> &mut A {
         &mut self.hue.0
     }
+    /// Returns a mutable reference to the saturation scalar
     pub fn saturation_mut(&mut self) -> &mut T {
         &mut self.saturation.0
     }
+    /// Returns a mutable reference to the lightness scalar
     pub fn lightness_mut(&mut self) -> &mut T {
         &mut self.lightness.0
     }
+    /// Set the hue channel value
     pub fn set_hue(&mut self, val: A) {
         self.hue.0 = val;
     }
+    /// Set the saturation channel value
     pub fn set_saturation(&mut self, val: T) {
         self.saturation.0 = val;
     }
+    /// Set the lightness channel value
     pub fn set_lightness(&mut self, val: T) {
         self.lightness.0 = val;
     }
