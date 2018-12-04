@@ -59,7 +59,7 @@
 //! use prisma::encoding::{TranscodableColor, EncodableColor, SrgbEncoding};
 //! use prisma::Rgb;
 //!
-//! let srgb_color = Rgb::from_channels(200, 200, 200u8).srgb_encoded();
+//! let srgb_color = Rgb::new(200, 200, 200u8).srgb_encoded();
 //! let linear_color = srgb_color.decode();
 //! // Do some transformation
 //! let srgb_color = linear_color.encode(SrgbEncoding::new());

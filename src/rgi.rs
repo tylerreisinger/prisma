@@ -56,8 +56,8 @@ where
     /// Construct a `Rgi` instance from red, green and intensity
     ///
     /// ## Panics:
-    /// If red+green is greater than 1.0 or less than 0.0, `from_channels` will panic.
-    pub fn from_channels(red: T, green: T, intensity: T) -> Self {
+    /// If red+green is greater than 1.0 or less than 0.0, `new` will panic.
+    pub fn new(red: T, green: T, intensity: T) -> Self {
         let zero = num_traits::cast(0.0).unwrap();
         if red + green > num_traits::cast(1.0).unwrap()
             || red + green < num_traits::cast(0.0).unwrap()
@@ -176,7 +176,7 @@ where
     T: PosNormalChannelScalar + Float,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        Rgi::from_channels(values.0, values.1, values.2)
+        Rgi::new(values.0, values.1, values.2)
     }
 }
 
@@ -275,9 +275,9 @@ where
 
             let i = num_traits::cast::<_, T>(1.0 / 3.0).unwrap() * sum;
 
-            Rgi::from_channels(r, g, i)
+            Rgi::new(r, g, i)
         } else {
-            Rgi::from_channels(zero, zero, zero)
+            Rgi::new(zero, zero, zero)
         }
     }
 }
@@ -292,7 +292,7 @@ where
         let green = from.green() * sum;
         let blue = from.blue() * sum;
 
-        Rgb::from_channels(red, green, blue)
+        Rgb::new(red, green, blue)
     }
 }
 
@@ -304,7 +304,7 @@ mod test {
 
     #[test]
     fn test_construct() {
-        let c1 = Rgi::from_channels(0.5, 0.2, 1.0);
+        let c1 = Rgi::new(0.5, 0.2, 1.0);
         assert_relative_eq!(c1.red(), 0.5);
         assert_relative_eq!(c1.green(), 0.2);
         assert_relative_eq!(c1.blue(), 0.3);
@@ -312,14 +312,14 @@ mod test {
         assert_eq!(c1.to_tuple(), (0.5, 0.2, 1.0));
         assert_relative_eq!(Rgi::from_tuple(c1.to_tuple()), c1);
 
-        let c2 = Rgi::from_channels(0.0, 0.0, 0.5);
+        let c2 = Rgi::new(0.0, 0.0, 0.5);
         assert_relative_eq!(c2.red(), 0.0);
         assert_relative_eq!(c2.green(), 0.0);
         assert_relative_eq!(c2.blue(), 1.0);
         assert_relative_eq!(c2.intensity(), 0.5);
         assert_eq!(c2.to_tuple(), (0.0, 0.0, 0.5));
 
-        let c3 = Rgi::from_channels(0.7, 0.3, 0.0);
+        let c3 = Rgi::new(0.7, 0.3, 0.0);
         assert_relative_eq!(c3.red(), 0.7);
         assert_relative_eq!(c3.green(), 0.3);
         assert_relative_eq!(c3.blue(), 0.0);
@@ -330,14 +330,14 @@ mod test {
 
     #[test]
     fn test_set_channels() {
-        let mut c1 = Rgi::from_channels(0.3, 0.2, 0.5);
+        let mut c1 = Rgi::new(0.3, 0.2, 0.5);
         c1.set_red(0.6);
         assert_relative_eq!(c1.red(), 0.6);
         assert_relative_eq!(c1.green(), 0.1142857, epsilon = 1e-6);
         assert_relative_eq!(c1.blue(), 0.2857143, epsilon = 1e-6);
         assert_relative_eq!(c1.intensity(), 0.5);
 
-        let mut c2 = Rgi::from_channels(0.333333, 0.333333, 0.9);
+        let mut c2 = Rgi::new(0.333333, 0.333333, 0.9);
         c2.set_green(0.5);
         assert_relative_eq!(c2.red(), 0.25, epsilon = 1e-6);
         assert_relative_eq!(c2.green(), 0.5, epsilon = 1e-6);
@@ -348,14 +348,14 @@ mod test {
         assert_relative_eq!(c2.green(), 1.0, epsilon = 1e-6);
         assert_relative_eq!(c2.blue(), 0.0, epsilon = 1e-6);
 
-        let mut c3 = Rgi::from_channels(0.6, 0.3, 0.83);
+        let mut c3 = Rgi::new(0.6, 0.3, 0.83);
         c3.set_blue(0.7);
         assert_relative_eq!(c3.red(), 0.2, epsilon = 1e-6);
         assert_relative_eq!(c3.green(), 0.1, epsilon = 1e-6);
         assert_relative_eq!(c3.blue(), 0.7, epsilon = 1e-6);
         assert_relative_eq!(c3.intensity(), 0.83, epsilon = 1e-6);
 
-        let mut c4 = Rgi::from_channels(1.0, 0.0, 0.6);
+        let mut c4 = Rgi::new(1.0, 0.0, 0.6);
         c4.set_red(0.5);
         assert_relative_eq!(c4.red(), 0.5);
         assert_relative_eq!(c4.green(), 0.25);
@@ -370,51 +370,51 @@ mod test {
 
     #[test]
     fn test_flatten() {
-        let c1 = Rgi::from_channels(0.2, 0.5, 0.6);
+        let c1 = Rgi::new(0.2, 0.5, 0.6);
         assert_eq!(c1.as_slice(), &[0.2, 0.5, 0.6]);
         assert_relative_eq!(Rgi::from_slice(c1.as_slice()), c1);
     }
 
     #[test]
     fn test_normalize() {
-        let c1 = Rgi::from_channels(0.5, 0.2, 0.8);
+        let c1 = Rgi::new(0.5, 0.2, 0.8);
         assert_relative_eq!(c1.normalize(), c1);
         assert!(c1.is_normalized());
-        let c2 = Rgi::from_channels(0.0, 0.0, 1.2);
-        assert_relative_eq!(c2.normalize(), Rgi::from_channels(0.0, 0.0, 1.0));
+        let c2 = Rgi::new(0.0, 0.0, 1.2);
+        assert_relative_eq!(c2.normalize(), Rgi::new(0.0, 0.0, 1.0));
         assert!(!c2.is_normalized());
     }
 
     #[test]
     #[should_panic]
     fn test_constructor_oob_panic() {
-        let mut c1 = Rgi::from_channels(0.7, 0.4, 0.9);
+        let mut c1 = Rgi::new(0.7, 0.4, 0.9);
         c1.set_blue(0.0);
     }
 
     #[test]
     #[should_panic]
     fn test_red_setter_oob_panic() {
-        let mut c1 = Rgi::from_channels(0.2, 0.3, 0.8);
+        let mut c1 = Rgi::new(0.2, 0.3, 0.8);
         c1.set_red(1.2);
     }
     #[test]
     #[should_panic]
     fn test_green_setter_oob_panic() {
-        let mut c1 = Rgi::from_channels(0.2, 0.3, 0.8);
+        let mut c1 = Rgi::new(0.2, 0.3, 0.8);
         c1.set_green(1.00000000001);
     }
 
     #[test]
     fn test_lerp() {
-        let c1 = Rgi::from_channels(0.3, 0.6, 0.5);
-        let c2 = Rgi::from_channels(0.1, 0.4, 1.0);
+        let c1 = Rgi::new(0.3, 0.6, 0.5);
+        let c2 = Rgi::new(0.1, 0.4, 1.0);
         assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
         assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
-        assert_relative_eq!(c1.lerp(&c2, 0.5), Rgi::from_channels(0.2, 0.5, 0.75));
+        assert_relative_eq!(c1.lerp(&c2, 0.5), Rgi::new(0.2, 0.5, 0.75));
         assert_relative_eq!(
             c1.lerp(&c2, 0.75),
-            Rgi::from_channels(0.15, 0.45, 0.875),
+            Rgi::new(0.15, 0.45, 0.875),
             epsilon = 1e-5
         );
     }
@@ -428,39 +428,27 @@ mod test {
             assert_relative_eq!(rgb, item.rgb, epsilon = 1e-6);
         }
 
-        let rgb1 = Rgb::from_channels(0.50, 0.50, 1.0);
+        let rgb1 = Rgb::new(0.50, 0.50, 1.0);
         let rgi1 = Rgi::from_color(&rgb1);
-        assert_relative_eq!(
-            rgi1,
-            Rgi::from_channels(0.25, 0.25, 0.6666666666),
-            epsilon = 1e-6
-        );
+        assert_relative_eq!(rgi1, Rgi::new(0.25, 0.25, 0.6666666666), epsilon = 1e-6);
         assert_relative_eq!(Rgb::from_color(&rgi1), rgb1);
 
-        let rgb2 = Rgb::from_channels(0.00, 0.00, 0.00);
+        let rgb2 = Rgb::new(0.00, 0.00, 0.00);
         let rgi2 = Rgi::from_color(&rgb2);
-        assert_relative_eq!(rgi2, Rgi::from_channels(0.0, 0.0, 0.0));
+        assert_relative_eq!(rgi2, Rgi::new(0.0, 0.0, 0.0));
         assert_relative_eq!(Rgb::from_color(&rgi2), rgb2);
 
-        let rgb3 = Rgb::from_channels(1.0, 1.0, 1.0);
+        let rgb3 = Rgb::new(1.0, 1.0, 1.0);
         let rgi3 = Rgi::from_color(&rgb3);
-        assert_relative_eq!(
-            rgi3,
-            Rgi::from_channels(0.333333, 0.333333, 1.0),
-            epsilon = 1e-5
-        );
+        assert_relative_eq!(rgi3, Rgi::new(0.333333, 0.333333, 1.0), epsilon = 1e-5);
         assert_relative_eq!(Rgb::from_color(&rgi3), rgb3);
     }
 
     #[test]
     fn color_cast() {
-        let c1 = Rgi::from_channels(0.6f32, 0.2, 0.9);
+        let c1 = Rgi::new(0.6f32, 0.2, 0.9);
         assert_relative_eq!(c1.color_cast(), c1);
         assert_relative_eq!(c1.color_cast::<f64>().color_cast(), c1);
-        assert_relative_eq!(
-            c1.color_cast(),
-            Rgi::from_channels(0.6, 0.2, 0.9),
-            epsilon = 1e-6
-        );
+        assert_relative_eq!(c1.color_cast(), Rgi::new(0.6, 0.2, 0.9), epsilon = 1e-6);
     }
 }

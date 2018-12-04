@@ -70,7 +70,7 @@ where
     Model: LmsModel<T>,
 {
     /// Construct an `LMS` instance from `l`, `m` and `s`
-    pub fn from_channels(l: T, m: T, s: T) -> Self {
+    pub fn new(l: T, m: T, s: T) -> Self {
         Lms {
             l: FreeChannel::new(l),
             m: FreeChannel::new(m),
@@ -154,7 +154,7 @@ where
     Model: LmsModel<T>,
 {
     fn from_tuple(values: (T, T, T)) -> Self {
-        Lms::from_channels(values.0, values.1, values.2)
+        Lms::new(values.0, values.1, values.2)
     }
 }
 
@@ -259,7 +259,7 @@ where
     fn from_color(from: &Xyz<T>) -> Self {
         let transform = Model::forward_transform();
         let (l, m, s) = transform.transform_vector(from.clone().to_tuple());
-        Lms::from_channels(l, m, s)
+        Lms::new(l, m, s)
     }
 }
 
@@ -271,7 +271,7 @@ where
     fn from_color(from: &Lms<T, Model>) -> Self {
         let transform = Model::inverse_transform();
         let (x, y, z) = transform.transform_vector(from.clone().to_tuple());
-        Xyz::from_channels(x, y, z)
+        Xyz::new(x, y, z)
     }
 }
 
@@ -381,7 +381,7 @@ mod test {
 
     #[test]
     fn test_construct() {
-        let c1 = LmsCam2002::from_channels(0.4, 0.6, 0.2);
+        let c1 = LmsCam2002::new(0.4, 0.6, 0.2);
         assert_relative_eq!(c1.l(), 0.4);
         assert_relative_eq!(c1.m(), 0.6);
         assert_relative_eq!(c1.s(), 0.2);
@@ -391,86 +391,64 @@ mod test {
 
     #[test]
     fn test_lerp() {
-        let c1 = LmsCam97s::from_channels(0.5, 0.9, 0.0);
-        let c2 = LmsCam97s::from_channels(0.7, 0.0, 0.4);
+        let c1 = LmsCam97s::new(0.5, 0.9, 0.0);
+        let c2 = LmsCam97s::new(0.7, 0.0, 0.4);
         assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
         assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
-        assert_relative_eq!(c1.lerp(&c2, 0.5), LmsCam97s::from_channels(0.6, 0.45, 0.2));
-        assert_relative_eq!(
-            c1.lerp(&c2, 0.75),
-            LmsCam97s::from_channels(0.65, 0.225, 0.3)
-        );
+        assert_relative_eq!(c1.lerp(&c2, 0.5), LmsCam97s::new(0.6, 0.45, 0.2));
+        assert_relative_eq!(c1.lerp(&c2, 0.75), LmsCam97s::new(0.65, 0.225, 0.3));
     }
 
     #[test]
     fn test_normalize() {
-        let c1 = LmsCam2002::from_channels(-50.0, 50.0, 1e7);
+        let c1 = LmsCam2002::new(-50.0, 50.0, 1e7);
         assert!(c1.is_normalized());
         assert_relative_eq!(c1.normalize(), c1);
     }
 
     #[test]
     fn test_flatten() {
-        let c1 = LmsBradford::from_channels(0.2, 0.5, 1.0);
+        let c1 = LmsBradford::new(0.2, 0.5, 1.0);
         assert_eq!(c1.as_slice(), &[0.2, 0.5, 1.0]);
         assert_relative_eq!(LmsBradford::from_slice(c1.as_slice()), c1);
     }
 
     #[test]
     fn test_from_xyz() {
-        let c1 = Xyz::from_channels(0.5, 0.2, 0.0);
+        let c1 = Xyz::new(0.5, 0.2, 0.0);
         let t1 = Lms::<_, CieCam2002>::from_color(&c1);
-        assert_relative_eq!(
-            t1,
-            Lms::from_channels(0.45232, -0.01230, 0.00422),
-            epsilon = 1e-4
-        );
+        assert_relative_eq!(t1, Lms::new(0.45232, -0.01230, 0.00422), epsilon = 1e-4);
         assert_relative_eq!(Xyz::from_color(&t1), c1, epsilon = 1e-4);
 
-        let c2 = Xyz::from_channels(0.3, 0.3, 0.3);
+        let c2 = Xyz::new(0.3, 0.3, 0.3);
         let t2 = Lms::<_, CieCam2002>::from_color(&c2);
-        assert_relative_eq!(t2, Lms::from_channels(0.3, 0.3, 0.3), epsilon = 1e-4);
+        assert_relative_eq!(t2, Lms::new(0.3, 0.3, 0.3), epsilon = 1e-4);
         assert_relative_eq!(Xyz::from_color(&t2), c2, epsilon = 1e-4);
 
-        let c3 = Xyz::from_channels(0.6, 0.4, 0.5);
+        let c3 = Xyz::new(0.6, 0.4, 0.5);
         let t3 = Lms::<_, CieCam97s>::from_color(&c3);
-        assert_relative_eq!(
-            t3,
-            Lms::from_channels(0.5519, 0.23313, 0.50826),
-            epsilon = 1e-4
-        );
+        assert_relative_eq!(t3, Lms::new(0.5519, 0.23313, 0.50826), epsilon = 1e-4);
         assert_relative_eq!(Xyz::from_color(&t3), c3, epsilon = 1e-4);
 
-        let c4 = Xyz::from_channels(0.2, 0.3, 0.6);
+        let c4 = Xyz::new(0.2, 0.3, 0.6);
         let t4 = Lms::<_, Bradford>::from_color(&c4);
-        assert_relative_eq!(
-            t4,
-            Lms::from_channels(0.1621, 0.38603, 0.6050),
-            epsilon = 1e-4
-        );
+        assert_relative_eq!(t4, Lms::new(0.1621, 0.38603, 0.6050), epsilon = 1e-4);
         assert_relative_eq!(Xyz::from_color(&t4), c4, epsilon = 1e-4);
     }
 
     #[test]
     fn test_to_xyz() {
-        let c1 = LmsCam2002::from_channels(0.25, 0.50, 0.75);
+        let c1 = LmsCam2002::new(0.25, 0.50, 0.75);
         let t1 = Xyz::from_color(&c1);
-        assert_relative_eq!(
-            t1,
-            Xyz::from_channels(0.2716575, 0.404425, 0.75624),
-            epsilon = 1e-4
-        );
+        assert_relative_eq!(t1, Xyz::new(0.2716575, 0.404425, 0.75624), epsilon = 1e-4);
         assert_relative_eq!(LmsCam2002::from_color(&t1), c1, epsilon = 1e-4);
     }
 
     #[test]
     fn test_color_cast() {
-        let c1 = LmsCam2002::from_channels(0.25, 0.50, 0.75);
+        let c1 = LmsCam2002::new(0.25, 0.50, 0.75);
         assert_relative_eq!(c1.color_cast(), c1);
-        assert_relative_eq!(
-            c1.color_cast(),
-            LmsCam2002::from_channels(0.25f32, 0.50f32, 0.75f32)
-        );
+        assert_relative_eq!(c1.color_cast(), LmsCam2002::new(0.25f32, 0.50f32, 0.75f32));
         assert_relative_eq!(c1.color_cast::<f32>().color_cast(), c1);
     }
 }

@@ -5,35 +5,64 @@ use approx;
 use channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar, PosFreeChannel,
 };
-use color::{Bounded, Color, Flatten, FromTuple, Lerp};
+use color::{Bounded, Color, FromTuple, Lerp};
 use num_traits;
 use std::fmt;
-use std::mem;
-use std::slice;
 use tags::LuvTag;
 use xyz::Xyz;
 
+use white_point::{UnitWhitePoint, WhitePoint};
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
-pub struct Luv<T> {
+pub struct Luv<T, W> {
     pub L: PosFreeChannel<T>,
     pub u: FreeChannel<T>,
     pub v: FreeChannel<T>,
+    white_point: W,
 }
 
-impl<T> Luv<T>
+impl<T, W> Luv<T, W>
 where
     T: FreeChannelScalar,
+    W: UnitWhitePoint<T>,
 {
-    pub fn from_channels(L: T, u: T, v: T) -> Self {
+    pub fn new(L: T, u: T, v: T) -> Self {
         Luv {
             L: PosFreeChannel::new(L),
             u: FreeChannel::new(u),
             v: FreeChannel::new(v),
+            white_point: W::default(),
+        }
+    }
+}
+
+impl<T, W> Luv<T, W>
+where
+    T: FreeChannelScalar,
+    W: WhitePoint<T>,
+{
+    pub fn new_with_whitepoint(L: T, u: T, v: T, white_point: W) -> Self {
+        Luv {
+            L: PosFreeChannel::new(L),
+            u: FreeChannel::new(u),
+            v: FreeChannel::new(v),
+            white_point,
         }
     }
 
-    impl_color_color_cast_square!(Luv { L, u, v }, chan_traits = { FreeChannelScalar });
+    pub fn color_cast<TOut>(&self) -> Luv<TOut, W>
+    where
+        T: ChannelFormatCast<TOut>,
+        TOut: FreeChannelScalar,
+    {
+        Luv {
+            L: self.L.clone().channel_cast(),
+            u: self.u.clone().channel_cast(),
+            v: self.v.clone().channel_cast(),
+            white_point: self.white_point.clone(),
+        }
+    }
 
     pub fn L(&self) -> T {
         self.L.0.clone()
@@ -62,11 +91,15 @@ where
     pub fn set_v(&mut self, val: T) {
         self.v.0 = val;
     }
+    pub fn white_point(&self) -> &W {
+        &self.white_point
+    }
 }
 
-impl<T> Color for Luv<T>
+impl<T, W> Color for Luv<T, W>
 where
     T: FreeChannelScalar,
+    W: WhitePoint<T>,
 {
     type Tag = LuvTag;
     type ChannelsTuple = (T, T, T);
@@ -80,127 +113,130 @@ where
     }
 }
 
-impl<T> FromTuple for Luv<T>
+impl<T, W> FromTuple for Luv<T, W>
 where
     T: FreeChannelScalar,
+    W: UnitWhitePoint<T>,
 {
     fn from_tuple(values: (T, T, T)) -> Self {
-        Luv::from_channels(values.0, values.1, values.2)
+        Luv::new(values.0, values.1, values.2)
     }
 }
 
-impl<T> Bounded for Luv<T>
+impl<T, W> Bounded for Luv<T, W>
 where
     T: FreeChannelScalar,
+    W: WhitePoint<T>,
 {
     fn normalize(self) -> Self {
-        Luv::from_channels(self.L.normalize().0, self.u(), self.v())
+        Luv::new_with_whitepoint(self.L.normalize().0, self.u(), self.v(), self.white_point)
     }
     fn is_normalized(&self) -> bool {
         self.L.is_normalized()
     }
 }
 
-impl<T> Lerp for Luv<T>
+impl<T, W> Lerp for Luv<T, W>
 where
     T: FreeChannelScalar + Lerp,
+    W: WhitePoint<T>,
 {
     type Position = <FreeChannel<T> as Lerp>::Position;
-    impl_color_lerp_square!(Luv { L, u, v });
-}
-
-impl<T> Flatten for Luv<T>
-where
-    T: FreeChannelScalar,
-{
-    type ScalarFormat = T;
-
-    impl_color_as_slice!(T);
-    impl_color_from_slice_square!(Luv<T> {L:PosFreeChannel - 0, u:FreeChannel - 1,
-        v:FreeChannel - 2});
+    impl_color_lerp_square!(Luv { L, u, v }, copy = { white_point });
 }
 
 #[cfg(feature = "approx")]
-impl<T> approx::AbsDiffEq for Luv<T>
+impl<T, W> approx::AbsDiffEq for Luv<T, W>
 where
     T: FreeChannelScalar + approx::AbsDiffEq,
     T::Epsilon: Clone,
+    W: WhitePoint<T>,
 {
     impl_abs_diff_eq!({L, u, v});
 }
 #[cfg(feature = "approx")]
-impl<T> approx::RelativeEq for Luv<T>
+impl<T, W> approx::RelativeEq for Luv<T, W>
 where
     T: FreeChannelScalar + approx::RelativeEq,
     T::Epsilon: Clone,
+    W: WhitePoint<T>,
 {
     impl_rel_eq!({L, u, v});
 }
 #[cfg(feature = "approx")]
-impl<T> approx::UlpsEq for Luv<T>
+impl<T, W> approx::UlpsEq for Luv<T, W>
 where
     T: FreeChannelScalar + approx::UlpsEq,
     T::Epsilon: Clone,
+    W: WhitePoint<T>,
 {
     impl_ulps_eq!({L, u, v});
 }
-impl<T> Default for Luv<T>
+impl<T, W> Default for Luv<T, W>
 where
     T: FreeChannelScalar,
+    W: UnitWhitePoint<T>,
 {
-    impl_color_default!(Luv {
-        L: PosFreeChannel,
-        u: FreeChannel,
-        v: FreeChannel
-    });
+    fn default() -> Self {
+        Luv {
+            L: Default::default(),
+            u: Default::default(),
+            v: Default::default(),
+            white_point: Default::default(),
+        }
+    }
 }
 
-impl<T> fmt::Display for Luv<T>
+impl<T, W> fmt::Display for Luv<T, W>
 where
     T: FreeChannelScalar + fmt::Display,
+    W: WhitePoint<T>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "L*u*v*({}, {}, {})", self.L, self.u, self.v)
     }
 }
 
-impl<T> Luv<T>
+impl<T, W> Luv<T, W>
 where
     T: FreeChannelScalar + fmt::Display,
+    W: WhitePoint<T>,
 {
-    pub fn from_xyz(from: &Xyz<T>, wp: &Xyz<T>) -> Self {
+    pub fn from_xyz(from: &Xyz<T>, wp: W) -> Self {
+        let wp_xyz = wp.get_xyz();
         let epsilon: T = num_traits::cast(1e-8).unwrap();
         let four: T = num_traits::cast(4.0).unwrap();
         let fifteen: T = num_traits::cast(15.0).unwrap();
         let three: T = num_traits::cast(3.0).unwrap();
         let nine: T = num_traits::cast(9.0).unwrap();
 
-        let yr = from.y() / wp.y();
+        let yr = from.y() / wp_xyz.y();
         let L = Self::compute_L(yr);
 
         let denom = from.x() + fifteen * from.y() + three * from.z() + epsilon;
-        let r_denom = wp.x() + fifteen * wp.y() + three * wp.z() + epsilon;
+        let r_denom = wp_xyz.x() + fifteen * wp_xyz.y() + three * wp_xyz.z() + epsilon;
         let u_prime = (four * from.x()) / denom;
         let v_prime = (nine * from.y()) / denom;
-        let ur_prime = (four * wp.x()) / r_denom;
-        let vr_prime = (nine * wp.y()) / r_denom;
+        let ur_prime = (four * wp_xyz.x()) / r_denom;
+        let vr_prime = (nine * wp_xyz.y()) / r_denom;
 
         let u = num_traits::cast::<_, T>(13.0).unwrap() * L * (u_prime - ur_prime);
         let v = num_traits::cast::<_, T>(13.0).unwrap() * L * (v_prime - vr_prime);
 
-        Luv::from_channels(L, u, v)
+        Luv::new_with_whitepoint(L, u, v, wp)
     }
 
-    pub fn to_xyz(&self, wp: &Xyz<T>) -> Xyz<T> {
+    pub fn to_xyz(&self) -> Xyz<T> {
+        let wp_xyz = self.white_point.get_xyz();
         let epsilon: T = num_traits::cast(1e-8).unwrap();
         let four: T = num_traits::cast(4.0).unwrap();
         let fifteen: T = num_traits::cast(15.0).unwrap();
         let three: T = num_traits::cast(3.0).unwrap();
         let nine: T = num_traits::cast(9.0).unwrap();
 
-        let r_denom = wp.x() + fifteen * wp.y() + three * wp.z();
-        let u0 = (four * wp.x()) / r_denom;
-        let v0 = (nine * wp.y()) / r_denom;
+        let r_denom = wp_xyz.x() + fifteen * wp_xyz.y() + three * wp_xyz.z();
+        let u0 = (four * wp_xyz.x()) / r_denom;
+        let v0 = (nine * wp_xyz.y()) / r_denom;
 
         let Y = Self::compute_Y(self.L());
 
@@ -216,7 +252,6 @@ where
                 / (self.v() + num_traits::cast::<_, T>(13.0).unwrap() * self.L() * v0 + epsilon)
                 - num_traits::cast::<_, T>(5.0).unwrap());
 
-        println!("{} {} {} {}", a, b, c, d);
         let X = if a != c {
             (d - b) / (a - c)
         } else {
@@ -225,7 +260,7 @@ where
 
         let Z = X * a + b;
 
-        Xyz::from_channels(X, Y, Z)
+        Xyz::new(X, Y, Z)
     }
 
     fn compute_Y(L: T) -> T {
@@ -264,7 +299,7 @@ mod test {
 
     #[test]
     fn test_construct() {
-        let c1 = Luv::from_channels(82.00, -40.0, 60.0);
+        let c1 = Luv::<_, D65>::new(82.00, -40.0, 60.0);
         assert_relative_eq!(c1.L(), 82.00);
         assert_relative_eq!(c1.u(), -40.0);
         assert_relative_eq!(c1.v(), 60.0);
@@ -274,128 +309,105 @@ mod test {
 
     #[test]
     fn test_lerp() {
-        let c1 = Luv::from_channels(30.0, 120.0, -50.0);
-        let c2 = Luv::from_channels(80.0, -90.0, 20.0);
+        let c1 = Luv::<_, D65>::new(30.0, 120.0, -50.0);
+        let c2 = Luv::<_, D65>::new(80.0, -90.0, 20.0);
         assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
         assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
         assert_relative_eq!(c2.lerp(&c1, 0.0), c2);
-        assert_relative_eq!(c1.lerp(&c2, 0.5), Luv::from_channels(55.0, 15.0, -15.0));
-        assert_relative_eq!(c1.lerp(&c2, 0.25), Luv::from_channels(42.5, 67.5, -32.5));
+        assert_relative_eq!(c1.lerp(&c2, 0.5), Luv::<_, D65>::new(55.0, 15.0, -15.0));
+        assert_relative_eq!(c1.lerp(&c2, 0.25), Luv::<_, D65>::new(42.5, 67.5, -32.5));
     }
 
     #[test]
     fn test_normalize() {
-        let c1 = Luv::from_channels(120.0, -60.0, 30.0);
+        let c1 = Luv::<_, D65>::new(120.0, -60.0, 30.0);
         assert!(c1.is_normalized());
         assert_relative_eq!(c1.normalize(), c1);
-        let c2 = Luv::from_channels(-62.0, 111.11, -500.0);
+        let c2 = Luv::<_, D65>::new(-62.0, 111.11, -500.0);
         assert!(!c2.is_normalized());
-        assert_relative_eq!(c2.normalize(), Luv::from_channels(0.0, 111.11, -500.0));
+        assert_relative_eq!(c2.normalize(), Luv::<_, D65>::new(0.0, 111.11, -500.0));
         assert_relative_eq!(c2.normalize().normalize(), c2.normalize());
     }
 
     #[test]
-    fn test_flatted() {
-        let c1 = Luv::from_channels(92.0, -32.0, 70.0);
-        assert_eq!(c1.as_slice(), &[92.0, -32.0, 70.0]);
-        assert_relative_eq!(Luv::from_slice(c1.as_slice()), c1);
-    }
-
-    #[test]
     fn test_from_xyz() {
-        let c1 = Xyz::from_channels(0.5, 0.5, 0.5);
-        let t1 = Luv::from_xyz(&c1, &D65::get_xyz());
+        let c1 = Xyz::new(0.5, 0.5, 0.5);
+        let t1 = Luv::from_xyz(&c1, D65);
         assert_relative_eq!(
             t1,
-            Luv::from_channels(76.0693, 12.5457, 5.2885),
+            Luv::<_, D65>::new(76.0693, 12.5457, 5.2885),
             epsilon = 1e-4
         );
-        assert_relative_eq!(t1.to_xyz(&D65::get_xyz()), c1, epsilon = 1e-4);
+        assert_relative_eq!(t1.to_xyz(), c1, epsilon = 1e-4);
 
-        let c2 = Xyz::from_channels(0.33, 0.67, 1.0);
-        let t2 = Luv::from_xyz(&c2, &D50::get_xyz());
+        let c2 = Xyz::new(0.33, 0.67, 1.0);
+        let t2 = Luv::from_xyz(&c2, D50);
         assert_relative_eq!(
             t2,
-            Luv::from_channels(85.5039, -122.8324, -41.5728),
+            Luv::<_, D50>::new(85.5039, -122.8324, -41.5728),
             epsilon = 1e-4
         );
-        assert_relative_eq!(t2.to_xyz(&D50::get_xyz()), c2, epsilon = 1e-4);
+        assert_relative_eq!(t2.to_xyz(), c2, epsilon = 1e-4);
 
-        let c3 = Xyz::from_channels(0.0, 0.0, 0.0);
-        let t3 = Luv::from_xyz(&c3, &D65::get_xyz());
-        assert_relative_eq!(t3, Luv::from_channels(0.0, 0.0, 0.0), epsilon = 1e-4);
-        assert_relative_eq!(t3.to_xyz(&D65::get_xyz()), c3, epsilon = 1e-4);
+        let c3 = Xyz::new(0.0, 0.0, 0.0);
+        let t3 = Luv::from_xyz(&c3, D65);
+        assert_relative_eq!(t3, Luv::<_, D65>::new(0.0, 0.0, 0.0), epsilon = 1e-4);
+        assert_relative_eq!(t3.to_xyz(), c3, epsilon = 1e-4);
 
-        let c4 = D75::get_xyz();
-        let t4 = Luv::from_xyz(&c4, &D75::get_xyz());
-        assert_relative_eq!(t4, Luv::from_channels(100.0, 0.0, 0.0), epsilon = 1e-4);
-        assert_relative_eq!(t4.to_xyz(&D75::get_xyz()), c4, epsilon = 1e-4);
+        let c4 = D75.get_xyz();
+        let t4 = Luv::from_xyz(&c4, D75);
+        assert_relative_eq!(t4, Luv::<_, D75>::new(100.0, 0.0, 0.0), epsilon = 1e-4);
+        assert_relative_eq!(t4.to_xyz(), c4, epsilon = 1e-4);
 
-        let c5 = Xyz::from_channels(0.72, 0.565, 0.37);
-        let t5 = Luv::from_xyz(&c5, &D75::get_xyz());
+        let c5 = Xyz::new(0.72, 0.565, 0.37);
+        let t5 = Luv::from_xyz(&c5, D75);
         assert_relative_eq!(
             t5,
-            Luv::from_channels(79.8975, 89.2637, 36.2923),
+            Luv::<_, D75>::new(79.8975, 89.2637, 36.2923),
             epsilon = 1e-4
         );
-        assert_relative_eq!(t5.to_xyz(&D75::get_xyz()), c5, epsilon = 1e-4);
+        assert_relative_eq!(t5.to_xyz(), c5, epsilon = 1e-4);
 
-        let c6 = Xyz::from_channels(0.22, 0.565, 0.87);
-        let t6 = Luv::from_xyz(&c6, &A::get_xyz());
+        let c6 = Xyz::new(0.22, 0.565, 0.87);
+        let t6 = Luv::from_xyz(&c6, A);
         assert_relative_eq!(
             t6,
-            Luv::from_channels(79.8975, -185.0166, -77.3701),
+            Luv::<_, A>::new(79.8975, -185.0166, -77.3701),
             epsilon = 1e-4
         );
-        assert_relative_eq!(t6.to_xyz(&A::get_xyz()), c6, epsilon = 1e-4);
+        assert_relative_eq!(t6.to_xyz(), c6, epsilon = 1e-4);
     }
 
     #[test]
     fn test_to_xyz() {
-        let c1 = Luv::from_channels(50.0, 0.0, 0.0);
-        let t1 = c1.to_xyz(&D65::get_xyz());
-        assert_relative_eq!(
-            t1,
-            Xyz::from_channels(0.175064, 0.184187, 0.200548),
-            epsilon = 1e-4
-        );
-        assert_relative_eq!(Luv::from_xyz(&t1, &D65::get_xyz()), c1, epsilon = 1e-4);
+        let c1 = Luv::<_, D65>::new(50.0, 0.0, 0.0);
+        let t1 = c1.to_xyz();
+        assert_relative_eq!(t1, Xyz::new(0.175064, 0.184187, 0.200548), epsilon = 1e-4);
+        assert_relative_eq!(Luv::from_xyz(&t1, D65), c1, epsilon = 1e-4);
 
-        let c2 = Luv::from_channels(62.5, 50.0, -50.0);
-        let t2 = c2.to_xyz(&D50::get_xyz());
-        assert_relative_eq!(
-            t2,
-            Xyz::from_channels(0.442536, 0.309910, 0.482665),
-            epsilon = 1e-4
-        );
-        assert_relative_eq!(Luv::from_xyz(&t2, &D50::get_xyz()), c2, epsilon = 1e-4);
+        let c2 = Luv::<_, D50>::new(62.5, 50.0, -50.0);
+        let t2 = c2.to_xyz();
+        assert_relative_eq!(t2, Xyz::new(0.442536, 0.309910, 0.482665), epsilon = 1e-4);
+        assert_relative_eq!(Luv::from_xyz(&t2, D50), c2, epsilon = 1e-4);
 
-        let c3 = Luv::from_channels(35.0, 72.5, 0.0);
-        let t3 = c3.to_xyz(&D75::get_xyz());
-        assert_relative_eq!(
-            t3,
-            Xyz::from_channels(0.147161, 0.084984, 0.082072),
-            epsilon = 1e-4
-        );
-        assert_relative_eq!(Luv::from_xyz(&t3, &D75::get_xyz()), c3, epsilon = 1e-4);
+        let c3 = Luv::<_, D75>::new(35.0, 72.5, 0.0);
+        let t3 = c3.to_xyz();
+        assert_relative_eq!(t3, Xyz::new(0.147161, 0.084984, 0.082072), epsilon = 1e-4);
+        assert_relative_eq!(Luv::from_xyz(&t3, D75), c3, epsilon = 1e-4);
 
-        let c4 = Luv::from_channels(78.9, -30.0, -75.0);
-        let t4 = c4.to_xyz(&D65::get_xyz());
-        assert_relative_eq!(
-            t4,
-            Xyz::from_channels(0.525544, 0.547551, 1.243412),
-            epsilon = 1e-4
-        );
-        assert_relative_eq!(Luv::from_xyz(&t4, &D65::get_xyz()), c4, epsilon = 1e-4);
+        let c4 = Luv::<_, D65>::new(78.9, -30.0, -75.0);
+        let t4 = c4.to_xyz();
+        assert_relative_eq!(t4, Xyz::new(0.525544, 0.547551, 1.243412), epsilon = 1e-4);
+        assert_relative_eq!(Luv::from_xyz(&t4, D65), c4, epsilon = 1e-4);
     }
 
     #[test]
     fn test_color_cast() {
-        let c1 = Luv::from_channels(55.5, 88.8, -22.2);
+        let c1 = Luv::<_, D65>::new(55.5, 88.8, -22.2);
         assert_relative_eq!(c1.color_cast(), c1);
         assert_relative_eq!(
             c1.color_cast(),
-            Luv::from_channels(55.5f32, 88.8f32, -22.2f32),
+            Luv::<_, D65>::new(55.5f32, 88.8f32, -22.2f32),
             epsilon = 1e-5
         );
         assert_relative_eq!(c1.color_cast::<f32>().color_cast(), c1, epsilon = 1e-5);

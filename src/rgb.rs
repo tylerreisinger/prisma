@@ -48,11 +48,11 @@ use tags::RgbTag;
 /// use prisma::{HomogeneousColor, Lerp, Rgb};
 ///
 /// let black = Rgb::broadcast(0.0f32);
-/// let blue = Rgb::from_channels(0, 0, 255u8);
+/// let blue = Rgb::new(0, 0, 255u8);
 /// // Convert blue to have float channels and compute the color halfway between blue and black
 /// let blended = black.lerp(&blue.color_cast(), 0.5);
 ///
-/// assert_eq!(blended, Rgb::from_channels(0.0, 0.0, 0.5));
+/// assert_eq!(blended, Rgb::new(0.0, 0.0, 0.5));
 /// ```
 pub struct Rgb<T> {
     pub red: PosNormalBoundedChannel<T>,
@@ -68,7 +68,7 @@ where
     T: PosNormalChannelScalar,
 {
     /// Construct a new `Rgb` instance with the given channel values
-    pub fn from_channels(red: T, green: T, blue: T) -> Self {
+    pub fn new(red: T, green: T, blue: T) -> Self {
         Rgb {
             red: PosNormalBoundedChannel::new(red),
             green: PosNormalBoundedChannel::new(green),
@@ -153,7 +153,7 @@ where
     T: PosNormalChannelScalar,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        Rgb::from_channels(values.0, values.1, values.2)
+        Rgb::new(values.0, values.1, values.2)
     }
 }
 
@@ -339,7 +339,7 @@ where
         let value = max_chan;
         let saturation = chroma / (value + epsilon);
 
-        hsv::Hsv::from_channels(A::from_angle(angle::Turns(hue)), saturation, value)
+        hsv::Hsv::new(A::from_angle(angle::Turns(hue)), saturation, value)
     }
 }
 
@@ -361,7 +361,7 @@ where
 
         let saturation = chroma / sat_denom;
 
-        hsl::Hsl::from_channels(A::from_angle(angle::Turns(hue)), saturation, lightness)
+        hsl::Hsl::new(A::from_angle(angle::Turns(hue)), saturation, lightness)
     }
 }
 
@@ -380,7 +380,7 @@ where
         let blackness = cast::<_, T>(1.0).unwrap() - max_channel;
         let whiteness = cast::<_, T>(1.0).unwrap() - (blackness + chroma);
 
-        hwb::Hwb::from_channels(A::from_angle(angle::Turns(hue)), whiteness, blackness)
+        hwb::Hwb::new(A::from_angle(angle::Turns(hue)), whiteness, blackness)
     }
 }
 
@@ -397,7 +397,7 @@ mod test {
     #[test]
     fn test_construct() {
         {
-            let color = Rgb::from_channels(0u8, 0, 0);
+            let color = Rgb::new(0u8, 0, 0);
             assert_eq!(color.red(), 0u8);
             assert_eq!(color.green(), 0u8);
             assert_eq!(color.blue(), 0u8);
@@ -405,7 +405,7 @@ mod test {
             let c2 = color.clone();
             assert_eq!(color, c2);
 
-            let c3 = Rgb::from_channels(120u8, 100u8, 255u8);
+            let c3 = Rgb::new(120u8, 100u8, 255u8);
             assert_eq!(c3.red(), 120u8);
             assert_eq!(c3.green(), 100u8);
             assert_eq!(c3.blue(), 255u8);
@@ -419,76 +419,69 @@ mod test {
         }
         {
             let color = Rgb::broadcast(0.5_f32);
-            assert_ulps_eq!(color, Rgb::from_channels(0.5_f32, 0.5, 0.5));
+            assert_ulps_eq!(color, Rgb::new(0.5_f32, 0.5, 0.5));
         }
         {
             let color = Rgb::from_slice(&[120u8, 240, 10]);
-            assert_eq!(color, Rgb::from_channels(120u8, 240, 10));
+            assert_eq!(color, Rgb::new(120u8, 240, 10));
             assert_eq!(color.to_tuple(), (120u8, 240, 10));
         }
         {
             let c1 = Rgb::from_tuple((0.8f32, 0.5, 0.3));
-            assert_ulps_eq!(c1, Rgb::from_channels(0.8f32, 0.5, 0.3));
+            assert_ulps_eq!(c1, Rgb::new(0.8f32, 0.5, 0.3));
         }
     }
 
     #[test]
     fn test_lerp_int() {
-        let c1 = Rgb::from_channels(100u8, 200u8, 0u8);
-        let c2 = Rgb::from_channels(200u8, 0u8, 255u8);
+        let c1 = Rgb::new(100u8, 200u8, 0u8);
+        let c2 = Rgb::new(200u8, 0u8, 255u8);
 
-        assert_eq!(c1.lerp(&c2, 0.5_f64), Rgb::from_channels(150u8, 100, 127));
+        assert_eq!(c1.lerp(&c2, 0.5_f64), Rgb::new(150u8, 100, 127));
         assert_eq!(c1.lerp(&c2, 0.0_f64), c1);
         assert_eq!(c1.lerp(&c2, 1.0_f64), c2);
     }
 
     #[test]
     fn test_lerp_float() {
-        let c1 = Rgb::from_channels(0.2_f32, 0.5, 1.0);
-        let c2 = Rgb::from_channels(0.8_f32, 0.5, 0.1);
+        let c1 = Rgb::new(0.2_f32, 0.5, 1.0);
+        let c2 = Rgb::new(0.8_f32, 0.5, 0.1);
 
-        assert_ulps_eq!(
-            c1.lerp(&c2, 0.5_f32),
-            Rgb::from_channels(0.5_f32, 0.5, 0.55)
-        );
-        assert_ulps_eq!(c1.lerp(&c2, 0.0_f32), Rgb::from_channels(0.2_f32, 0.5, 1.0));
-        assert_ulps_eq!(c1.lerp(&c2, 1.0_f32), Rgb::from_channels(0.8_f32, 0.5, 0.1));
+        assert_ulps_eq!(c1.lerp(&c2, 0.5_f32), Rgb::new(0.5_f32, 0.5, 0.55));
+        assert_ulps_eq!(c1.lerp(&c2, 0.0_f32), Rgb::new(0.2_f32, 0.5, 1.0));
+        assert_ulps_eq!(c1.lerp(&c2, 1.0_f32), Rgb::new(0.8_f32, 0.5, 0.1));
     }
 
     #[test]
     fn test_invert() {
-        let c = Rgb::from_channels(200u8, 0, 255);
-        let c2 = Rgb::from_channels(0.8_f32, 0.0, 0.25);
+        let c = Rgb::new(200u8, 0, 255);
+        let c2 = Rgb::new(0.8_f32, 0.0, 0.25);
 
-        assert_eq!(c.invert(), Rgb::from_channels(55u8, 255, 0));
-        assert_ulps_eq!(c2.invert(), Rgb::from_channels(0.2_f32, 1.0, 0.75));
+        assert_eq!(c.invert(), Rgb::new(55u8, 255, 0));
+        assert_ulps_eq!(c2.invert(), Rgb::new(0.2_f32, 1.0, 0.75));
     }
 
     #[test]
     fn test_chroma() {
-        let c = Rgb::from_channels(200u8, 150, 100);
+        let c = Rgb::new(200u8, 150, 100);
         assert_eq!(c.get_chroma(), 100u8);
 
-        let c2 = Rgb::from_channels(1.0_f32, 0.0, 0.25);
+        let c2 = Rgb::new(1.0_f32, 0.0, 0.25);
         assert_ulps_eq!(c2.get_chroma(), 1.0_f32);
 
-        let c3 = Rgb::from_channels(0.5_f32, 0.5, 0.5);
+        let c3 = Rgb::new(0.5_f32, 0.5, 0.5);
         assert_ulps_eq!(c3.get_chroma(), 0.0_f32);
     }
 
     #[test]
     fn test_hue() {
-        let c1 = Rgb::from_channels(1.0_f32, 0.0, 0.0);
+        let c1 = Rgb::new(1.0_f32, 0.0, 0.0);
         assert_ulps_eq!(c1.get_hue(), Deg(0.0));
-        assert_ulps_eq!(Rgb::from_channels(0.0, 1.0_f32, 0.0).get_hue(), Deg(120.0));
-        assert_ulps_eq!(Rgb::from_channels(0.0, 0.0_f32, 1.0).get_hue(), Deg(240.0));
+        assert_ulps_eq!(Rgb::new(0.0, 1.0_f32, 0.0).get_hue(), Deg(120.0));
+        assert_ulps_eq!(Rgb::new(0.0, 0.0_f32, 1.0).get_hue(), Deg(240.0));
+        assert_relative_eq!(Rgb::new(0.5, 0.5, 0.0).get_hue(), Deg(60.0), epsilon = 1e-6);
         assert_relative_eq!(
-            Rgb::from_channels(0.5, 0.5, 0.0).get_hue(),
-            Deg(60.0),
-            epsilon = 1e-6
-        );
-        assert_relative_eq!(
-            Rgb::from_channels(0.5, 0.0, 0.5).get_hue(),
+            Rgb::new(0.5, 0.0, 0.5).get_hue(),
             Deg(300.0),
             epsilon = 1e-6
         );
@@ -503,8 +496,8 @@ mod test {
             assert_relative_eq!(hsv, item.hsv, epsilon = 1e-3);
         }
 
-        let c1 = Rgb::from_channels(0.2, 0.2, 0.2);
-        assert_relative_eq!(Hsv::from_color(&c1), Hsv::from_channels(Deg(0.0), 0.0, 0.2));
+        let c1 = Rgb::new(0.2, 0.2, 0.2);
+        assert_relative_eq!(Hsv::from_color(&c1), Hsv::new(Deg(0.0), 0.0, 0.2));
     }
 
     #[test]
@@ -519,53 +512,53 @@ mod test {
 
     #[test]
     fn color_cast() {
-        let c1 = Rgb::from_channels(0u8, 0, 0);
+        let c1 = Rgb::new(0u8, 0, 0);
         assert_eq!(c1.color_cast(), c1);
-        assert_eq!(c1.color_cast(), Rgb::from_channels(0u16, 0, 0));
-        assert_eq!(c1.color_cast(), Rgb::from_channels(0u32, 0, 0));
-        assert_relative_eq!(c1.color_cast(), Rgb::from_channels(0.0f32, 0.0, 0.0));
-        assert_relative_eq!(c1.color_cast(), Rgb::from_channels(0.0f64, 0.0, 0.0));
+        assert_eq!(c1.color_cast(), Rgb::new(0u16, 0, 0));
+        assert_eq!(c1.color_cast(), Rgb::new(0u32, 0, 0));
+        assert_relative_eq!(c1.color_cast(), Rgb::new(0.0f32, 0.0, 0.0));
+        assert_relative_eq!(c1.color_cast(), Rgb::new(0.0f64, 0.0, 0.0));
 
-        let c2 = Rgb::from_channels(255u8, 127, 255);
+        let c2 = Rgb::new(255u8, 127, 255);
         assert_eq!(c2.color_cast(), c2);
         assert_relative_eq!(
             c2.color_cast(),
-            Rgb::from_channels(1.0f32, 0.4980392, 1.0),
+            Rgb::new(1.0f32, 0.4980392, 1.0),
             epsilon = 1e-6
         );
 
-        let c3 = Rgb::from_channels(65535u16, 0, 20000);
+        let c3 = Rgb::new(65535u16, 0, 20000);
         assert_eq!(c3.color_cast(), c3);
         assert_relative_eq!(
             c3.color_cast(),
-            Rgb::from_channels(1.0f64, 0.0, 0.3051804),
+            Rgb::new(1.0f64, 0.0, 0.3051804),
             epsilon = 1e-6
         );
         assert_eq!(c3.color_cast::<f32>().color_cast(), c3);
 
-        let c4 = Rgb::from_channels(1.0f32, 0.25, 0.0);
+        let c4 = Rgb::new(1.0f32, 0.25, 0.0);
         assert_eq!(c4.color_cast(), c4);
-        assert_eq!(c4.color_cast(), Rgb::from_channels(255u8, 63, 0));
-        assert_eq!(c4.color_cast(), Rgb::from_channels(0xffffu16, 0x3fff, 0));
+        assert_eq!(c4.color_cast(), Rgb::new(255u8, 63, 0));
+        assert_eq!(c4.color_cast(), Rgb::new(0xffffu16, 0x3fff, 0));
 
-        let c5 = Rgb::from_channels(0.33f64, 0.50, 0.80);
+        let c5 = Rgb::new(0.33f64, 0.50, 0.80);
         assert_eq!(c5.color_cast(), c5);
         assert_relative_eq!(
             c5.color_cast(),
-            Rgb::from_channels(0.33f32, 0.50, 0.80),
+            Rgb::new(0.33f32, 0.50, 0.80),
             epsilon = 1e-6
         );
         assert_relative_eq!(c5.color_cast::<f64>().color_cast(), c5, epsilon = 1e-6);
 
-        let c6 = Rgb::from_channels(0.60f32, 0.01, 0.99);
+        let c6 = Rgb::new(0.60f32, 0.01, 0.99);
         assert_eq!(c6.color_cast(), c6);
-        assert_eq!(c6.color_cast(), Rgb::from_channels(153u8, 2, 253));
+        assert_eq!(c6.color_cast(), Rgb::new(153u8, 2, 253));
         assert_relative_eq!(
             c6.color_cast::<u16>()
                 .color_cast::<u32>()
                 .color_cast::<f32>()
                 .color_cast::<f64>(),
-            Rgb::from_channels(0.60f64, 0.01, 0.99),
+            Rgb::new(0.60f64, 0.01, 0.99),
             epsilon = 1e-4
         );
     }

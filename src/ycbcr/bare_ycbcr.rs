@@ -61,7 +61,7 @@ where
     T: NormalChannelScalar + PosNormalChannelScalar,
 {
     /// Construct a `BareYCbCr` from channel values.
-    pub fn from_channels(luma: T, cb: T, cr: T) -> Self {
+    pub fn new(luma: T, cb: T, cr: T) -> Self {
         BareYCbCr {
             luma: PosNormalBoundedChannel::new(luma),
             cb: NormalBoundedChannel::new(cb),
@@ -115,8 +115,8 @@ where
     ///
     /// ```rust
     /// # use prisma::ycbcr::{BareYCbCr, JpegModel, YCbCrJpeg};
-    /// let c = BareYCbCr::from_channels(0.5, 0.3, 0.2).with_model(JpegModel);
-    /// assert_eq!(c, YCbCrJpeg::from_channels(0.5, 0.3, 0.2));
+    /// let c = BareYCbCr::new(0.5, 0.3, 0.2).with_model(JpegModel);
+    /// assert_eq!(c, YCbCrJpeg::new(0.5, 0.3, 0.2));
     /// ```
     pub fn with_model<M>(self, model: M) -> YCbCr<T, M>
     where
@@ -148,7 +148,7 @@ where
     T: PosNormalChannelScalar + NormalChannelScalar,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        BareYCbCr::from_channels(values.0, values.1, values.2)
+        BareYCbCr::new(values.0, values.1, values.2)
     }
 }
 
@@ -246,7 +246,7 @@ where
 
         let (y, cb, cr) = transform.transform_vector(from.clone().to_tuple());
 
-        BareYCbCr::from_channels(y + shift.0, cb + shift.1, cr + shift.2)
+        BareYCbCr::new(y + shift.0, cb + shift.1, cr + shift.2)
     }
 
     /// Convert from YCbCr to Rgb.
@@ -275,7 +275,7 @@ where
 
         let (r, g, b) = transform.transform_vector(shifted_color);
 
-        let out = Rgb::from_channels(
+        let out = Rgb::new(
             num_traits::cast(r).unwrap(),
             num_traits::cast(g).unwrap(),
             num_traits::cast(b).unwrap(),

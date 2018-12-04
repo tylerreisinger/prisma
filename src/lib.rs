@@ -60,7 +60,6 @@ pub use lab::Lab;
 pub use lchab::Lchab;
 pub use lchuv::Lchuv;
 pub use linalg::Matrix3;
-//pub use lms::{Lms, LmsBradford, LmsCam2002, LmsCam97s, LmsModel, LmsTag, Bradford, CieCam97s, CieCam2002};
 pub use luv::Luv;
 pub use rgb::{Rgb, Rgba};
 pub use rgi::Rgi;

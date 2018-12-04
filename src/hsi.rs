@@ -62,7 +62,7 @@ where
     A: AngularChannelScalar + Angle<Scalar = T>,
 {
     /// Construct an `Hsi` instance from hue, saturation and intensity
-    pub fn from_channels(hue: A, saturation: T, intensity: T) -> Self {
+    pub fn new(hue: A, saturation: T, intensity: T) -> Self {
         Hsi {
             hue: AngularChannel::new(hue),
             saturation: PosNormalBoundedChannel::new(saturation),
@@ -154,7 +154,7 @@ where
     A: AngularChannelScalar + Angle<Scalar = T>,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        Hsi::from_channels(values.0, values.1, values.2)
+        Hsi::new(values.0, values.1, values.2)
     }
 }
 
@@ -293,7 +293,7 @@ where
             num_traits::cast(0.0).unwrap()
         };
 
-        Hsi::from_channels(hue, saturation, intensity)
+        Hsi::new(hue, saturation, intensity)
     }
 }
 
@@ -326,11 +326,11 @@ where
 
         let turns_hue = Turns::from_angle(value.hue());
         if turns_hue < Turns(num_traits::cast(1.0 / 3.0).unwrap()) {
-            Rgb::from_channels(c2, c3, c1)
+            Rgb::new(c2, c3, c1)
         } else if turns_hue < Turns(num_traits::cast(2.0 / 3.0).unwrap()) {
-            Rgb::from_channels(c1, c2, c3)
+            Rgb::new(c1, c2, c3)
         } else {
-            Rgb::from_channels(c3, c1, c2)
+            Rgb::new(c3, c1, c2)
         }
     }
 }
@@ -410,14 +410,14 @@ mod test {
 
     #[test]
     fn test_construct() {
-        let c1 = Hsi::from_channels(Deg(225.0), 0.8, 0.284);
+        let c1 = Hsi::new(Deg(225.0), 0.8, 0.284);
         assert_eq!(c1.hue(), Deg(225.0));
         assert_eq!(c1.saturation(), 0.8);
         assert_eq!(c1.intensity(), 0.284);
         assert_eq!(c1.to_tuple(), (Deg(225.0), 0.8, 0.284));
         assert_eq!(Hsi::from_tuple(c1.to_tuple()), c1);
 
-        let c2 = Hsi::from_channels(Turns(0.33), 0.62, 0.98);
+        let c2 = Hsi::new(Turns(0.33), 0.62, 0.98);
         assert_eq!(c2.hue(), Turns(0.33));
         assert_eq!(c2.saturation(), 0.62);
         assert_eq!(c2.intensity(), 0.98);
@@ -426,29 +426,23 @@ mod test {
 
     #[test]
     fn test_invert() {
-        let c1 = Hsi::from_channels(Deg(222.0), 0.65, 0.23);
+        let c1 = Hsi::new(Deg(222.0), 0.65, 0.23);
         assert_relative_eq!(c1.clone().invert().invert(), c1);
-        assert_relative_eq!(c1.invert(), Hsi::from_channels(Deg(42.0), 0.35, 0.77));
+        assert_relative_eq!(c1.invert(), Hsi::new(Deg(42.0), 0.35, 0.77));
 
-        let c2 = Hsi::from_channels(Turns(0.40), 0.25, 0.8);
+        let c2 = Hsi::new(Turns(0.40), 0.25, 0.8);
         assert_relative_eq!(c2.clone().invert().invert(), c2);
-        assert_relative_eq!(c2.invert(), Hsi::from_channels(Turns(0.90), 0.75, 0.2));
+        assert_relative_eq!(c2.invert(), Hsi::new(Turns(0.90), 0.75, 0.2));
     }
 
     #[test]
     fn test_lerp() {
-        let c1 = Hsi::from_channels(Deg(80.0), 0.20, 0.60);
-        let c2 = Hsi::from_channels(Deg(120.0), 0.80, 0.90);
+        let c1 = Hsi::new(Deg(80.0), 0.20, 0.60);
+        let c2 = Hsi::new(Deg(120.0), 0.80, 0.90);
         assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
         assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
-        assert_relative_eq!(
-            c1.lerp(&c2, 0.5),
-            Hsi::from_channels(Deg(100.0), 0.50, 0.75)
-        );
-        assert_relative_eq!(
-            c1.lerp(&c2, 0.25),
-            Hsi::from_channels(Deg(90.0), 0.35, 0.675)
-        );
+        assert_relative_eq!(c1.lerp(&c2, 0.5), Hsi::new(Deg(100.0), 0.50, 0.75));
+        assert_relative_eq!(c1.lerp(&c2, 0.25), Hsi::new(Deg(90.0), 0.35, 0.675));
     }
 
     #[test]
@@ -472,43 +466,43 @@ mod test {
             assert_relative_eq!(hsi, item.hsi, epsilon = 2e-3);
         }
 
-        let c1 = Hsi::from_channels(Deg(150.0), 1.0, 1.0);
+        let c1 = Hsi::new(Deg(150.0), 1.0, 1.0);
         let rgb1_1 = c1.to_rgb(HsiOutOfGamutMode::Preserve);
         let rgb1_2 = c1.to_rgb(HsiOutOfGamutMode::Clip);
         let rgb1_3 = c1.to_rgb(HsiOutOfGamutMode::SimpleRescale);
         let rgb1_4 = c1.to_rgb(HsiOutOfGamutMode::SaturationRescale);
-        assert_relative_eq!(rgb1_1, Rgb::from_channels(0.0, 2.0, 1.0), epsilon = 1e-6);
-        assert_relative_eq!(rgb1_2, Rgb::from_channels(0.0, 1.0, 1.0), epsilon = 1e-6);
-        assert_relative_eq!(rgb1_3, Rgb::from_channels(0.0, 1.0, 0.5), epsilon = 1e-6);
-        assert_relative_eq!(rgb1_4, Rgb::from_channels(1.0, 1.0, 1.0), epsilon = 1e-6);
+        assert_relative_eq!(rgb1_1, Rgb::new(0.0, 2.0, 1.0), epsilon = 1e-6);
+        assert_relative_eq!(rgb1_2, Rgb::new(0.0, 1.0, 1.0), epsilon = 1e-6);
+        assert_relative_eq!(rgb1_3, Rgb::new(0.0, 1.0, 0.5), epsilon = 1e-6);
+        assert_relative_eq!(rgb1_4, Rgb::new(1.0, 1.0, 1.0), epsilon = 1e-6);
 
-        let c2 = Hsi::from_channels(Deg(180.0), 1.0, 0.7);
+        let c2 = Hsi::new(Deg(180.0), 1.0, 0.7);
         let rgb2_1 = c2.to_rgb(HsiOutOfGamutMode::Preserve);
         let rgb2_2 = c2.to_rgb(HsiOutOfGamutMode::Clip);
         let rgb2_3 = c2.to_rgb(HsiOutOfGamutMode::SimpleRescale);
         let rgb2_4 = c2.to_rgb(HsiOutOfGamutMode::SaturationRescale);
-        assert_relative_eq!(rgb2_1, Rgb::from_channels(0.0, 1.05, 1.05), epsilon = 1e-6);
-        assert_relative_eq!(rgb2_2, Rgb::from_channels(0.0, 1.00, 1.00), epsilon = 1e-6);
-        assert_relative_eq!(rgb2_3, Rgb::from_channels(0.0, 1.00, 1.00), epsilon = 1e-6);
-        assert_relative_eq!(rgb2_4, Rgb::from_channels(0.1, 1.00, 1.00), epsilon = 1e-6);
+        assert_relative_eq!(rgb2_1, Rgb::new(0.0, 1.05, 1.05), epsilon = 1e-6);
+        assert_relative_eq!(rgb2_2, Rgb::new(0.0, 1.00, 1.00), epsilon = 1e-6);
+        assert_relative_eq!(rgb2_3, Rgb::new(0.0, 1.00, 1.00), epsilon = 1e-6);
+        assert_relative_eq!(rgb2_4, Rgb::new(0.1, 1.00, 1.00), epsilon = 1e-6);
 
-        let c3 = Hsi::from_channels(Deg(240.0), 1.0, 0.3);
+        let c3 = Hsi::new(Deg(240.0), 1.0, 0.3);
         let rgb3_1 = c3.to_rgb(HsiOutOfGamutMode::Preserve);
         let rgb3_2 = c3.to_rgb(HsiOutOfGamutMode::Clip);
         let rgb3_3 = c3.to_rgb(HsiOutOfGamutMode::SimpleRescale);
         let rgb3_4 = c3.to_rgb(HsiOutOfGamutMode::SaturationRescale);
-        assert_relative_eq!(rgb3_1, Rgb::from_channels(0.0, 0.0, 0.9), epsilon = 1e-6);
-        assert_relative_eq!(rgb3_2, Rgb::from_channels(0.0, 0.0, 0.9), epsilon = 1e-6);
-        assert_relative_eq!(rgb3_3, Rgb::from_channels(0.0, 0.0, 0.9), epsilon = 1e-6);
-        assert_relative_eq!(rgb3_4, Rgb::from_channels(0.0, 0.0, 0.9), epsilon = 1e-6);
+        assert_relative_eq!(rgb3_1, Rgb::new(0.0, 0.0, 0.9), epsilon = 1e-6);
+        assert_relative_eq!(rgb3_2, Rgb::new(0.0, 0.0, 0.9), epsilon = 1e-6);
+        assert_relative_eq!(rgb3_3, Rgb::new(0.0, 0.0, 0.9), epsilon = 1e-6);
+        assert_relative_eq!(rgb3_4, Rgb::new(0.0, 0.0, 0.9), epsilon = 1e-6);
     }
 
     #[test]
     fn test_color_cast() {
-        let c1 = Hsi::from_channels(Deg(120.0), 0.53, 0.94);
+        let c1 = Hsi::new(Deg(120.0), 0.53, 0.94);
         assert_relative_eq!(
             c1.color_cast(),
-            Hsi::from_channels(Turns(0.33333333333f32), 0.53f32, 0.94),
+            Hsi::new(Turns(0.33333333333f32), 0.53f32, 0.94),
             epsilon = 1e-6
         );
         assert_relative_eq!(

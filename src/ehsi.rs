@@ -50,7 +50,7 @@ where
     A: AngularChannelScalar + Angle<Scalar = T>,
 {
     /// Construct an eHsi instance from hue, saturation and intensity.
-    pub fn from_channels(hue: A, saturation: T, intensity: T) -> Self {
+    pub fn new(hue: A, saturation: T, intensity: T) -> Self {
         eHsi {
             hue: AngularChannel::new(hue),
             saturation: PosNormalBoundedChannel::new(saturation),
@@ -112,7 +112,7 @@ where
     /// Returns an `Hsi` instance that is the same as `self` if they would be equivalent, or `None` otherwise
     pub fn to_hsi(&self) -> Option<Hsi<T, A>> {
         if self.is_same_as_hsi() {
-            Some(Hsi::from_channels(
+            Some(Hsi::new(
                 self.hue().clone(),
                 self.saturation().clone(),
                 self.intensity().clone(),
@@ -125,7 +125,7 @@ where
     ///
     /// If they would not be equivalent, returns `None`.
     pub fn from_hsi(hsi: &Hsi<T, A>) -> Option<eHsi<T, A>> {
-        let out = eHsi::from_channels(
+        let out = eHsi::new(
             hsi.hue().clone(),
             hsi.saturation().clone(),
             hsi.intensity().clone(),
@@ -169,7 +169,7 @@ where
     A: AngularChannelScalar + Angle<Scalar = T>,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        eHsi::from_channels(values.0, values.1, values.2)
+        eHsi::new(values.0, values.1, values.2)
     }
 }
 
@@ -327,7 +327,7 @@ where
             saturation = one - ((three * (one - max)) / (three - sum + epsilon));
         }
 
-        eHsi::from_channels(hue, saturation, intensity)
+        eHsi::new(hue, saturation, intensity)
     }
 }
 
@@ -359,9 +359,9 @@ where
             let c3 = num_traits::cast::<_, T>(3.0).unwrap() * from.intensity() - (c1 + c2);
 
             match hue_seg {
-                0 | 1 => Rgb::from_channels(c2, c3, c1),
-                2 | 3 => Rgb::from_channels(c1, c2, c3),
-                4 | 5 => Rgb::from_channels(c3, c1, c2),
+                0 | 1 => Rgb::new(c2, c3, c1),
+                2 | 3 => Rgb::new(c1, c2, c3),
+                4 | 5 => Rgb::new(c3, c1, c2),
                 _ => unreachable!(),
             }
         // eHsi conversion
@@ -384,9 +384,9 @@ where
             let c3 = num_traits::cast::<_, T>(3.0).unwrap() * from.intensity() - (c1 + c2);
 
             match hue_seg {
-                1 | 2 => Rgb::from_channels(c3, c1, c2),
-                3 | 4 => Rgb::from_channels(c2, c3, c1),
-                5 | 0 => Rgb::from_channels(c1, c2, c3),
+                1 | 2 => Rgb::new(c3, c1, c2),
+                3 | 4 => Rgb::new(c2, c3, c1),
+                5 | 0 => Rgb::new(c1, c2, c3),
                 _ => unreachable!(),
             }
         }
@@ -402,14 +402,14 @@ mod test {
 
     #[test]
     fn test_construct() {
-        let c1 = eHsi::from_channels(Deg(140.0), 0.68, 0.22);
+        let c1 = eHsi::new(Deg(140.0), 0.68, 0.22);
         assert_relative_eq!(c1.hue(), Deg(140.0));
         assert_relative_eq!(c1.saturation(), 0.68);
         assert_relative_eq!(c1.intensity(), 0.22);
         assert_eq!(c1.to_tuple(), (Deg(140.0), 0.68, 0.22));
         assert_eq!(eHsi::from_tuple(c1.to_tuple()), c1);
 
-        let c2 = eHsi::from_channels(Rad(2.0f32), 0.33f32, 0.10);
+        let c2 = eHsi::new(Rad(2.0f32), 0.33f32, 0.10);
         assert_relative_eq!(c2.hue(), Rad(2.0f32));
         assert_relative_eq!(c2.saturation(), 0.33);
         assert_relative_eq!(c2.intensity(), 0.10);
@@ -419,59 +419,53 @@ mod test {
 
     #[test]
     fn test_invert() {
-        let c1 = eHsi::from_channels(Deg(198.0), 0.33, 0.49);
-        assert_relative_eq!(c1.invert(), eHsi::from_channels(Deg(18.0), 0.67, 0.51));
+        let c1 = eHsi::new(Deg(198.0), 0.33, 0.49);
+        assert_relative_eq!(c1.invert(), eHsi::new(Deg(18.0), 0.67, 0.51));
         assert_relative_eq!(c1.invert().invert(), c1);
 
         let c2 = eHsi::from_tuple((Turns(0.40), 0.50, 0.00));
-        assert_relative_eq!(c2.invert(), eHsi::from_channels(Turns(0.90), 0.50, 1.00));
+        assert_relative_eq!(c2.invert(), eHsi::new(Turns(0.90), 0.50, 1.00));
         assert_relative_eq!(c2.invert().invert(), c2);
     }
 
     #[test]
     fn test_lerp() {
-        let c1 = eHsi::from_channels(Turns(0.9), 0.46, 0.20);
-        let c2 = eHsi::from_channels(Turns(0.3), 0.50, 0.50);
+        let c1 = eHsi::new(Turns(0.9), 0.46, 0.20);
+        let c2 = eHsi::new(Turns(0.3), 0.50, 0.50);
         assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
         assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
-        assert_relative_eq!(
-            c1.lerp(&c2, 0.5),
-            eHsi::from_channels(Turns(0.1), 0.48, 0.35)
-        );
-        assert_relative_eq!(
-            c1.lerp(&c2, 0.25),
-            eHsi::from_channels(Turns(0.0), 0.47, 0.275)
-        );
+        assert_relative_eq!(c1.lerp(&c2, 0.5), eHsi::new(Turns(0.1), 0.48, 0.35));
+        assert_relative_eq!(c1.lerp(&c2, 0.25), eHsi::new(Turns(0.0), 0.47, 0.275));
     }
 
     #[test]
     fn test_normalize() {
-        let c1 = eHsi::from_channels(Deg(400.0), 1.25, -0.33);
+        let c1 = eHsi::new(Deg(400.0), 1.25, -0.33);
         assert!(!c1.is_normalized());
-        assert_relative_eq!(c1.normalize(), eHsi::from_channels(Deg(40.0), 1.00, 0.00));
+        assert_relative_eq!(c1.normalize(), eHsi::new(Deg(40.0), 1.00, 0.00));
         assert_eq!(c1.normalize().normalize(), c1.normalize());
 
-        let c2 = eHsi::from_channels(Deg(20.0), 0.35, 0.99);
+        let c2 = eHsi::new(Deg(20.0), 0.35, 0.99);
         assert!(c2.is_normalized());
         assert_eq!(c2.normalize(), c2);
     }
 
     #[test]
     fn hsi_ehsi_convert() {
-        let hsi1 = Hsi::from_channels(Deg(120.0), 0.0, 0.0);
+        let hsi1 = Hsi::new(Deg(120.0), 0.0, 0.0);
         let ehsi1 = eHsi::from_hsi(&hsi1);
-        assert_eq!(ehsi1, Some(eHsi::from_channels(Deg(120.0), 0.0, 0.0)));
+        assert_eq!(ehsi1, Some(eHsi::new(Deg(120.0), 0.0, 0.0)));
         assert_eq!(hsi1, ehsi1.unwrap().to_hsi().unwrap());
 
-        let ehsi2 = eHsi::from_hsi(&Hsi::from_channels(Deg(120.0), 1.0, 1.0));
+        let ehsi2 = eHsi::from_hsi(&Hsi::new(Deg(120.0), 1.0, 1.0));
         assert_eq!(ehsi2, None);
 
-        let hsi3 = Hsi::from_channels(Deg(180.0), 1.0, 0.60);
+        let hsi3 = Hsi::new(Deg(180.0), 1.0, 0.60);
         let ehsi3 = eHsi::from_hsi(&hsi3);
-        assert_relative_eq!(ehsi3.unwrap(), eHsi::from_channels(Deg(180.0), 1.0, 0.60));
+        assert_relative_eq!(ehsi3.unwrap(), eHsi::new(Deg(180.0), 1.0, 0.60));
         assert_relative_eq!(hsi3, &ehsi3.unwrap().to_hsi().unwrap());
 
-        let hsi3 = Hsi::from_channels(Deg(180.0), 1.0, 0.70);
+        let hsi3 = Hsi::new(Deg(180.0), 1.0, 0.70);
         let ehsi3 = eHsi::from_hsi(&hsi3);
         assert_eq!(ehsi3, None);
     }
@@ -509,27 +503,23 @@ mod test {
             }
         }
 
-        let c1 = Rgb::from_channels(1.0, 1.0, 1.0);
+        let c1 = Rgb::new(1.0, 1.0, 1.0);
         let h1 = eHsi::from_color(&c1);
-        assert_relative_eq!(h1, eHsi::from_channels(Deg(0.0), 1.0, 1.0));
+        assert_relative_eq!(h1, eHsi::new(Deg(0.0), 1.0, 1.0));
 
-        let c2 = Rgb::from_channels(0.5, 1.0, 1.0);
+        let c2 = Rgb::new(0.5, 1.0, 1.0);
         let h2 = eHsi::from_color(&c2);
-        assert_relative_eq!(
-            h2,
-            eHsi::from_channels(Deg(180.0), 1.0, 0.833333333),
-            epsilon = 1e-3
-        );
+        assert_relative_eq!(h2, eHsi::new(Deg(180.0), 1.0, 0.833333333), epsilon = 1e-3);
     }
 
     #[test]
     fn test_color_cast() {
-        let c1 = eHsi::from_channels(Deg(240.0f32), 0.22f32, 0.81f32);
+        let c1 = eHsi::new(Deg(240.0f32), 0.22f32, 0.81f32);
         assert_relative_eq!(c1.color_cast::<f32, Turns<f32>>().color_cast(), c1);
         assert_relative_eq!(c1.color_cast(), c1);
         assert_relative_eq!(
             c1.color_cast(),
-            eHsi::from_channels(Turns(0.6666666), 0.22, 0.81),
+            eHsi::new(Turns(0.6666666), 0.22, 0.81),
             epsilon = 1e-5
         );
     }

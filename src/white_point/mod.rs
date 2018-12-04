@@ -19,11 +19,26 @@ use xyy::XyY;
 use xyz::Xyz;
 
 /// A named standard illuminant, expressed as XYZ coordinates
-pub trait NamedWhitePoint<T> {
+pub trait WhitePoint<T>: Clone + PartialEq {
     /// Return the white point's XYZ coordinates
-    fn get_xyz() -> Xyz<T>;
+    fn get_xyz(&self) -> Xyz<T>;
     /// Return the white point's coordinates expressed in xyY chromaticity space
-    fn get_xy_chromaticity() -> XyY<T>;
+    fn get_xy_chromaticity(&self) -> XyY<T>;
+}
+
+/// A `WhitePoint` which carries no data
+pub trait UnitWhitePoint<T>: WhitePoint<T> + Default + Copy {}
+
+impl<'a, T, U> WhitePoint<T> for &'a U
+where
+    U: WhitePoint<T>,
+{
+    fn get_xyz(&self) -> Xyz<T> {
+        <U as WhitePoint<T>>::get_xyz(&self)
+    }
+    fn get_xy_chromaticity(&self) -> XyY<T> {
+        <U as WhitePoint<T>>::get_xy_chromaticity(&self)
+    }
 }
 
 pub mod deg_10;
