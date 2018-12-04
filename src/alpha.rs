@@ -20,6 +20,7 @@ use std::slice;
 use tags::AlphaTag;
 use ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
 
+//TODO: Implement Deref[Mut]
 /// A wrapper around a color with an alpha channel
 ///
 /// `Alpha<T>` makes it easy to add an alpha channel to any other color and share code between
@@ -27,8 +28,8 @@ use ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
 pub struct Alpha<T, InnerColor> {
-    pub color: InnerColor,
-    pub alpha: PosNormalBoundedChannel<T>,
+    color: InnerColor,
+    alpha: PosNormalBoundedChannel<T>,
 }
 
 impl<T, InnerColor> Alpha<T, InnerColor>

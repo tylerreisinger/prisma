@@ -53,9 +53,9 @@ use xyz::Xyz;
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct XyY<T> {
-    pub x: PosNormalBoundedChannel<T>,
-    pub y: PosNormalBoundedChannel<T>,
-    pub Y: FreeChannel<T>,
+    x: PosNormalBoundedChannel<T>,
+    y: PosNormalBoundedChannel<T>,
+    Y: FreeChannel<T>,
 }
 
 impl<T> XyY<T>

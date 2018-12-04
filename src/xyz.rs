@@ -53,9 +53,9 @@ use tags::XyzTag;
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Xyz<T> {
-    pub x: PosFreeChannel<T>,
-    pub y: PosFreeChannel<T>,
-    pub z: PosFreeChannel<T>,
+    x: PosFreeChannel<T>,
+    y: PosFreeChannel<T>,
+    z: PosFreeChannel<T>,
 }
 
 impl<T> Xyz<T>

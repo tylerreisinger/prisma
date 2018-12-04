@@ -55,9 +55,9 @@ use tags::RgbTag;
 /// assert_eq!(blended, Rgb::new(0.0, 0.0, 0.5));
 /// ```
 pub struct Rgb<T> {
-    pub red: PosNormalBoundedChannel<T>,
-    pub green: PosNormalBoundedChannel<T>,
-    pub blue: PosNormalBoundedChannel<T>,
+    red: PosNormalBoundedChannel<T>,
+    green: PosNormalBoundedChannel<T>,
+    blue: PosNormalBoundedChannel<T>,
 }
 
 /// A convenience type for representing Rgb with an alpha channel.

@@ -44,9 +44,9 @@ use tags::HslTag;
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct Hsl<T, A = Deg<T>> {
-    pub hue: AngularChannel<A>,
-    pub saturation: PosNormalBoundedChannel<T>,
-    pub lightness: PosNormalBoundedChannel<T>,
+    hue: AngularChannel<A>,
+    saturation: PosNormalBoundedChannel<T>,
+    lightness: PosNormalBoundedChannel<T>,
 }
 
 pub type Hsla<T, A> = Alpha<T, Hsl<T, A>>;

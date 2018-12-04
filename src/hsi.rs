@@ -51,9 +51,9 @@ pub enum HsiOutOfGamutMode {
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct Hsi<T, A = Deg<T>> {
-    pub hue: AngularChannel<A>,
-    pub saturation: PosNormalBoundedChannel<T>,
-    pub intensity: PosNormalBoundedChannel<T>,
+    hue: AngularChannel<A>,
+    saturation: PosNormalBoundedChannel<T>,
+    intensity: PosNormalBoundedChannel<T>,
 }
 
 impl<T, A> Hsi<T, A>

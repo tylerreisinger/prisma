@@ -36,9 +36,9 @@ use tags::HwbTag;
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct Hwb<T, A = Deg<T>> {
-    pub hue: AngularChannel<A>,
-    pub whiteness: PosNormalBoundedChannel<T>,
-    pub blackness: PosNormalBoundedChannel<T>,
+    hue: AngularChannel<A>,
+    whiteness: PosNormalBoundedChannel<T>,
+    blackness: PosNormalBoundedChannel<T>,
 }
 
 /// Combination of traits used to bound `T` in `Hwb`

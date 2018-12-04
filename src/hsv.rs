@@ -43,9 +43,9 @@ use tags::HsvTag;
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub struct Hsv<T, A = Deg<T>> {
-    pub hue: AngularChannel<A>,
-    pub saturation: PosNormalBoundedChannel<T>,
-    pub value: PosNormalBoundedChannel<T>,
+    hue: AngularChannel<A>,
+    saturation: PosNormalBoundedChannel<T>,
+    value: PosNormalBoundedChannel<T>,
 }
 
 pub type Hsva<T, A> = Alpha<T, Hsv<T, A>>;
