@@ -97,6 +97,9 @@ where
     pub fn set_hue(&mut self, val: A) {
         self.hue.0 = val;
     }
+    pub fn white_point(&self) -> &W {
+        &self.white_point
+    }
 }
 
 impl<T, W, A> Color for Lchab<T, W, A>
