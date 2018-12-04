@@ -49,20 +49,23 @@ pub use color::{
     Invert, Lerp, PolarColor,
 };
 
-pub use alpha::Alpha;
+pub use alpha::{
+    eHsia, Alpha, Hsia, Hsla, Hsva, Hwba, Laba, Lchaba, Lchauv, Lmsa, Luva, Rgba, Rgia, XyYa, Xyza,
+    YCbCra,
+};
 pub use chromaticity::ChromaticityCoordinates;
 pub use convert::{FromColor, FromHsi, FromYCbCr};
 pub use ehsi::eHsi;
 pub use hsi::{Hsi, HsiOutOfGamutMode};
-pub use hsl::{Hsl, Hsla};
-pub use hsv::{Hsv, Hsva};
-pub use hwb::{Hwb, HwbBoundedChannelTraits, Hwba};
+pub use hsl::Hsl;
+pub use hsv::Hsv;
+pub use hwb::{Hwb, HwbBoundedChannelTraits};
 pub use lab::Lab;
 pub use lchab::Lchab;
 pub use lchuv::Lchuv;
 pub use linalg::Matrix3;
 pub use luv::Luv;
-pub use rgb::{Rgb, Rgba};
+pub use rgb::Rgb;
 pub use rgi::Rgi;
 pub use xyy::XyY;
 pub use xyz::Xyz;

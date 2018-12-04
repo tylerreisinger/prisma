@@ -2,7 +2,6 @@
 //!
 //! Provides the [Rgb<T>](struct.Rgb.html) type.
 
-use alpha::Alpha;
 use angle;
 #[cfg(feature = "approx")]
 use approx;
@@ -59,9 +58,6 @@ pub struct Rgb<T> {
     green: PosNormalBoundedChannel<T>,
     blue: PosNormalBoundedChannel<T>,
 }
-
-/// A convenience type for representing Rgb with an alpha channel.
-pub type Rgba<T> = Alpha<T, Rgb<T>>;
 
 impl<T> Rgb<T>
 where

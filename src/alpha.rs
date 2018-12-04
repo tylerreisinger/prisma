@@ -1,6 +1,7 @@
 //! A wrapper type adding an alpha channel to other color types
+#![allow(non_camel_case_types)]
 
-use angle::Angle;
+use angle::{Angle, Deg};
 #[cfg(feature = "approx")]
 use approx;
 use channel::{
@@ -19,6 +20,9 @@ use std::mem;
 use std::slice;
 use tags::AlphaTag;
 use ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
+
+use crate::{eHsi, Hsl, Hsv, Hwb, Lab, Lchab, Lchuv, Luv, Rgb, Rgi, XyY, Xyz};
+use lms::Lms;
 
 //TODO: Implement Deref[Mut]
 /// A wrapper around a color with an alpha channel
@@ -294,11 +298,41 @@ where
     }
 }
 
+/// An `Rgb` value with an alpha channel
+pub type Rgba<T> = Alpha<T, Rgb<T>>;
+/// An `Rgi` value with an alpha channel
+pub type Rgia<T> = Alpha<T, Rgi<T>>;
+/// An `Hsl` value with an alpha channel
+pub type Hsla<T, A> = Alpha<T, Hsl<T, A>>;
+/// An `Hsv` value with an alpha channel
+pub type Hsva<T, A> = Alpha<T, Hsv<T, A>>;
+/// An `Hwb` value with an alpha channel
+pub type Hwba<T, A> = Alpha<T, Hwb<T, A>>;
+/// An `Hsi` value with an alpha channel
+pub type Hsia<T, A> = Alpha<T, Hsi<T, A>>;
+/// An `eHsi` value with an alpha channel
+pub type eHsia<T, A> = Alpha<T, eHsi<T, A>>;
+/// An `YCbCr` value with an alpha channel
+pub type YCbCra<T, M> = Alpha<T, YCbCr<T, M>>;
+/// An `Xyz` value with an alpha channel
+pub type Xyza<T> = Alpha<T, Xyz<T>>;
+/// An `XyY` value with an alpha channel
+pub type XyYa<T> = Alpha<T, XyY<T>>;
+/// An `Lab` value with an alpha channel
+pub type Laba<T, W> = Alpha<T, Lab<T, W>>;
+/// An `Luv` value with an alpha channel
+pub type Luva<T, W> = Alpha<T, Luv<T, W>>;
+/// An `Lchab` value with an alpha channel
+pub type Lchaba<T, W, A = Deg<T>> = Alpha<T, Lchab<T, W, A>>;
+/// An `Lchuv` value with an alpha channel
+pub type Lchauv<T, W, A = Deg<T>> = Alpha<T, Lchuv<T, W, A>>;
+/// An `Lmsa` value with an alpha channel
+pub type Lmsa<T, M> = Alpha<T, Lms<T, M>>;
+
 #[cfg(test)]
 mod test {
+    use super::*;
     use angle::*;
-    use color::*;
-    use hsv::*;
     use rgb::*;
 
     #[test]

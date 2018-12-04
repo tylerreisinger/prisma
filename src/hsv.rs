@@ -1,6 +1,5 @@
 //! The HSV device-dependent color model
 
-use alpha::Alpha;
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle};
 #[cfg(feature = "approx")]
@@ -47,9 +46,6 @@ pub struct Hsv<T, A = Deg<T>> {
     saturation: PosNormalBoundedChannel<T>,
     value: PosNormalBoundedChannel<T>,
 }
-
-/// An `Hsv` value with an alpha channel
-pub type Hsva<T, A> = Alpha<T, Hsv<T, A>>;
 
 impl<T, A> Hsv<T, A>
 where

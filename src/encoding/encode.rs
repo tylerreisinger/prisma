@@ -3,10 +3,11 @@
 //! See the [`encoding`](../index.html) module level documentation for more information
 
 use super::EncodableColor;
+use alpha::Rgba;
 use channel::{ChannelFormatCast, PosNormalChannelScalar};
 use color::Color;
 use num_traits;
-use rgb::{Rgb, Rgba};
+use rgb::Rgb;
 use std::fmt;
 
 /// An object that can encode a color from a linear encoding to a different encoding
@@ -264,8 +265,8 @@ where
     where
         Encoder: ChannelEncoder,
     {
-        let alpha = self.alpha();
-        let inner_color = self.color().encode_color(enc);
+        let (color, alpha) = self.decompose();
+        let inner_color = color.encode_color(enc);
         Rgba::from_color_and_alpha(inner_color, alpha)
     }
 
@@ -273,8 +274,8 @@ where
     where
         Decoder: ChannelDecoder,
     {
-        let alpha = self.alpha();
-        let inner_color = self.color().decode_color(dec);
+        let (color, alpha) = self.decompose();
+        let inner_color = color.decode_color(dec);
         Rgba::from_color_and_alpha(inner_color, alpha)
     }
 }

@@ -1,6 +1,5 @@
 //! The HSL device-dependent polar color model
 
-use alpha::Alpha;
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle};
 #[cfg(feature = "approx")]
@@ -48,9 +47,6 @@ pub struct Hsl<T, A = Deg<T>> {
     saturation: PosNormalBoundedChannel<T>,
     lightness: PosNormalBoundedChannel<T>,
 }
-
-/// An `Hsl` value with an alpha channel
-pub type Hsla<T, A> = Alpha<T, Hsl<T, A>>;
 
 impl<T, A> Hsl<T, A>
 where

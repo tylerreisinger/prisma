@@ -1,6 +1,5 @@
 //! The HWB device-dependent polar color model
 
-use alpha::Alpha;
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle};
 #[cfg(feature = "approx")]
@@ -45,9 +44,6 @@ pub struct Hwb<T, A = Deg<T>> {
 pub trait HwbBoundedChannelTraits: PosNormalChannelScalar + num_traits::Float {}
 
 impl<T> HwbBoundedChannelTraits for T where T: PosNormalChannelScalar + num_traits::Float {}
-
-/// An `Hwb` value with an alpha channel
-pub type Hwba<T, A> = Alpha<T, Hwb<T, A>>;
 
 impl<T, A> Hwb<T, A>
 where
