@@ -18,9 +18,11 @@ pub struct PosNormalChannelTag;
 pub struct NormalChannelTag;
 
 /// A channel bounded between 0 and a maximum value
+#[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PosNormalBoundedChannel<T>(pub T);
 /// A channel bounded between a minimum and a maximum value
+#[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NormalBoundedChannel<T>(pub T);
 

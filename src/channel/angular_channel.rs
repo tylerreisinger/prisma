@@ -15,6 +15,7 @@ use std::ops;
 pub struct AngularChannelTag;
 
 /// A channel that is represented by an angle
+#[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AngularChannel<T>(pub T);
 

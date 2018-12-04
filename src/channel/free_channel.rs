@@ -13,9 +13,11 @@ pub struct FreeChannelTag;
 pub struct PosFreeChannelTag;
 
 /// A free channel that only takes on positive values
+#[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct PosFreeChannel<T>(pub T);
 /// A free channel with no constraints
+#[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct FreeChannel<T>(pub T);
 
