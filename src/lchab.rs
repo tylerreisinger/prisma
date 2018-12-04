@@ -1,48 +1,74 @@
 #![allow(non_snake_case)]
 
-use angle;
-use angle::{Angle, Deg, FromAngle, IntoAngle, Rad, Turns};
+use angle::{Angle, Deg, FromAngle, IntoAngle, Rad};
 #[cfg(feature = "approx")]
 use approx;
 use channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
     FreeChannelScalar, PosFreeChannel,
 };
-use color::{Bounded, Color, Flatten, FromTuple, Lerp, PolarColor};
+use color::{Bounded, Color, FromTuple, Lerp, PolarColor};
 use convert::{FromColor, GetChroma, GetHue};
 use lab::Lab;
 use num_traits;
 use std::fmt;
-use std::mem;
-use std::slice;
 use tags::LchabTag;
 use white_point::{UnitWhitePoint, WhitePoint};
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
-pub struct Lchab<T, A = Deg<T>> {
+pub struct Lchab<T, W, A = Deg<T>> {
     pub L: PosFreeChannel<T>,
     pub chroma: PosFreeChannel<T>,
     pub hue: AngularChannel<A>,
+    white_point: W,
 }
 
-impl<T, A> Lchab<T, A>
+impl<T, W, A> Lchab<T, W, A>
 where
     T: FreeChannelScalar,
     A: AngularChannelScalar,
+    W: UnitWhitePoint<T>,
 {
     pub fn new(L: T, chroma: T, hue: A) -> Self {
         Lchab {
             L: PosFreeChannel::new(L),
             chroma: PosFreeChannel::new(chroma),
             hue: AngularChannel::new(hue),
+            white_point: W::default(),
+        }
+    }
+}
+
+impl<T, W, A> Lchab<T, W, A>
+where
+    T: FreeChannelScalar,
+    A: AngularChannelScalar,
+    W: WhitePoint<T>,
+{
+    pub fn new_with_whitepoint(L: T, chroma: T, hue: A, white_point: W) -> Self {
+        Lchab {
+            L: PosFreeChannel::new(L),
+            chroma: PosFreeChannel::new(chroma),
+            hue: AngularChannel::new(hue),
+            white_point,
         }
     }
 
-    impl_color_color_cast_angular!(
-        Lchab { L, chroma, hue },
-        chan_traits = { FreeChannelScalar }
-    );
+    pub fn color_cast<TOut, AOut>(&self) -> Lchab<TOut, W, AOut>
+    where
+        T: ChannelFormatCast<TOut>,
+        TOut: FreeChannelScalar,
+        A: ChannelFormatCast<AOut>,
+        AOut: AngularChannelScalar,
+    {
+        Lchab {
+            L: self.L.clone().channel_cast(),
+            chroma: self.chroma.clone().channel_cast(),
+            hue: self.hue.clone().channel_cast(),
+            white_point: self.white_point.clone(),
+        }
+    }
 
     pub fn L(&self) -> T {
         self.L.0.clone()
@@ -73,10 +99,11 @@ where
     }
 }
 
-impl<T, A> Color for Lchab<T, A>
+impl<T, W, A> Color for Lchab<T, W, A>
 where
     T: FreeChannelScalar,
     A: AngularChannelScalar,
+    W: WhitePoint<T>,
 {
     type Tag = LchabTag;
     type ChannelsTuple = (T, T, A);
@@ -89,115 +116,120 @@ where
     }
 }
 
-impl<T, A> PolarColor for Lchab<T, A>
+impl<T, W, A> PolarColor for Lchab<T, W, A>
 where
     T: FreeChannelScalar,
     A: AngularChannelScalar,
+    W: WhitePoint<T>,
 {
     type Angular = A;
     type Cartesian = T;
 }
 
-impl<T, A> FromTuple for Lchab<T, A>
+impl<T, W, A> FromTuple for Lchab<T, W, A>
 where
     T: FreeChannelScalar,
     A: AngularChannelScalar,
+    W: UnitWhitePoint<T>,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
         Lchab::new(values.0, values.1, values.2)
     }
 }
 
-impl<T, A> Lerp for Lchab<T, A>
+impl<T, W, A> Lerp for Lchab<T, W, A>
 where
     T: FreeChannelScalar + Lerp,
     A: AngularChannelScalar + Lerp,
+    W: WhitePoint<T>,
 {
     type Position = A::Position;
 
-    impl_color_lerp_angular!(Lchab<T> {hue, L, chroma });
+    impl_color_lerp_angular!(Lchab<T> {hue, L, chroma }, copy={white_point});
 }
 
-impl<T, A> Bounded for Lchab<T, A>
+impl<T, W, A> Bounded for Lchab<T, W, A>
 where
     T: FreeChannelScalar,
     A: AngularChannelScalar,
+    W: WhitePoint<T>,
 {
-    impl_color_bounded!(Lchab { L, chroma, hue });
-}
-
-impl<T, A> Flatten for Lchab<T, A>
-where
-    T: FreeChannelScalar + num_traits::Float,
-    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Turns<T>>,
-{
-    type ScalarFormat = T;
-
-    impl_color_as_slice!(T);
-
-    fn from_slice(vals: &[T]) -> Self {
-        Lchab::new(
-            vals[0].clone(),
-            vals[1].clone(),
-            A::from_angle(angle::Turns(vals[2].clone())),
+    fn normalize(self) -> Self {
+        Lchab::new_with_whitepoint(
+            self.L.normalize().0,
+            self.chroma.normalize().0,
+            self.hue.normalize().0,
+            self.white_point,
         )
+    }
+    fn is_normalized(&self) -> bool {
+        self.L.is_normalized() && self.hue.is_normalized()
     }
 }
 
 #[cfg(feature = "approx")]
-impl<T, A> approx::AbsDiffEq for Lchab<T, A>
+impl<T, W, A> approx::AbsDiffEq for Lchab<T, W, A>
 where
     T: FreeChannelScalar + approx::AbsDiffEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::AbsDiffEq,
     A::Epsilon: Clone + num_traits::Float,
+    W: WhitePoint<T>,
 {
     impl_abs_diff_eq!({L, chroma, hue});
 }
 #[cfg(feature = "approx")]
-impl<T, A> approx::RelativeEq for Lchab<T, A>
+impl<T, W, A> approx::RelativeEq for Lchab<T, W, A>
 where
     T: FreeChannelScalar + approx::RelativeEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::RelativeEq,
     A::Epsilon: Clone + num_traits::Float,
+    W: WhitePoint<T>,
 {
     impl_rel_eq!({L, chroma, hue});
 }
 #[cfg(feature = "approx")]
-impl<T, A> approx::UlpsEq for Lchab<T, A>
+impl<T, W, A> approx::UlpsEq for Lchab<T, W, A>
 where
     T: FreeChannelScalar + approx::UlpsEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::UlpsEq,
     A::Epsilon: Clone + num_traits::Float,
+    W: WhitePoint<T>,
 {
     impl_ulps_eq!({L, chroma, hue});
 }
 
-impl<T, A> Default for Lchab<T, A>
+impl<T, W, A> Default for Lchab<T, W, A>
 where
     T: FreeChannelScalar + num_traits::Zero,
     A: AngularChannelScalar + num_traits::Zero,
+    W: UnitWhitePoint<T>,
 {
-    impl_color_default!(Lchab {
-        hue: AngularChannel,
-        L: PosFreeChannel,
-        chroma: PosFreeChannel
-    });
+    fn default() -> Self {
+        Lchab {
+            L: Default::default(),
+            chroma: Default::default(),
+            hue: Default::default(),
+            white_point: Default::default(),
+        }
+    }
 }
 
-impl<T, A> fmt::Display for Lchab<T, A>
+impl<T, W, A> fmt::Display for Lchab<T, W, A>
 where
     T: FreeChannelScalar + fmt::Display,
     A: AngularChannelScalar + fmt::Display,
+    W: WhitePoint<T>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Lch(ab)({}, {}, {})", self.L, self.chroma, self.hue)
     }
 }
 
-impl<T, A> GetChroma for Lchab<T, A>
+impl<T, W, A> GetChroma for Lchab<T, W, A>
 where
     T: FreeChannelScalar,
     A: AngularChannelScalar,
+    W: WhitePoint<T>,
 {
     type ChromaType = T;
     fn get_chroma(&self) -> T {
@@ -205,15 +237,16 @@ where
     }
 }
 
-impl<T, A> GetHue for Lchab<T, A>
+impl<T, W, A> GetHue for Lchab<T, W, A>
 where
     T: FreeChannelScalar,
     A: AngularChannelScalar,
+    W: WhitePoint<T>,
 {
     impl_color_get_hue_angular!(Lchab);
 }
 
-impl<T, A, W> FromColor<Lab<T, W>> for Lchab<T, A>
+impl<T, W, A> FromColor<Lab<T, W>> for Lchab<T, W, A>
 where
     T: FreeChannelScalar,
     A: AngularChannelScalar + FromAngle<Rad<T>> + Angle,
@@ -224,41 +257,47 @@ where
         let chroma = (from.a() * from.a() + from.b() * from.b()).sqrt();
         let hue = A::from_angle(Rad::atan2(from.b(), from.a()));
 
-        Lchab::new(L, chroma, <A as Angle>::normalize(hue))
+        Lchab::new_with_whitepoint(
+            L,
+            chroma,
+            <A as Angle>::normalize(hue),
+            from.white_point.clone(),
+        )
     }
 }
 
-impl<T, A, W> FromColor<Lchab<T, A>> for Lab<T, W>
+impl<T, W, A> FromColor<Lchab<T, W, A>> for Lab<T, W>
 where
     T: FreeChannelScalar,
     A: AngularChannelScalar + Angle<Scalar = T>,
-    W: UnitWhitePoint<T>,
+    W: WhitePoint<T>,
 {
-    fn from_color(from: &Lchab<T, A>) -> Self {
+    fn from_color(from: &Lchab<T, W, A>) -> Self {
         let L = from.L();
         let a = from.chroma() * from.hue().cos();
         let b = from.chroma() * from.hue().sin();
 
-        Lab::new(L, a, b)
+        Lab::new_with_whitepoint(L, a, b, from.white_point.clone())
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    use angle::Turns;
     use lab::Lab;
     use white_point::*;
 
     #[test]
     fn test_construct() {
-        let c1 = Lchab::new(55.3, 12.9, Deg(90.0));
+        let c1 = Lchab::<_, D65, _>::new(55.3, 12.9, Deg(90.0));
         assert_relative_eq!(c1.L(), 55.3);
         assert_relative_eq!(c1.chroma(), 12.9);
         assert_relative_eq!(c1.hue(), Deg(90.0));
         assert_eq!(c1.to_tuple(), (55.3, 12.9, Deg(90.0)));
         assert_relative_eq!(Lchab::from_tuple(c1.to_tuple()), c1);
 
-        let c2 = Lchab::new(92.0, 55.0, Turns(0.5));
+        let c2 = Lchab::<_, D50, _>::new(92.0, 55.0, Turns(0.5));
         assert_relative_eq!(c2.L(), 92.0);
         assert_relative_eq!(c2.chroma(), 55.0);
         assert_relative_eq!(c2.hue(), Turns(0.5));
@@ -268,15 +307,15 @@ mod test {
 
     #[test]
     fn test_lerp() {
-        let c1 = Lchab::new(25.0, 90.0, Deg(300.0));
-        let c2 = Lchab::new(75.0, 50.0, Deg(50.0));
+        let c1 = Lchab::<_, D65, _>::new(25.0, 90.0, Deg(300.0));
+        let c2 = Lchab::<_, D65, _>::new(75.0, 50.0, Deg(50.0));
         assert_relative_eq!(c1.lerp(&c2, 0.0), c1);
         assert_relative_eq!(c1.lerp(&c2, 1.0), c2);
         assert_relative_eq!(c1.lerp(&c2, 0.5), Lchab::new(50.0, 70.0, Deg(355.0)));
         assert_relative_eq!(c1.lerp(&c2, 0.25), Lchab::new(37.5, 80.0, Deg(327.5)));
 
-        let c3 = Lchab::new(0.0, 20.0, Deg(60.0));
-        let c4 = Lchab::new(60.0, 80.0, Deg(140.0));
+        let c3 = Lchab::<_, D65, _>::new(0.0, 20.0, Deg(60.0));
+        let c4 = Lchab::<_, D65, _>::new(60.0, 80.0, Deg(140.0));
         assert_relative_eq!(c3.lerp(&c4, 0.0), c3);
         assert_relative_eq!(c3.lerp(&c4, 1.0), c4);
         assert_relative_eq!(c3.lerp(&c4, 0.5), Lchab::new(30.0, 50.0, Deg(100.0)));
@@ -285,42 +324,32 @@ mod test {
 
     #[test]
     fn test_normalize() {
-        let c1 = Lchab::new(105.0, 32.0, Deg(300.0));
+        let c1 = Lchab::<_, D65, _>::new(105.0, 32.0, Deg(300.0));
         assert!(c1.is_normalized());
         assert_relative_eq!(c1.normalize(), c1);
 
-        let c2 = Lchab::new(-3.0, 1.0, Deg(220.0));
+        let c2 = Lchab::<_, D65, _>::new(-3.0, 1.0, Deg(220.0));
         assert!(!c2.is_normalized());
         assert_relative_eq!(c2.normalize(), Lchab::new(0.0, 1.0, Deg(220.0)));
 
-        let c3 = Lchab::new(50.0, -50.0, Turns(2.3));
+        let c3 = Lchab::<_, D65, _>::new(50.0, -50.0, Turns(2.3));
         assert!(!c3.is_normalized());
         assert_relative_eq!(c3.normalize(), Lchab::new(50.0, 0.0, Turns(0.3)));
 
-        let c4 = Lchab::new(110.0, 150.0, Deg(-50.0));
+        let c4 = Lchab::<_, D65, _>::new(110.0, 150.0, Deg(-50.0));
         assert!(!c4.is_normalized());
         assert_relative_eq!(c4.normalize(), Lchab::new(110.0, 150.0, Deg(310.0)));
     }
 
     #[test]
-    fn test_flatten() {
-        let c1 = Lchab::new(85.0, 11.11, Turns(0.5));
-        assert_eq!(c1.as_slice(), &[85.0, 11.11, 0.5]);
-        assert_relative_eq!(Lchab::from_slice(c1.as_slice()), c1);
-
-        let c2 = Lchab::new(55.55, 33.33, Deg(90.00));
-        assert_eq!(c2.as_slice(), &[55.55, 33.33, 90.00]);
-    }
-
-    #[test]
     fn test_get_chroma() {
-        let c1 = Lchab::new(44.44, 55.55, Deg(66.66));
+        let c1 = Lchab::<_, D50, _>::new(44.44, 55.55, Deg(66.66));
         assert_eq!(c1.get_chroma(), 55.55);
     }
 
     #[test]
     fn test_get_hue() {
-        let c1 = Lchab::new(20.0, 50.0, Deg(180.0));
+        let c1 = Lchab::<_, D50, _>::new(20.0, 50.0, Deg(180.0));
         assert_eq!(c1.get_hue::<Deg<_>>(), Deg(180.0));
         assert_eq!(c1.get_hue::<Turns<_>>(), Turns(0.5));
     }
@@ -383,7 +412,7 @@ mod test {
 
     #[test]
     fn test_color_cast() {
-        let c1 = Lchab::new(0.5f32, 42.0f32, Deg(120.0f32));
+        let c1 = Lchab::<_, D55, _>::new(0.5f32, 42.0f32, Deg(120.0f32));
         assert_relative_eq!(c1.color_cast(), c1);
         assert_relative_eq!(c1.color_cast::<f32, Rad<f32>>().color_cast(), c1);
         assert_relative_eq!(c1.color_cast(), Lchab::new(0.5, 42.0, Deg(120.0)));
