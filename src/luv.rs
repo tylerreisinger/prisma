@@ -1,3 +1,5 @@
+//! The CIELUV perceptually uniform device-independent color space
+
 #![allow(non_snake_case)]
 
 #[cfg(feature = "approx")]
@@ -13,12 +15,20 @@ use xyz::Xyz;
 
 use white_point::{UnitWhitePoint, WhitePoint};
 
+/// The CIELUV perceptually uniform device-independent color space
+///
+/// `Luv` is a perceptually uniform color space introduced by CIE at the same time as [`Lab`](struct.Lab.html).
+/// `Luv` is especially well suited for dealing with colored lighting computations, with the additive
+/// mixture of two lights falling along a line in its the chromaticity space. It is an extension to
+/// the previous CIE UVW space.
+///
+/// Like `Lab`, `Luv` has a polar representation: [`Lchuv`](struct.Lchuv.html).
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Luv<T, W> {
-    pub L: PosFreeChannel<T>,
-    pub u: FreeChannel<T>,
-    pub v: FreeChannel<T>,
+    L: PosFreeChannel<T>,
+    u: FreeChannel<T>,
+    v: FreeChannel<T>,
     white_point: W,
 }
 
@@ -27,6 +37,10 @@ where
     T: FreeChannelScalar,
     W: UnitWhitePoint<T>,
 {
+    /// Construct a new `Luv` value with a named white point and channels.
+    ///
+    /// Unlike `new_with_whitepoint`, `new` constructs a default instance of a [`UnitWhitePoint`](white_point/trait.UnitWhitePoint.html).
+    /// It is only valid when `W` is a `UnitWhitePoint`.
     pub fn new(L: T, u: T, v: T) -> Self {
         Luv {
             L: PosFreeChannel::new(L),
@@ -42,6 +56,7 @@ where
     T: FreeChannelScalar,
     W: WhitePoint<T>,
 {
+    /// Construct a new `Luv` value with a given white point and channels
     pub fn new_with_whitepoint(L: T, u: T, v: T, white_point: W) -> Self {
         Luv {
             L: PosFreeChannel::new(L),
@@ -51,6 +66,7 @@ where
         }
     }
 
+    /// Convert the internal channel scalar format
     pub fn color_cast<TOut>(&self) -> Luv<TOut, W>
     where
         T: ChannelFormatCast<TOut>,
@@ -64,33 +80,43 @@ where
         }
     }
 
+    /// Returns the `L` lightness channel scalar
     pub fn L(&self) -> T {
         self.L.0.clone()
     }
+    /// Returns the `u` green-red channel scalar
     pub fn u(&self) -> T {
         self.u.0.clone()
     }
+    /// Returns the `v` blue-yellow channel scalar
     pub fn v(&self) -> T {
         self.v.0.clone()
     }
+    /// Returns a mutable reference to the `L` lightness channel scalar
     pub fn L_mut(&mut self) -> &mut T {
         &mut self.L.0
     }
+    /// Returns a mutable reference to the `u` green-red channel scalar
     pub fn u_mut(&mut self) -> &mut T {
         &mut self.u.0
     }
+    /// Returns a mutable reference to the `v` blue-yellow channel scalar
     pub fn v_mut(&mut self) -> &mut T {
         &mut self.v.0
     }
+    /// Set the `L` channel scalar
     pub fn set_L(&mut self, val: T) {
         self.L.0 = val;
     }
+    /// Set the `u` channel scalar
     pub fn set_u(&mut self, val: T) {
         self.u.0 = val;
     }
+    /// Set the `v` channel scalar
     pub fn set_v(&mut self, val: T) {
         self.v.0 = val;
     }
+    /// Returns a reference to the white point for the `Lab` color space
     pub fn white_point(&self) -> &W {
         &self.white_point
     }
@@ -202,6 +228,7 @@ where
     T: FreeChannelScalar + fmt::Display,
     W: WhitePoint<T>,
 {
+    /// Construct a `Luv` value from an `Xyz` value and white point
     pub fn from_xyz(from: &Xyz<T>, wp: W) -> Self {
         let wp_xyz = wp.get_xyz();
         let epsilon: T = num_traits::cast(1e-8).unwrap();
@@ -226,6 +253,7 @@ where
         Luv::new_with_whitepoint(L, u, v, wp)
     }
 
+    /// Construct an `Xyz` value from a `Luv` value
     pub fn to_xyz(&self) -> Xyz<T> {
         let wp_xyz = self.white_point.get_xyz();
         let epsilon: T = num_traits::cast(1e-8).unwrap();
@@ -282,10 +310,16 @@ where
     }
 
     #[inline]
+    /// Return the $`\epsilon`$ constant used in the Lab conversion
+    ///
+    /// For a description of the value, visit [`BruceLindbloom.com`](http://www.brucelindbloom.com/LContinuity.html).
     pub fn epsilon() -> T {
         num_traits::cast(0.008856451679035631).unwrap()
     }
     #[inline]
+    /// Return the $`\kappa`$ constant used in the Lab conversion
+    ///
+    /// For a description of the value, visit [`BruceLindbloom.com`](http://www.brucelindbloom.com/LContinuity.html).
     pub fn kappa() -> T {
         num_traits::cast(903.2962962963).unwrap()
     }

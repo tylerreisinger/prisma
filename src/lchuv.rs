@@ -1,3 +1,5 @@
+//! The $`\textrm{Lch}_{(\textrm{uv})}`$ device-independent polar color space
+
 #![allow(non_snake_case)]
 
 use angle::{Angle, Deg, FromAngle, IntoAngle, Rad};
@@ -15,12 +17,26 @@ use std::fmt;
 use tags::LchuvTag;
 use white_point::{UnitWhitePoint, WhitePoint};
 
+/// The $`\textrm{Lch}_{(\textrm{uv})}`$ device-independent polar color space
+///
+/// `Lchuv` is a simple polar representation of the [`Luv`](struct.Luv.html) color space defined as:
+///
+/// ```math
+/// \begin{aligned}
+///     L &= L \\
+///     C &= \sqrt{u^2 + v^2} \\
+///     H &= atan2(v, u)
+/// \end{aligned}
+/// ```
+///
+/// It is a useful space for computing smooth gradients in a polar space, but like `Luv` is out of gamut
+/// for many values which are not bounded by a simple geometric object.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Lchuv<T, W, A = Deg<T>> {
-    pub L: PosFreeChannel<T>,
-    pub chroma: PosFreeChannel<T>,
-    pub hue: AngularChannel<A>,
+    L: PosFreeChannel<T>,
+    chroma: PosFreeChannel<T>,
+    hue: AngularChannel<A>,
     white_point: W,
 }
 
@@ -30,6 +46,10 @@ where
     A: AngularChannelScalar,
     W: UnitWhitePoint<T>,
 {
+    /// Construct a new `Lchuv` value with a named white point and channels
+    ///
+    /// Unlike `new_with_whitepoint`, `new` constructs a default instance of a [`UnitWhitePoint`](white_point/trait.UnitWhitePoint.html).
+    /// It is only valid when `W` is a `UnitWhitePoint`.
     pub fn new(L: T, chroma: T, hue: A) -> Self {
         Lchuv {
             L: PosFreeChannel::new(L),
@@ -46,6 +66,7 @@ where
     A: AngularChannelScalar,
     W: WhitePoint<T>,
 {
+    /// Construct a new `Lchuv` value with a given white point and channels
     pub fn new_with_whitepoint(L: T, chroma: T, hue: A, white_point: W) -> Self {
         Lchuv {
             L: PosFreeChannel::new(L),
@@ -55,6 +76,7 @@ where
         }
     }
 
+    /// Convert the internal channel scalar format
     pub fn color_cast<TOut, AOut>(&self) -> Lchuv<TOut, W, AOut>
     where
         T: ChannelFormatCast<TOut>,
@@ -70,33 +92,43 @@ where
         }
     }
 
+    /// Returns the `L` lightness channel scalar
     pub fn L(&self) -> T {
         self.L.0.clone()
     }
+    /// Returns the `C` chroma channel scalar
     pub fn chroma(&self) -> T {
         self.chroma.0.clone()
     }
+    /// Returns the `H` hue channel scalar
     pub fn hue(&self) -> A {
         self.hue.0.clone()
     }
+    /// Returns a mutable reference to the the `L` lightness channel scalar
     pub fn L_mut(&mut self) -> &mut T {
         &mut self.L.0
     }
+    /// Returns a mutable reference to the the `C` chroma channel scalar
     pub fn chroma_mut(&mut self) -> &mut T {
         &mut self.chroma.0
     }
+    /// Returns a mutable reference to the the `L` hue channel scalar
     pub fn hue_mut(&mut self) -> &mut A {
         &mut self.hue.0
     }
+    /// Sets the `L` channel scalar
     pub fn set_L(&mut self, val: T) {
         self.L.0 = val;
     }
+    /// Sets the `chroma` channel scalar
     pub fn set_chroma(&mut self, val: T) {
         self.chroma.0 = val;
     }
+    /// Sets the `hue` channel scalar
     pub fn set_hue(&mut self, val: A) {
         self.hue.0 = val;
     }
+    /// Returns a reference to the white point for the `Lchab` color space
     pub fn white_point(&self) -> &W {
         &self.white_point
     }
@@ -255,6 +287,7 @@ where
     A: AngularChannelScalar + FromAngle<Rad<T>> + Angle,
     W: WhitePoint<T>,
 {
+    /// Construct an `Lchuv` value from a `Lab` value
     fn from_color(from: &Luv<T, W>) -> Self {
         let L = from.L();
         let c = (from.u() * from.u() + from.v() * from.v()).sqrt();
@@ -270,6 +303,7 @@ where
     A: AngularChannelScalar + Angle<Scalar = T>,
     W: WhitePoint<T>,
 {
+    /// Construct a `Lab` value from an `Lchuv` value
     fn from_color(from: &Lchuv<T, W, A>) -> Self {
         let L = from.L();
         let u = from.chroma() * from.hue().cos();

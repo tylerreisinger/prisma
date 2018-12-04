@@ -1,3 +1,5 @@
+//! The CIELAB perceptually uniform device-independent color space
+
 #![allow(non_snake_case)]
 #[cfg(feature = "approx")]
 use approx;
@@ -11,13 +13,26 @@ use tags::LabTag;
 use white_point::{UnitWhitePoint, WhitePoint};
 use xyz::Xyz;
 
+/// The CIELAB perceptually uniform device-independent color space
+///
+/// Lab is a color space obtained by a non-linear transformation for XYZ that is intended to be
+/// perceptually uniform, that is, such that a euclidean distance in any direction appears to change
+/// the same amount. Unlike XYZ, Lab spaces require a reference white point in order to be defined.
+/// This means that there are many different lab spaces that are incompatible because of having different
+/// white points. Like XYZ, most values in `Lab` lie outside the visible gamut of the eye.
+///
+/// The `L` value represents lightness, while a and b are green vs red and blue vs yellow respectively.
+/// Lab is one of two commonly used perceptually uniform spaces, the other being [`Luv`](struct.Luv.html).
+///
+/// A polar version of `Lab` exists as [`Lchab`](struct.Lchab.html). Lchab is to Lab as Hsv is to Rgb,
+/// and is generally easier to reason about.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Lab<T, W> {
-    pub L: PosFreeChannel<T>,
-    pub a: FreeChannel<T>,
-    pub b: FreeChannel<T>,
-    pub white_point: W,
+    L: PosFreeChannel<T>,
+    a: FreeChannel<T>,
+    b: FreeChannel<T>,
+    white_point: W,
 }
 
 impl<T, W> Lab<T, W>
@@ -25,6 +40,10 @@ where
     T: FreeChannelScalar,
     W: UnitWhitePoint<T>,
 {
+    /// Construct a new `Lab` value with a named white point and channels.
+    ///
+    /// Unlike `new_with_whitepoint`, `new` constructs a default instance of a [`UnitWhitePoint`](white_point/trait.UnitWhitePoint.html).
+    /// It is only valid when `W` is a `UnitWhitePoint`.
     pub fn new(L: T, a: T, b: T) -> Self {
         Lab {
             L: PosFreeChannel::new(L),
@@ -40,6 +59,7 @@ where
     T: FreeChannelScalar,
     W: WhitePoint<T>,
 {
+    /// Construct a new `Lab` value with a given white point and channels
     pub fn new_with_whitepoint(L: T, a: T, b: T, white_point: W) -> Self {
         Lab {
             L: PosFreeChannel::new(L),
@@ -49,6 +69,7 @@ where
         }
     }
 
+    /// Convert the internal channel scalar format
     pub fn color_cast<TOut>(&self) -> Lab<TOut, W>
     where
         T: ChannelFormatCast<TOut>,
@@ -62,33 +83,43 @@ where
         }
     }
 
+    /// Returns the `L` lightness channel scalar
     pub fn L(&self) -> T {
         self.L.0.clone()
     }
+    /// Returns the `a` green-red channel scalar
     pub fn a(&self) -> T {
         self.a.0.clone()
     }
+    /// Returns the `b` yellow-blue channel scalar
     pub fn b(&self) -> T {
         self.b.0.clone()
     }
+    /// Returns a mutable reference to the `L` lightness channel scalar
     pub fn L_mut(&mut self) -> &mut T {
         &mut self.L.0
     }
+    /// Returns a mutable reference to the `a` green-red channel scalar
     pub fn a_mut(&mut self) -> &mut T {
         &mut self.a.0
     }
+    /// Returns a mutable reference to the `b` yellow-blue channel scalar
     pub fn b_mut(&mut self) -> &mut T {
         &mut self.b.0
     }
+    /// Set the `L` channel scalar
     pub fn set_L(&mut self, val: T) {
         self.L.0 = val;
     }
+    /// Set the `a` channel scalar
     pub fn set_a(&mut self, val: T) {
         self.a.0 = val;
     }
+    /// Set the `b` channel scalar
     pub fn set_b(&mut self, val: T) {
         self.b.0 = val;
     }
+    /// Returns a reference to the white point for the `Lab` color space
     pub fn white_point(&self) -> &W {
         &self.white_point
     }
@@ -198,6 +229,7 @@ where
     W: WhitePoint<T>,
 {
     #![cfg_attr(feature = "cargo-clippy", allow(clippy::many_single_char_names))]
+    /// Construct an `Lab` value from an `Xyz` instance and a white point
     pub fn from_xyz(from: &Xyz<T>, wp: W) -> Lab<T, W> {
         let wp_xyz = wp.get_xyz();
         let x = from.x() / wp_xyz.x();
@@ -213,6 +245,7 @@ where
         Lab::new_with_whitepoint(L, a, b, wp)
     }
 
+    /// Construct an `Xyz` value from `self`
     pub fn to_xyz(&self) -> Xyz<T> {
         let wp = self.white_point.get_xyz();
         let fy = Self::inv_f_y(self.L());
@@ -264,10 +297,16 @@ where
     }
 
     #[inline]
+    /// Return the $`\epsilon`$ constant used in the Lab conversion
+    ///
+    /// For a description of the value, visit [`BruceLindbloom.com`](http://www.brucelindbloom.com/LContinuity.html).
     pub fn epsilon() -> T {
         num_traits::cast(0.008856451679035631).unwrap()
     }
     #[inline]
+    /// Return the $`\kappa`$ constant used in the Lab conversion
+    ///
+    /// For a description of the value, visit [`BruceLindbloom.com`](http://www.brucelindbloom.com/LContinuity.html).
     pub fn kappa() -> T {
         num_traits::cast(903.2962962963).unwrap()
     }
