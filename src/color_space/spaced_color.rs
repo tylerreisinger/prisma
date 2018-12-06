@@ -20,7 +20,7 @@ use ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
 /// `SpacedColor` implements `Deref` and `DerefMut`, allowing it to act like the underlying color transparently
 /// in many situations.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SpacedColor<T, Color, Encoding, Space: ColorSpace<T>> {
+pub struct SpacedColor<T: num_traits::Float, Color, Encoding, Space: ColorSpace<T>> {
     color: EncodedColor<Color, Encoding>,
     space: Space,
     _marker: PhantomData<T>,
@@ -31,6 +31,7 @@ where
     C: EncodableColor,
     S: ColorSpace<T>,
     E: ColorEncoding,
+    T: num_traits::Float,
 {
     /// Construct a new `SpacedColor` from an [`EncodedColor`](../../encoding/encoded_color/struct.EncodedColor.html)
     /// and a [`ColorSpace`](../color_space/trait.ColorSpace.html)
@@ -73,7 +74,7 @@ where
     C: EncodableColor + FromTuple,
     S: ColorSpace<T> + PartialEq + Clone,
     E: ColorEncoding + PartialEq,
-    T: PartialEq + Clone,
+    T: PartialEq + Clone + num_traits::Float,
 {
     /// Construct a `SpacedColor` from a tuple of channels, an encoding and a color space
     pub fn from_tuple(tuple: <Self as Color>::ChannelsTuple, encoding: E, space: S) -> Self {
@@ -86,7 +87,7 @@ where
     C: EncodableColor + HomogeneousColor,
     S: ColorSpace<T> + PartialEq + Clone,
     E: ColorEncoding + PartialEq,
-    T: PartialEq + Clone,
+    T: PartialEq + Clone + num_traits::Float,
 {
     /// Construct a `SpacedColor` by broadcasting a value to all channels, plus an encoding and a color space
     pub fn broadcast(value: C::ChannelFormat, encoding: E, space: S) -> Self {
@@ -99,7 +100,7 @@ where
     C: Color + EncodableColor,
     S: ColorSpace<T> + PartialEq + Clone,
     E: ColorEncoding + PartialEq,
-    T: PartialEq + Clone,
+    T: PartialEq + Clone + num_traits::Float,
 {
     type Tag = C::Tag;
     type ChannelsTuple = C::ChannelsTuple;
@@ -117,7 +118,7 @@ where
     C: Color3 + EncodableColor,
     S: ColorSpace<T> + PartialEq + Clone,
     E: ColorEncoding + PartialEq,
-    T: PartialEq + Clone,
+    T: PartialEq + Clone + num_traits::Float,
 {
 }
 impl<T, C, E, S> Color4 for SpacedColor<T, C, E, S>
@@ -125,7 +126,7 @@ where
     C: Color4 + EncodableColor,
     S: ColorSpace<T> + PartialEq + Clone,
     E: ColorEncoding + PartialEq,
-    T: PartialEq + Clone,
+    T: PartialEq + Clone + num_traits::Float,
 {
 }
 
@@ -134,7 +135,7 @@ where
     C: Color + EncodableColor + PolarColor,
     S: ColorSpace<T> + PartialEq + Clone,
     E: ColorEncoding + PartialEq,
-    T: PartialEq + Clone,
+    T: PartialEq + Clone + num_traits::Float,
 {
     type Angular = C::Angular;
     type Cartesian = C::Cartesian;
@@ -145,7 +146,7 @@ where
     C: Color + EncodableColor + Lerp,
     S: ColorSpace<T> + PartialEq + Clone,
     E: ColorEncoding + PartialEq,
-    T: PartialEq + Clone,
+    T: PartialEq + Clone + num_traits::Float,
 {
     type Position = C::Position;
 
@@ -162,7 +163,7 @@ where
     C: Color + EncodableColor + Invert,
     S: ColorSpace<T> + PartialEq,
     E: ColorEncoding + PartialEq,
-    T: PartialEq + Clone,
+    T: PartialEq + Clone + num_traits::Float,
 {
     fn invert(self) -> Self {
         SpacedColor::new(self.color.invert(), self.space)
@@ -174,7 +175,7 @@ where
     C: Color + EncodableColor + Bounded,
     S: ColorSpace<T> + PartialEq,
     E: ColorEncoding + PartialEq,
-    T: PartialEq + Clone,
+    T: PartialEq + Clone + num_traits::Float,
 {
     fn normalize(self) -> Self {
         SpacedColor::new(self.color.normalize(), self.space)
@@ -189,7 +190,7 @@ where
     C: Color + EncodableColor,
     S: ColorSpace<T> + PartialEq + Clone,
     E: ColorEncoding + PartialEq,
-    T: PartialEq + Clone,
+    T: PartialEq + Clone + num_traits::Float,
 {
 }
 
@@ -198,7 +199,7 @@ where
     C: Color + EncodableColor,
     S: ColorSpace<T> + PartialEq + Clone,
     E: ColorEncoding + PartialEq,
-    T: PartialEq + Clone,
+    T: PartialEq + Clone + num_traits::Float,
 {
     type Target = EncodedColor<C, E>;
 
@@ -212,7 +213,7 @@ where
     C: Color + EncodableColor,
     S: ColorSpace<T> + PartialEq + Clone,
     E: ColorEncoding + PartialEq,
-    T: PartialEq + Clone,
+    T: PartialEq + Clone + num_traits::Float,
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.color_mut()
@@ -222,12 +223,12 @@ where
 impl<T, C, E, S> SpacedColor<T, C, E, S>
 where
     C: Color<ChannelsTuple = (T, T, T)> + TranscodableColor,
-    S: ColorSpace<T> + ConvertToXyz<EncodedColor<C, E>>,
+    S: ColorSpace<T> + ConvertToXyz<T, C, E>,
     E: ColorEncoding + PartialEq,
     T: PosNormalChannelScalar + FreeChannelScalar + num_traits::Float,
 {
     /// Convert `Self` into an `Xyz` value
-    pub fn to_xyz(&self) -> <S as ConvertToXyz<EncodedColor<C, E>>>::OutputColor {
+    pub fn to_xyz(&self) -> <S as ConvertToXyz<T, C, E>>::OutputColor {
         self.space.convert_to_xyz(&self.color)
     }
 }
@@ -235,16 +236,13 @@ where
 impl<T, C, E, S> SpacedColor<T, C, E, S>
 where
     C: Color + TranscodableColor,
-    S: ColorSpace<T> + PartialEq + Clone + ConvertFromXyz<EncodedColor<C, E>>,
+    S: ColorSpace<T, Encoding = E> + PartialEq + Clone + ConvertFromXyz<T, C>,
     E: ColorEncoding + PartialEq,
-    T: PartialEq + Clone,
+    T: PartialEq + Clone + num_traits::Float,
 {
     /// Construct `Self` from an `Xyz` value and a color space
-    pub fn from_xyz(
-        from: &<S as ConvertFromXyz<EncodedColor<C, E>>>::InputColor,
-        space: S,
-    ) -> Self {
-        SpacedColor::new(space.convert_from_xyz(from), space)
+    pub fn from_xyz(from: &<S as ConvertFromXyz<T, C>>::InputColor, space: S) -> Self {
+        space.convert_from_xyz(from)
     }
 }
 
@@ -254,7 +252,7 @@ where
     C2: Color + EncodableColor,
     S: ColorSpace<T> + PartialEq + Clone,
     E: ColorEncoding + PartialEq,
-    T: PartialEq + Clone,
+    T: PartialEq + Clone + num_traits::Float,
 {
     fn from_color(from: &SpacedColor<T, C2, E, S>) -> Self {
         SpacedColor::new(EncodedColor::from_color(&from.color), from.space.clone())
@@ -299,19 +297,72 @@ where
     }
 }
 
+#[cfg(feature = "approx")]
+impl<T, C, E, S> approx::AbsDiffEq for SpacedColor<T, C, E, S>
+where
+    C: EncodableColor + approx::AbsDiffEq,
+    S: ColorSpace<T> + PartialEq,
+    E: ColorEncoding + PartialEq,
+    T: num_traits::Float,
+{
+    type Epsilon = C::Epsilon;
+
+    fn default_epsilon() -> Self::Epsilon {
+        C::default_epsilon()
+    }
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        (self.space == other.space) && self.color.abs_diff_eq(&other.color, epsilon)
+    }
+}
+#[cfg(feature = "approx")]
+impl<T, C, E, S> approx::RelativeEq for SpacedColor<T, C, E, S>
+where
+    C: EncodableColor + approx::RelativeEq,
+    S: ColorSpace<T> + PartialEq,
+    E: ColorEncoding + PartialEq,
+    T: num_traits::Float,
+{
+    fn default_max_relative() -> Self::Epsilon {
+        C::default_max_relative()
+    }
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        (self.space == other.space) && self.color.relative_eq(&other.color, epsilon, max_relative)
+    }
+}
+
+#[cfg(feature = "approx")]
+impl<T, C, E, S> approx::UlpsEq for SpacedColor<T, C, E, S>
+where
+    C: EncodableColor + approx::UlpsEq,
+    S: ColorSpace<T> + PartialEq,
+    E: ColorEncoding + PartialEq,
+    T: num_traits::Float,
+{
+    fn default_max_ulps() -> u32 {
+        C::default_max_ulps()
+    }
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        (self.space == other.space) && self.color.ulps_eq(&other.color, epsilon, max_ulps)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::Rgb;
-    use color_space::presets::sRgb;
-    use color_space::{EncodedColorSpace, NamedColorSpace, WithColorSpace};
+    use color_space::named::SRgb;
+    use color_space::WithColorSpace;
 
     #[test]
     fn test_with_color_space() {
-        let srgb: EncodedColorSpace<f32, _> = sRgb::get_color_space();
         let rgb1 = Rgb::new(0.5, 0.75, 1.0f32)
             .srgb_encoded()
-            .with_color_space(&srgb);
+            .with_color_space(SRgb::<f32>::new());
 
         assert_eq!(rgb1.red(), 0.5);
         assert_eq!(rgb1.green(), 0.75);

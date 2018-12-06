@@ -146,11 +146,11 @@
 //!
 //! use prisma::{Rgb, Xyz};
 //! use prisma::encoding::{EncodableColor, TranscodableColor};
-//! use prisma::color_space::{ColorSpace, EncodedColorSpace, NamedColorSpace, ConvertToXyz};
-//! use prisma::color_space::presets::sRgb;
+//! use prisma::color_space::{ColorSpace, EncodedColorSpace, ConvertToXyz};
+//! use prisma::color_space::named::SRgb;
 //!
 //! let rgb = Rgb::new(0.25, 0.5, 0.75f32).srgb_encoded();
-//! let color_space = sRgb::get_color_space();
+//! let color_space = SRgb::new();
 //! // In this case, since rgb and color_space know their own encodings, the conversion to linear
 //! // is automatic.
 //! let xyz = color_space.convert_to_xyz(&rgb);

@@ -1,4 +1,5 @@
 //! Provides the `EncodedColor` type for storing colors with their encodings.
+
 use super::EncodableColor;
 use crate::channel::{AngularChannelScalar, PosNormalChannelScalar};
 use crate::{
@@ -11,6 +12,7 @@ use color_space::{ColorSpace, SpacedColor, WithColorSpace};
 use convert::{FromColor, FromHsi, FromYCbCr};
 use encoding::encode::{ColorEncoding, LinearEncoding, TranscodableColor};
 use hsi::{Hsi, HsiOutOfGamutMode};
+use num_traits;
 use ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
 
 use std::fmt;
@@ -130,6 +132,7 @@ where
     C: EncodableColor,
     S: ColorSpace<T>,
     E: ColorEncoding,
+    T: num_traits::Float,
 {
     fn with_color_space(self, space: S) -> SpacedColor<T, C, E, S> {
         SpacedColor::new(self, space)

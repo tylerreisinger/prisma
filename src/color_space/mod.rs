@@ -2,17 +2,17 @@
 
 mod color_space;
 /// Named built-in color spaces
-pub mod presets;
+pub mod named;
 mod primary;
 mod spaced_color;
-
-use encoding::{ColorEncoding, EncodableColor};
 
 pub use self::color_space::{
     ColorSpace, ConvertFromXyz, ConvertToXyz, EncodedColorSpace, LinearColorSpace,
 };
 pub use self::primary::RgbPrimary;
 pub use self::spaced_color::SpacedColor;
+use encoding::{ColorEncoding, EncodableColor};
+use num_traits;
 
 /// A color which can be assigned a color space
 pub trait WithColorSpace<T, C, E, S>
@@ -20,15 +20,14 @@ where
     C: EncodableColor,
     S: ColorSpace<T>,
     E: ColorEncoding,
+    T: num_traits::Float,
 {
     /// Create a new spaced color from `self` and a color space
     fn with_color_space(self, space: S) -> SpacedColor<T, C, E, S>;
 }
-// TODO: Maybe implement a unit color space like with the white points
-/// A known color space
-pub trait NamedColorSpace<T> {
-    /// The type used for encoding and decoding colors associated with this color space
-    type Encoding: ColorEncoding;
-    /// Returns a new instance of the color space
-    fn get_color_space() -> EncodedColorSpace<T, Self::Encoding>;
+
+/// A color space with all data known at compile time
+pub trait UnitColorSpace<T: num_traits::Float>: ColorSpace<T> {
+    /// Returns a new `EncodedColorSpace` instance representing the color space
+    fn build_color_space_instance() -> EncodedColorSpace<T, Self::Encoding>;
 }
