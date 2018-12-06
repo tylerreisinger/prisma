@@ -4,6 +4,7 @@
 
 use std::marker::PhantomData;
 
+use alpha::{Rgba, Xyza};
 use channel::{ChannelFormatCast, FreeChannelScalar, PosNormalChannelScalar};
 use color::Color;
 use color_space::{ColorSpace, EncodedColorSpace, RgbPrimary};
@@ -93,15 +94,39 @@ macro_rules! impl_known_color_space {
                 Xyz::new(x, y, z)
             }
         }
-        impl<T> ConvertFromXyz<T, Rgb<T>> for $name<T>
+        impl<T> ConvertFromXyz<T, Xyz<T>> for $name<T>
         where
             T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar + ChannelFormatCast<f64>,
             f64: ChannelFormatCast<T>,
         {
-            type InputColor = Xyz<T>;
-            fn convert_from_xyz_raw(&self, color: &Self::InputColor) -> Rgb<T> {
+            type OutputColor = Rgb<T>;
+            fn convert_from_xyz_raw(&self, color: &Xyz<T>) -> Rgb<T> {
                 let (r, g, b) = self.get_inverse_xyz_transform().transform_vector(color.clone().to_tuple());
                 Rgb::new(r, g, b)
+            }
+        }
+        impl<T, E> ConvertToXyz<T, Rgba<T>, E> for $name<T>
+        where
+            T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar + ChannelFormatCast<f64>,
+            f64: ChannelFormatCast<T>,
+            E: ColorEncoding,
+        {
+            type OutputColor = Xyza<T>;
+            fn convert_to_xyz(&self, color: &EncodedColor<Rgba<T>, E>) -> Self::OutputColor {
+                let linear_color = color.clone().decode();
+                let (x, y, z) = self.get_xyz_transform().transform_vector(linear_color.color().color().to_tuple());
+                Xyza::new(Xyz::new(x, y, z), color.alpha())
+            }
+        }
+        impl<T> ConvertFromXyz<T, Xyza<T>> for $name<T>
+        where
+            T: num_traits::Float + FreeChannelScalar + PosNormalChannelScalar + ChannelFormatCast<f64>,
+            f64: ChannelFormatCast<T>,
+        {
+            type OutputColor = Rgba<T>;
+            fn convert_from_xyz_raw(&self, color: &Xyza<T>) -> Rgba<T> {
+                let (r, g, b) = self.get_inverse_xyz_transform().transform_vector((**color).clone().to_tuple());
+                Rgba::new(Rgb::new(r, g, b), color.alpha())
             }
         }
     }

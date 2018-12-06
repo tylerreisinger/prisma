@@ -6,13 +6,16 @@ use std::ops::{Deref, DerefMut};
 use crate::{
     Bounded, Color, Color3, Color4, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor,
 };
+use alpha::{Rgba, Xyza};
 use angle::Angle;
-use channel::{AngularChannelScalar, FreeChannelScalar, PosNormalChannelScalar};
+use channel::{AngularChannelScalar, ChannelFormatCast, FreeChannelScalar, PosNormalChannelScalar};
 use color_space::{ColorSpace, ConvertFromXyz, ConvertToXyz};
 use convert::{FromColor, FromHsi, FromYCbCr};
 use encoding::{ColorEncoding, EncodableColor, EncodedColor, TranscodableColor};
 use hsi::{Hsi, HsiOutOfGamutMode};
 use num_traits;
+use rgb::Rgb;
+use xyz::Xyz;
 use ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
 
 /// A device-dependent color with an associated color space and encoding
@@ -222,7 +225,7 @@ where
 
 impl<T, C, E, S> SpacedColor<T, C, E, S>
 where
-    C: Color<ChannelsTuple = (T, T, T)> + TranscodableColor,
+    C: TranscodableColor,
     S: ColorSpace<T> + ConvertToXyz<T, C, E>,
     E: ColorEncoding + PartialEq,
     T: PosNormalChannelScalar + FreeChannelScalar + num_traits::Float,
@@ -233,15 +236,43 @@ where
     }
 }
 
-impl<T, C, E, S> SpacedColor<T, C, E, S>
+impl<T, E, S> SpacedColor<T, Rgb<T>, E, S>
 where
-    C: Color + TranscodableColor,
-    S: ColorSpace<T, Encoding = E> + PartialEq + Clone + ConvertFromXyz<T, C>,
+    S: ColorSpace<T, Encoding = E>
+        + PartialEq
+        + Clone
+        + ConvertFromXyz<T, Xyz<T>, OutputColor = Rgb<T>>,
     E: ColorEncoding + PartialEq,
-    T: PartialEq + Clone + num_traits::Float,
+    T: PartialEq
+        + Clone
+        + num_traits::Float
+        + FreeChannelScalar
+        + PosNormalChannelScalar
+        + ChannelFormatCast<f64>,
+    f64: ChannelFormatCast<T>,
 {
     /// Construct `Self` from an `Xyz` value and a color space
-    pub fn from_xyz(from: &<S as ConvertFromXyz<T, C>>::InputColor, space: S) -> Self {
+    pub fn from_xyz(from: &Xyz<T>, space: S) -> Self {
+        space.convert_from_xyz(from)
+    }
+}
+impl<T, E, S> SpacedColor<T, Rgba<T>, E, S>
+where
+    S: ColorSpace<T, Encoding = E>
+        + PartialEq
+        + Clone
+        + ConvertFromXyz<T, Xyza<T>, OutputColor = Rgba<T>>,
+    E: ColorEncoding + PartialEq,
+    T: PartialEq
+        + Clone
+        + num_traits::Float
+        + FreeChannelScalar
+        + PosNormalChannelScalar
+        + ChannelFormatCast<f64>,
+    f64: ChannelFormatCast<T>,
+{
+    /// Construct `Self` from an `Xyz` value and a color space
+    pub fn from_xyza(from: &Xyza<T>, space: S) -> Self {
         space.convert_from_xyz(from)
     }
 }
@@ -354,9 +385,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Rgb;
+    use crate::{Rgb, Rgba, Xyza};
     use color_space::named::SRgb;
     use color_space::WithColorSpace;
+    use encoding::SrgbEncoding;
 
     #[test]
     fn test_with_color_space() {
@@ -368,5 +400,30 @@ mod tests {
         assert_eq!(rgb1.green(), 0.75);
         assert_eq!(rgb1.blue(), 1.00);
         assert_eq!(rgb1.clone().to_tuple(), (0.5, 0.75, 1.0));
+        assert_eq!(rgb1.encoding(), &SrgbEncoding);
+    }
+
+    #[test]
+    fn test_alpha() {
+        let rgba1 = Rgba::new(Rgb::new(0.3, 0.5, 0.7), 1.0);
+
+        assert_eq!(rgba1.alpha(), 1.0);
+        assert_eq!(rgba1.red(), 0.3);
+        assert_eq!(rgba1.green(), 0.5);
+        assert_eq!(rgba1.blue(), 0.7);
+        assert_eq!(rgba1.to_tuple(), ((0.3, 0.5, 0.7), 1.0));
+        assert_eq!(rgba1.color(), &Rgb::new(0.3, 0.5, 0.7));
+    }
+
+    #[test]
+    fn test_alpha_convert() {
+        let rgba1 = Rgba::new(Rgb::new(0.25, 0.5, 0.5), 0.8).encoded_as(SrgbEncoding);
+        let xyza1 = SRgb::new().convert_to_xyz(&rgba1);
+        assert_eq!(xyza1.alpha(), 0.8);
+        assert_relative_eq!(
+            xyza1,
+            Xyza::new(Xyz::new(0.136141, 0.179340, 0.229900), 0.8),
+            epsilon = 1e-5
+        );
     }
 }
