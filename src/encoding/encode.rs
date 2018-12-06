@@ -267,7 +267,7 @@ where
     {
         let (color, alpha) = self.decompose();
         let inner_color = color.encode_color(enc);
-        Rgba::from_color_and_alpha(inner_color, alpha)
+        Rgba::new(inner_color, alpha)
     }
 
     fn decode_color<Decoder>(self, dec: &Decoder) -> Self
@@ -276,7 +276,7 @@ where
     {
         let (color, alpha) = self.decompose();
         let inner_color = color.decode_color(dec);
-        Rgba::from_color_and_alpha(inner_color, alpha)
+        Rgba::new(inner_color, alpha)
     }
 }
 

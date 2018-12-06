@@ -43,7 +43,7 @@ where
     InnerColor: Color,
 {
     /// Construct an `Alpha` object from a color and an alpha value
-    pub fn from_color_and_alpha(color: InnerColor, alpha: T) -> Self {
+    pub fn new(color: InnerColor, alpha: T) -> Self {
         Alpha {
             color,
             alpha: PosNormalBoundedChannel::new(alpha),
@@ -110,7 +110,7 @@ where
     InnerColor: Color + FromTuple,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
-        Alpha::from_color_and_alpha(InnerColor::from_tuple(values.0), values.1)
+        Alpha::new(InnerColor::from_tuple(values.0), values.1)
     }
 }
 
@@ -218,7 +218,7 @@ where
     InnerColor2: Color,
 {
     fn from_color(from: &Alpha<T, InnerColor2>) -> Self {
-        Alpha::from_color_and_alpha(InnerColor::from_color(from.color()), from.alpha())
+        Alpha::new(InnerColor::from_color(from.color()), from.alpha())
     }
 }
 impl<T, InnerColor, A> FromHsi<Alpha<T, Hsi<T, A>>> for Alpha<T, InnerColor>
@@ -228,7 +228,7 @@ where
     A: AngularChannelScalar + Angle,
 {
     fn from_hsi(from: &Alpha<T, Hsi<T, A>>, out_of_gamut_mode: HsiOutOfGamutMode) -> Self {
-        Alpha::from_color_and_alpha(
+        Alpha::new(
             InnerColor::from_hsi(from.color(), out_of_gamut_mode),
             from.alpha(),
         )
@@ -241,7 +241,7 @@ where
     M: YCbCrModel<T>,
 {
     fn from_ycbcr(from: &Alpha<T, YCbCr<T, M>>, out_of_gamut_mode: YCbCrOutOfGamutMode) -> Self {
-        Alpha::from_color_and_alpha(
+        Alpha::new(
             InnerColor::from_ycbcr(from.color(), out_of_gamut_mode),
             from.alpha(),
         )
@@ -359,7 +359,7 @@ mod test {
 
     #[test]
     fn test_construct() {
-        let c1 = Rgba::from_color_and_alpha(Rgb::new(30u8, 120u8, 255u8), 222u8);
+        let c1 = Rgba::new(Rgb::new(30u8, 120u8, 255u8), 222u8);
         assert_eq!(c1.alpha(), 222u8);
         assert_eq!(c1.color().red(), 30u8);
         assert_eq!(c1.color().green(), 120u8);
@@ -368,16 +368,13 @@ mod test {
         assert_eq!(ic1, (30u8, 120, 255));
         assert_eq!(a, 222u8);
 
-        let mut c2 = Hsva::from_color_and_alpha(Hsv::new(Deg(0.3f32), 0.66, 0.9), 0.25f32);
+        let mut c2 = Hsva::new(Hsv::new(Deg(0.3f32), 0.66, 0.9), 0.25f32);
         assert_eq!(c2.alpha(), 0.25f32);
         assert_ulps_eq!(*c2.color(), Hsv::new(Deg(0.3f32), 0.66, 0.9));
         assert_eq!(c2, Hsva::from_tuple(((Deg(0.3f32), 0.66f32, 0.9), 0.25)));
         *c2.alpha_mut() = 0.75;
         *c2.color_mut().saturation_mut() = 0.01;
-        assert_ulps_eq!(
-            c2,
-            Hsva::from_color_and_alpha(Hsv::new(Deg(0.3f32), 0.01, 0.9), 0.75f32)
-        );
+        assert_ulps_eq!(c2, Hsva::new(Hsv::new(Deg(0.3f32), 0.01, 0.9), 0.75f32));
 
         let (c, a) = c2.clone().decompose();
         assert_eq!(c, *c2.color());
@@ -386,66 +383,60 @@ mod test {
         let c3 = Rgba::broadcast(50u8);
         assert_eq!(c3, Rgba::from_tuple(((50u8, 50, 50), 50)));
 
-        let c4 = Rgba::from_color_and_alpha(Rgb::new(0.2, 0.6, 0.99), 0.05);
+        let c4 = Rgba::new(Rgb::new(0.2, 0.6, 0.99), 0.05);
         assert_relative_eq!(
             c4.clamp(0.25, 0.75),
-            Rgba::from_color_and_alpha(Rgb::new(0.25, 0.6, 0.75), 0.25)
+            Rgba::new(Rgb::new(0.25, 0.6, 0.75), 0.25)
         );
     }
 
     #[test]
     fn test_invert() {
-        let c1 = Rgba::from_color_and_alpha(Rgb::new(30u8, 255u8, 200u8), 155u8);
+        let c1 = Rgba::new(Rgb::new(30u8, 255u8, 200u8), 155u8);
         assert_eq!(c1.clone().invert().invert(), c1);
-        assert_eq!(
-            c1.invert(),
-            Rgba::from_color_and_alpha(Rgb::new(225u8, 0, 55), 100u8)
-        );
+        assert_eq!(c1.invert(), Rgba::new(Rgb::new(225u8, 0, 55), 100u8));
 
-        let c2 = Hsva::from_color_and_alpha(Hsv::new(Deg(120.0f32), 0.3f32, 0.85), 0.3f32);
+        let c2 = Hsva::new(Hsv::new(Deg(120.0f32), 0.3f32, 0.85), 0.3f32);
         assert_relative_eq!(c2.clone().invert().invert(), c2, epsilon = 1e-6);
         assert_relative_eq!(
             c2.invert(),
-            Hsva::from_color_and_alpha(Hsv::new(Deg(300.0f32), 0.7f32, 0.15), 0.7f32),
+            Hsva::new(Hsv::new(Deg(300.0f32), 0.7f32, 0.15), 0.7f32),
             epsilon = 1e-4
         );
     }
 
     #[test]
     fn test_lerp() {
-        let c1 = Rgba::from_color_and_alpha(Rgb::new(120u8, 200, 0), 150);
-        let c2 = Rgba::from_color_and_alpha(Rgb::new(250u8, 100, 220), 55);
+        let c1 = Rgba::new(Rgb::new(120u8, 200, 0), 150);
+        let c2 = Rgba::new(Rgb::new(250u8, 100, 220), 55);
         assert_eq!(c1.lerp(&c2, 0.0), c1);
         assert_eq!(c1.lerp(&c2, 1.0), c2);
-        assert_eq!(
-            c1.lerp(&c2, 0.5),
-            Rgba::from_color_and_alpha(Rgb::new(185u8, 150, 110), 102)
-        );
+        assert_eq!(c1.lerp(&c2, 0.5), Rgba::new(Rgb::new(185u8, 150, 110), 102));
 
-        let c3 = Hsva::from_color_and_alpha(Hsv::new(Deg(60.0), 0.25, 0.55), 0.95);
-        let c4 = Hsva::from_color_and_alpha(Hsv::new(Deg(340.0), 0.95, 0.0), 0.25);
+        let c3 = Hsva::new(Hsv::new(Deg(60.0), 0.25, 0.55), 0.95);
+        let c4 = Hsva::new(Hsv::new(Deg(340.0), 0.95, 0.0), 0.25);
         assert_relative_eq!(c3.lerp(&c4, 0.0), c3);
         assert_relative_eq!(c3.lerp(&c4, 1.0), c4);
         assert_relative_eq!(
             c3.lerp(&c4, 0.25),
-            Hsva::from_color_and_alpha(Hsv::new(Deg(40.0), 0.425, 0.41250), 0.7750)
+            Hsva::new(Hsv::new(Deg(40.0), 0.425, 0.41250), 0.7750)
         );
     }
 
     #[test]
     fn test_flatten() {
-        let c1 = Rgba::from_color_and_alpha(Rgb::new(100u8, 50, 175), 254);
+        let c1 = Rgba::new(Rgb::new(100u8, 50, 175), 254);
         assert_eq!(c1.as_slice(), &[100u8, 50, 175, 254]);
         assert_eq!(Rgba::from_slice(c1.as_slice()), c1);
 
-        let c2 = Hsva::from_color_and_alpha(Hsv::new(Turns(0.5f32), 0.77f32, 0.5), 0.8765);
+        let c2 = Hsva::new(Hsv::new(Turns(0.5f32), 0.77f32, 0.5), 0.8765);
         assert_eq!(c2.as_slice(), &[0.5f32, 0.77, 0.5, 0.8765]);
         assert_eq!(Hsva::from_slice(c2.as_slice()), c2);
     }
 
     #[test]
     fn test_deref() {
-        let mut c1 = Rgba::from_color_and_alpha(Rgb::new(50, 250, 0u8), 100u8);
+        let mut c1 = Rgba::new(Rgb::new(50, 250, 0u8), 100u8);
 
         assert_eq!(c1.red(), 50);
         assert_eq!(c1.green(), 250);
