@@ -17,6 +17,7 @@ use hsi::{Hsi, HsiOutOfGamutMode};
 use num_traits;
 use std::fmt;
 use std::mem;
+use std::ops::{Deref, DerefMut};
 use std::slice;
 use tags::AlphaTag;
 use ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
@@ -24,11 +25,11 @@ use ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
 use crate::{eHsi, Hsl, Hsv, Hwb, Lab, Lchab, Lchuv, Luv, Rgb, Rgi, XyY, Xyz};
 use lms::Lms;
 
-//TODO: Implement Deref[Mut]
 /// A wrapper around a color with an alpha channel
 ///
 /// `Alpha<T>` makes it easy to add an alpha channel to any other color and share code between
-/// all color types.
+/// all color types. `Alpha<T>` implements `Deref` and `DerefMut`, making it able to act like the
+/// underlying color in many situations.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
 pub struct Alpha<T, InnerColor> {
@@ -247,6 +248,27 @@ where
     }
 }
 
+impl<T, InnerColor> Deref for Alpha<T, InnerColor>
+where
+    T: PosNormalChannelScalar,
+    InnerColor: Color,
+{
+    type Target = InnerColor;
+    fn deref(&self) -> &InnerColor {
+        &self.color
+    }
+}
+
+impl<T, InnerColor> DerefMut for Alpha<T, InnerColor>
+where
+    T: PosNormalChannelScalar,
+    InnerColor: Color,
+{
+    fn deref_mut(&mut self) -> &mut InnerColor {
+        &mut self.color
+    }
+}
+
 #[cfg(feature = "approx")]
 impl<T, InnerColor> approx::AbsDiffEq for Alpha<T, InnerColor>
 where
@@ -419,5 +441,18 @@ mod test {
         let c2 = Hsva::from_color_and_alpha(Hsv::new(Turns(0.5f32), 0.77f32, 0.5), 0.8765);
         assert_eq!(c2.as_slice(), &[0.5f32, 0.77, 0.5, 0.8765]);
         assert_eq!(Hsva::from_slice(c2.as_slice()), c2);
+    }
+
+    #[test]
+    fn test_deref() {
+        let mut c1 = Rgba::from_color_and_alpha(Rgb::new(50, 250, 0u8), 100u8);
+
+        assert_eq!(c1.red(), 50);
+        assert_eq!(c1.green(), 250);
+        assert_eq!(c1.blue(), 0);
+        assert_eq!(c1.alpha(), 100);
+
+        c1.set_red(100);
+        assert_eq!(c1.red(), 100);
     }
 }
