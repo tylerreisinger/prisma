@@ -1,4 +1,5 @@
 //! The CIELAB perceptually uniform device-independent color space
+#![allow(clippy::many_single_char_names)]
 
 #![allow(non_snake_case)]
 use crate::channel::{
@@ -228,7 +229,6 @@ where
     T: FreeChannelScalar,
     W: WhitePoint<T>,
 {
-    #![cfg_attr(feature = "cargo-clippy", allow(clippy::many_single_char_names))]
     /// Construct an `Lab` value from an `Xyz` instance and a white point
     pub fn from_xyz(from: &Xyz<T>, wp: W) -> Lab<T, W> {
         let wp_xyz = wp.get_xyz();

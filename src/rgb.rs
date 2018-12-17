@@ -262,12 +262,13 @@ where
         mem::swap(&mut c2, &mut c3);
         scaling_factor = cast(-1.0).unwrap();
     }
-    let mut min_chan: T = c3;
-    if c1 < c2 {
+    let min_chan = if c1 < c2 {
         mem::swap(&mut c1, &mut c2);
         scaling_factor = cast::<_, T>(-1.0 / 3.0).unwrap() - scaling_factor;
-        min_chan = c2.min(c3);
-    }
+        c2.min(c3)
+    } else {
+        c3
+    };
 
     (scaling_factor, c1, c2, c3, min_chan)
 }

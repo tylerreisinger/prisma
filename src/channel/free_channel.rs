@@ -68,11 +68,7 @@ where
         }
     }
     fn is_normalized(&self) -> bool {
-        if self.0 < num_traits::cast(0.0).unwrap() {
-            false
-        } else {
-            true
-        }
+        self.0 >= num_traits::cast(0.0).unwrap()
     }
 }
 

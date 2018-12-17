@@ -321,17 +321,16 @@ where
 
         let one: T = num_traits::cast(1.0).unwrap();
 
-        let saturation;
-        if intensity <= i_limit {
-            saturation = if intensity != num_traits::cast::<_, T>(0.0).unwrap() {
+        let saturation = if intensity <= i_limit {
+            if intensity != num_traits::cast::<_, T>(0.0).unwrap() {
                 one - min / intensity
             } else {
                 num_traits::cast(0.0).unwrap()
-            };
+            }
         } else {
             let three: T = num_traits::cast(3.0).unwrap();
-            saturation = one - ((three * (one - max)) / (three - sum + epsilon));
-        }
+            one - ((three * (one - max)) / (three - sum + epsilon))
+        };
 
         eHsi::new(hue, saturation, intensity)
     }

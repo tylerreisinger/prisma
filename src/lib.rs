@@ -158,8 +158,10 @@
 //! ```
 //! <a name="definitions"></a>
 
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal))]
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
+#![allow(clippy::unreadable_literal)]
+#![allow(clippy::module_inception)]
+#![allow(clippy::clone_on_copy)]
+#![allow(clippy::useless_transmute)]
 #![warn(missing_docs)]
 
 extern crate angular_units as angle;
