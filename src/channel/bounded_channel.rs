@@ -2,13 +2,13 @@
 //!
 //! Bounded channels are the only to support integer scalars
 
+use super::cast::ChannelFormatCast;
 use super::scalar::{NormalChannelScalar, PosNormalChannelScalar};
 use super::traits::ColorChannel;
+use super::ChannelCast;
+use crate::color;
 #[cfg(feature = "approx")]
 use approx;
-use channel::cast::ChannelFormatCast;
-use channel::ChannelCast;
-use color;
 use num_traits;
 use std::fmt;
 

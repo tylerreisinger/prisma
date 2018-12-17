@@ -1,29 +1,29 @@
 //! A wrapper type adding an alpha channel to other color types
 #![allow(non_camel_case_types)]
 
-use angle::{Angle, Deg};
-#[cfg(feature = "approx")]
-use approx;
-use channel::{
+use crate::channel::{
     AngularChannelScalar, ColorChannel, NormalChannelScalar, PosNormalBoundedChannel,
     PosNormalChannelScalar,
 };
-use color::{
+use crate::color::{
     Bounded, Color, Color3, Color4, Flatten, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor,
 };
-use convert::{FromColor, FromHsi, FromYCbCr};
-use encoding::EncodableColor;
-use hsi::{Hsi, HsiOutOfGamutMode};
+use crate::convert::{FromColor, FromHsi, FromYCbCr};
+use crate::encoding::EncodableColor;
+use crate::hsi::{Hsi, HsiOutOfGamutMode};
+use crate::tags::AlphaTag;
+use crate::ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
+use angle::{Angle, Deg};
+#[cfg(feature = "approx")]
+use approx;
 use num_traits;
 use std::fmt;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::slice;
-use tags::AlphaTag;
-use ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
 
+use crate::lms::Lms;
 use crate::{eHsi, Hsl, Hsv, Hwb, Lab, Lchab, Lchuv, Luv, Rgb, Rgi, XyY, Xyz};
-use lms::Lms;
 
 /// A wrapper around a color with an alpha channel
 ///
@@ -354,8 +354,9 @@ pub type Lmsa<T, M> = Alpha<T, Lms<T, M>>;
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::rgb::*;
     use angle::*;
-    use rgb::*;
+    use approx::*;
 
     #[test]
     fn test_construct() {

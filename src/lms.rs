@@ -3,19 +3,21 @@
 //! [`Lms`](struct.Lms.html) aims to represent the cone responses of human vision. See the struct
 //! level documentation for more information.
 
+use crate::channel::{
+    ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar,
+};
+use crate::color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Lerp};
+use crate::convert::FromColor;
+use crate::linalg::Matrix3;
+use crate::tags::LmsTag;
+use crate::xyz::Xyz;
 #[cfg(feature = "approx")]
 use approx;
-use channel::{ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar};
-use color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Lerp};
-use convert::FromColor;
-use linalg::Matrix3;
 use num_traits;
 use std::fmt;
 use std::marker::PhantomData;
 use std::mem;
 use std::slice;
-use tags::LmsTag;
-use xyz::Xyz;
 
 /// A model for transforming from XYZ to LMS and back
 pub trait LmsModel<T>: Clone + PartialEq {
@@ -377,7 +379,8 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use xyz::Xyz;
+    use crate::xyz::Xyz;
+    use approx::*;
 
     #[test]
     fn test_construct() {

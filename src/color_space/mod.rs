@@ -11,7 +11,7 @@ pub use self::color_space::{
 };
 pub use self::primary::RgbPrimary;
 pub use self::spaced_color::SpacedColor;
-use encoding::{ColorEncoding, EncodableColor};
+use crate::encoding::{ColorEncoding, EncodableColor};
 use num_traits;
 
 /// A color which can be assigned a color space

@@ -2,9 +2,9 @@
 //!
 //! For an overview of scalars, look at the [`channel`](../index.html) module documentation.
 
+use crate::color;
 use angle;
 use angle::*;
-use color;
 use num_traits::{cast, Float, NumCast, PrimInt, Zero};
 use std::ops;
 

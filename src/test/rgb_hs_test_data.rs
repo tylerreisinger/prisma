@@ -1,8 +1,8 @@
+use crate::hsi::Hsi;
+use crate::hsl::Hsl;
+use crate::hsv::Hsv;
+use crate::rgb::Rgb;
 use angle::*;
-use hsi::Hsi;
-use hsl::Hsl;
-use hsv::Hsv;
-use rgb::Rgb;
 
 pub struct TestColor {
     pub hsv: Hsv<f32>,

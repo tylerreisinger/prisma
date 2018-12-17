@@ -4,9 +4,9 @@ use angle::Angle;
 #[cfg(feature = "approx")]
 use approx;
 
-use channel::{ChannelCast, ChannelFormatCast, ColorChannel};
-use color;
-use color::Lerp;
+use crate::channel::{ChannelCast, ChannelFormatCast, ColorChannel};
+use crate::color;
+use crate::color::Lerp;
 use num_traits;
 use std::fmt;
 use std::ops;

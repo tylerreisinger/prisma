@@ -1,6 +1,6 @@
+use crate::hwb::Hwb;
+use crate::rgb::Rgb;
 use angle::Deg;
-use hwb::Hwb;
-use rgb::Rgb;
 
 pub struct TestColor {
     pub rgb: Rgb<f32>,

@@ -2,20 +2,20 @@
 
 #![allow(non_snake_case)]
 
-use angle::{Angle, Deg, FromAngle, IntoAngle, Rad};
-#[cfg(feature = "approx")]
-use approx;
-use channel::{
+use crate::channel::{
     AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
     FreeChannelScalar, PosFreeChannel,
 };
-use color::{Bounded, Color, FromTuple, Lerp, PolarColor};
-use convert::{FromColor, GetChroma, GetHue};
-use luv::Luv;
+use crate::color::{Bounded, Color, FromTuple, Lerp, PolarColor};
+use crate::convert::{FromColor, GetChroma, GetHue};
+use crate::luv::Luv;
+use crate::tags::LchuvTag;
+use crate::white_point::{UnitWhitePoint, WhitePoint};
+use angle::{Angle, Deg, FromAngle, IntoAngle, Rad};
+#[cfg(feature = "approx")]
+use approx;
 use num_traits;
 use std::fmt;
-use tags::LchuvTag;
-use white_point::{UnitWhitePoint, WhitePoint};
 
 /// The $`\textrm{Lch}_{(\textrm{uv})}`$ device-independent polar color space
 ///
@@ -316,9 +316,10 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::luv::Luv;
+    use crate::white_point::*;
     use angle::Turns;
-    use luv::Luv;
-    use white_point::*;
+    use approx::*;
 
     #[test]
     fn test_construct() {

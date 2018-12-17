@@ -5,10 +5,10 @@
 //! the most common standard models as well as a type for the creation of
 //! custom YCbCr models.
 
-use channel::{NormalChannelScalar, PosNormalChannelScalar};
-use linalg::Matrix3;
+use crate::channel::{NormalChannelScalar, PosNormalChannelScalar};
+use crate::linalg::Matrix3;
+use crate::ycbcr::YCbCr;
 use num_traits;
-use ycbcr::YCbCr;
 
 /// A coordinate shift for the components of a `YCbCr` model.
 ///

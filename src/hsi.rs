@@ -1,24 +1,24 @@
 //! The HSI device-dependent polar color space
 
+use crate::channel::{
+    AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
+    PosNormalBoundedChannel, PosNormalChannelScalar,
+};
+use crate::color;
+use crate::color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
+use crate::convert::{FromColor, FromHsi, GetHue};
+use crate::encoding::EncodableColor;
+use crate::rgb::Rgb;
+use crate::tags::HsiTag;
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle, Rad, Turns};
 #[cfg(feature = "approx")]
 use approx;
-use channel::{
-    AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
-    PosNormalBoundedChannel, PosNormalChannelScalar,
-};
-use color;
-use color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
-use convert::{FromColor, FromHsi, GetHue};
-use encoding::EncodableColor;
 use num_traits;
-use rgb::Rgb;
 use std::f64::consts;
 use std::fmt;
 use std::mem;
 use std::slice;
-use tags::HsiTag;
 
 /// Defines methods for handling out-of-gamut transformations from Hsi to Rgb
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -411,9 +411,10 @@ fn to_rgb_out_of_gamut<T, A>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use color::Flatten;
-    use rgb::Rgb;
-    use test;
+    use crate::color::Flatten;
+    use crate::rgb::Rgb;
+    use crate::test;
+    use approx::*;
 
     #[test]
     fn test_construct() {

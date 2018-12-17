@@ -1,18 +1,18 @@
 //! Implements the core `YCbCr` struct and some convenience types.
 
+use crate::channel::{ChannelFormatCast, NormalChannelScalar, PosNormalChannelScalar};
+use crate::color::{Bounded, Color, Flatten, FromTuple, Invert, Lerp};
+use crate::convert::{FromColor, FromYCbCr};
+use crate::encoding::EncodableColor;
+use crate::rgb::Rgb;
+use crate::tags::YCbCrTag;
 #[cfg(feature = "approx")]
 use approx;
-use channel::{ChannelFormatCast, NormalChannelScalar, PosNormalChannelScalar};
-use color::{Bounded, Color, Flatten, FromTuple, Invert, Lerp};
-use convert::{FromColor, FromYCbCr};
-use encoding::EncodableColor;
 use num_traits;
-use rgb::Rgb;
 use std::fmt;
-use tags::YCbCrTag;
 
-use ycbcr::bare_ycbcr::{BareYCbCr, YCbCrOutOfGamutMode};
-use ycbcr::model::{
+use crate::ycbcr::bare_ycbcr::{BareYCbCr, YCbCrOutOfGamutMode};
+use crate::ycbcr::model::{
     Bt709Model, Canonicalize, CustomYCbCrModel, JpegModel, UnitModel, YCbCrModel, YiqModel,
 };
 
@@ -416,10 +416,11 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use linalg::Matrix3;
-    use rgb::Rgb;
-    use ycbcr::bare_ycbcr::YCbCrOutOfGamutMode;
-    use ycbcr::model::*;
+    use crate::linalg::Matrix3;
+    use crate::rgb::Rgb;
+    use crate::ycbcr::bare_ycbcr::YCbCrOutOfGamutMode;
+    use crate::ycbcr::model::*;
+    use approx::*;
 
     #[test]
     fn test_custom_model() {

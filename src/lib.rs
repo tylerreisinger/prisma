@@ -162,11 +162,7 @@
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 #![warn(missing_docs)]
 
-extern crate num_traits;
-#[cfg(any(feature = "approx", test))]
-#[macro_use]
-extern crate approx;
-pub extern crate angular_units as angle;
+extern crate angular_units as angle;
 
 #[macro_use]
 mod impl_macros;
@@ -203,28 +199,28 @@ pub mod ycbcr;
 #[cfg(test)]
 pub mod test;
 
-pub use color::{
+pub use crate::color::{
     Bounded, Color, Color3, Color4, DeviceDependentColor, Flatten, FromTuple, HomogeneousColor,
     Invert, Lerp, PolarColor,
 };
 
-pub use alpha::{
+pub use crate::alpha::{
     eHsia, Alpha, Hsia, Hsla, Hsva, Hwba, Laba, Lchaba, Lchauv, Lmsa, Luva, Rgba, Rgia, XyYa, Xyza,
     YCbCra,
 };
-pub use chromaticity::ChromaticityCoordinates;
-pub use convert::{FromColor, FromHsi, FromYCbCr};
-pub use ehsi::eHsi;
-pub use hsi::{Hsi, HsiOutOfGamutMode};
-pub use hsl::Hsl;
-pub use hsv::Hsv;
-pub use hwb::{Hwb, HwbBoundedChannelTraits};
-pub use lab::Lab;
-pub use lchab::Lchab;
-pub use lchuv::Lchuv;
-pub use linalg::Matrix3;
-pub use luv::Luv;
-pub use rgb::Rgb;
-pub use rgi::Rgi;
-pub use xyy::XyY;
-pub use xyz::Xyz;
+pub use crate::chromaticity::ChromaticityCoordinates;
+pub use crate::convert::{FromColor, FromHsi, FromYCbCr};
+pub use crate::ehsi::eHsi;
+pub use crate::hsi::{Hsi, HsiOutOfGamutMode};
+pub use crate::hsl::Hsl;
+pub use crate::hsv::Hsv;
+pub use crate::hwb::{Hwb, HwbBoundedChannelTraits};
+pub use crate::lab::Lab;
+pub use crate::lchab::Lchab;
+pub use crate::lchuv::Lchuv;
+pub use crate::linalg::Matrix3;
+pub use crate::luv::Luv;
+pub use crate::rgb::Rgb;
+pub use crate::rgi::Rgi;
+pub use crate::xyy::XyY;
+pub use crate::xyz::Xyz;

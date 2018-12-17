@@ -2,18 +2,18 @@
 
 use super::EncodableColor;
 use crate::channel::{AngularChannelScalar, PosNormalChannelScalar};
+use crate::color_space::{ColorSpace, SpacedColor, WithColorSpace};
+use crate::convert::{FromColor, FromHsi, FromYCbCr};
+use crate::encoding::encode::{ColorEncoding, LinearEncoding, TranscodableColor};
+use crate::hsi::{Hsi, HsiOutOfGamutMode};
+use crate::ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
 use crate::{
     Bounded, Color, Color3, Color4, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor,
 };
 use angle::Angle;
 #[cfg(feature = "approx")]
 use approx;
-use color_space::{ColorSpace, SpacedColor, WithColorSpace};
-use convert::{FromColor, FromHsi, FromYCbCr};
-use encoding::encode::{ColorEncoding, LinearEncoding, TranscodableColor};
-use hsi::{Hsi, HsiOutOfGamutMode};
 use num_traits;
-use ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
 
 use std::fmt;
 use std::ops::{Deref, DerefMut};
@@ -349,9 +349,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test;
     use crate::{Hsv, Rgb};
     use angle::Deg;
-    use test;
+    use approx::*;
 
     #[test]
     fn test_encode_as() {

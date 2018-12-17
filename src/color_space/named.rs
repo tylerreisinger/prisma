@@ -4,19 +4,19 @@
 
 use std::marker::PhantomData;
 
-use alpha::{Rgba, Xyza};
-use channel::{ChannelFormatCast, FreeChannelScalar, PosNormalChannelScalar};
-use color::Color;
-use color_space::{ColorSpace, EncodedColorSpace, RgbPrimary};
-use encoding::{ColorEncoding, EncodedColor, SrgbEncoding};
-use linalg::Matrix3;
+use crate::alpha::{Rgba, Xyza};
+use crate::channel::{ChannelFormatCast, FreeChannelScalar, PosNormalChannelScalar};
+use crate::color::Color;
+use crate::color_space::{ColorSpace, EncodedColorSpace, RgbPrimary};
+use crate::encoding::{ColorEncoding, EncodedColor, SrgbEncoding};
+use crate::linalg::Matrix3;
+use crate::rgb::Rgb;
+use crate::white_point::{WhitePoint, D65};
+use crate::xyz::Xyz;
 use num_traits;
 use num_traits::cast;
-use rgb::Rgb;
-use white_point::{WhitePoint, D65};
-use xyz::Xyz;
 
-use color_space::{ConvertFromXyz, ConvertToXyz, UnitColorSpace};
+use crate::color_space::{ConvertFromXyz, ConvertToXyz, UnitColorSpace};
 
 /// The sRgb color space
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]

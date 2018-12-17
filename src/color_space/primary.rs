@@ -1,4 +1,4 @@
-use channel::{ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar};
+use crate::channel::{ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar};
 use num_traits;
 
 /// An xy value used as a primary in Rgb color spaces

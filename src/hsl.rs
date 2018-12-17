@@ -1,25 +1,25 @@
 //! The HSL device-dependent polar color model
 
+use crate::channel::{
+    AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
+    PosNormalBoundedChannel, PosNormalChannelScalar,
+};
+use crate::color;
+use crate::color::{Color, FromTuple};
+use crate::convert;
+use crate::convert::GetChroma;
+use crate::encoding::EncodableColor;
+use crate::rgb::Rgb;
+use crate::tags::HslTag;
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle};
 #[cfg(feature = "approx")]
 use approx;
-use channel::{
-    AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
-    PosNormalBoundedChannel, PosNormalChannelScalar,
-};
-use color;
-use color::{Color, FromTuple};
-use convert;
-use convert::GetChroma;
-use encoding::EncodableColor;
 use num_traits;
-use rgb::Rgb;
 use std::fmt;
 use std::mem;
 use std::ops;
 use std::slice;
-use tags::HslTag;
 
 //TODO: Consider adding an `HCL` constructor and conversion
 /// The HSL device-dependent polar color model
@@ -320,13 +320,14 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::color::*;
+    use crate::convert::*;
+    use crate::rgb::Rgb;
     use angle::*;
-    use color::*;
-    use convert::*;
-    use rgb::Rgb;
+    use approx::*;
     use std::f32::consts;
 
-    use test;
+    use crate::test;
 
     #[test]
     fn test_construct() {

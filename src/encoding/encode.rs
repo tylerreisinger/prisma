@@ -3,11 +3,11 @@
 //! See the [`encoding`](../index.html) module level documentation for more information
 
 use super::EncodableColor;
-use alpha::Rgba;
-use channel::{ChannelFormatCast, PosNormalChannelScalar};
-use color::Color;
+use crate::alpha::Rgba;
+use crate::channel::{ChannelFormatCast, PosNormalChannelScalar};
+use crate::color::Color;
+use crate::rgb::Rgb;
 use num_traits;
-use rgb::Rgb;
 use std::fmt;
 
 /// An object that can encode a color from a linear encoding to a different encoding
@@ -283,9 +283,10 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use color::*;
-    use encoding::EncodableColor;
-    use rgb::Rgb;
+    use crate::color::*;
+    use crate::encoding::EncodableColor;
+    use crate::rgb::Rgb;
+    use approx::*;
 
     #[test]
     fn test_gamma_encoding() {

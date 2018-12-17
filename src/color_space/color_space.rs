@@ -1,20 +1,20 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
-use alpha::{Rgba, Xyza};
-use channel::{ChannelFormatCast, FreeChannelScalar, PosNormalChannelScalar};
-use color::Color;
-use encoding::{
+use crate::alpha::{Rgba, Xyza};
+use crate::channel::{ChannelFormatCast, FreeChannelScalar, PosNormalChannelScalar};
+use crate::color::Color;
+use crate::encoding::{
     ChannelDecoder, ChannelEncoder, ColorEncoding, EncodableColor, EncodedColor, LinearEncoding,
     TranscodableColor,
 };
-use linalg::Matrix3;
+use crate::linalg::Matrix3;
+use crate::rgb::Rgb;
+use crate::xyz::Xyz;
 use num_traits;
-use rgb::Rgb;
-use xyz::Xyz;
 
-use color_space::primary::RgbPrimary;
-use color_space::SpacedColor;
+use super::primary::RgbPrimary;
+use super::SpacedColor;
 
 /// A color space that allows moving from device-dependent to device-independent spaces and back
 ///
@@ -496,15 +496,16 @@ impl<T, E> ConvertFromXyz<T, Rgba<T>> for EncodedColorSpace<T, E>
 #[cfg(test)]
 mod test {
     use super::*;
-    use color::*;
-    use color_space::named::*;
-    use color_space::primary::RgbPrimary;
-    use color_space::WithColorSpace;
-    use encoding::*;
-    use linalg::Matrix3;
-    use rgb::Rgb;
-    use white_point::{WhitePoint, D65};
-    use xyz::Xyz;
+    use crate::color::*;
+    use crate::color_space::named::*;
+    use crate::color_space::primary::RgbPrimary;
+    use crate::color_space::WithColorSpace;
+    use crate::encoding::*;
+    use crate::linalg::Matrix3;
+    use crate::rgb::Rgb;
+    use crate::white_point::{WhitePoint, D65};
+    use crate::xyz::Xyz;
+    use approx::*;
 
     #[test]
     fn test_convert_to_xyz() {

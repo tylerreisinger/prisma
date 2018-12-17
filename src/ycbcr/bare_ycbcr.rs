@@ -1,22 +1,22 @@
 //! Defines `BareYCbCr` for YCbCr colors that don't store their model.
 
-#[cfg(feature = "approx")]
-use approx;
-use channel::{
+use crate::channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, NormalBoundedChannel, NormalChannelScalar,
     PosNormalBoundedChannel, PosNormalChannelScalar,
 };
-use color::{Bounded, Color, Flatten, FromTuple, Invert, Lerp};
-use encoding::EncodableColor;
+use crate::color::{Bounded, Color, Flatten, FromTuple, Invert, Lerp};
+use crate::encoding::EncodableColor;
+#[cfg(feature = "approx")]
+use approx;
 use num_traits;
 use std::fmt;
 use std::mem;
 use std::slice;
 
-use rgb::Rgb;
-use tags::YCbCrTag;
-use ycbcr::model::YCbCrModel;
-use ycbcr::YCbCr;
+use crate::rgb::Rgb;
+use crate::tags::YCbCrTag;
+use crate::ycbcr::model::YCbCrModel;
+use crate::ycbcr::YCbCr;
 
 /// Methods for handling out of gamut colors when converting to Rgb.
 ///

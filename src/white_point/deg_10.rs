@@ -1,10 +1,10 @@
 //! The named standard illuminants used with the 10 degree standard observer
 
-use channel::{FreeChannelScalar, PosNormalChannelScalar};
+use crate::channel::{FreeChannelScalar, PosNormalChannelScalar};
+use crate::white_point::{UnitWhitePoint, WhitePoint};
+use crate::xyy::XyY;
+use crate::xyz::Xyz;
 use num_traits::{cast, Float};
-use white_point::{UnitWhitePoint, WhitePoint};
-use xyy::XyY;
-use xyz::Xyz;
 
 /// Incandescent / Tungsten.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]

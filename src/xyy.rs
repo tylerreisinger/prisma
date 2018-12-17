@@ -1,20 +1,20 @@
 //! The xyY device-independent chromaticity space
 
 #![allow(non_snake_case)]
-#[cfg(feature = "approx")]
-use approx;
-use channel::{
+use crate::channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar,
     PosNormalBoundedChannel, PosNormalChannelScalar,
 };
-use color::{Bounded, Color, Flatten, FromTuple, Lerp};
-use convert::FromColor;
+use crate::color::{Bounded, Color, Flatten, FromTuple, Lerp};
+use crate::convert::FromColor;
+use crate::tags::XyYTag;
+use crate::xyz::Xyz;
+#[cfg(feature = "approx")]
+use approx;
 use num_traits;
 use std::fmt;
 use std::mem;
 use std::slice;
-use tags::XyYTag;
-use xyz::Xyz;
 
 /// The xyY device-independent chromaticity space
 ///
@@ -310,7 +310,8 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use xyz::Xyz;
+    use crate::xyz::Xyz;
+    use approx::*;
 
     #[test]
     fn test_construct() {

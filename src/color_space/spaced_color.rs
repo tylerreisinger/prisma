@@ -3,20 +3,22 @@
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 
+use crate::alpha::{Rgba, Xyza};
+use crate::channel::{
+    AngularChannelScalar, ChannelFormatCast, FreeChannelScalar, PosNormalChannelScalar,
+};
+use crate::color_space::{ColorSpace, ConvertFromXyz, ConvertToXyz};
+use crate::convert::{FromColor, FromHsi, FromYCbCr};
+use crate::encoding::{ColorEncoding, EncodableColor, EncodedColor, TranscodableColor};
+use crate::hsi::{Hsi, HsiOutOfGamutMode};
+use crate::rgb::Rgb;
+use crate::xyz::Xyz;
+use crate::ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
 use crate::{
     Bounded, Color, Color3, Color4, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor,
 };
-use alpha::{Rgba, Xyza};
 use angle::Angle;
-use channel::{AngularChannelScalar, ChannelFormatCast, FreeChannelScalar, PosNormalChannelScalar};
-use color_space::{ColorSpace, ConvertFromXyz, ConvertToXyz};
-use convert::{FromColor, FromHsi, FromYCbCr};
-use encoding::{ColorEncoding, EncodableColor, EncodedColor, TranscodableColor};
-use hsi::{Hsi, HsiOutOfGamutMode};
 use num_traits;
-use rgb::Rgb;
-use xyz::Xyz;
-use ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
 
 /// A device-dependent color with an associated color space and encoding
 ///
@@ -385,10 +387,11 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::color_space::named::SRgb;
+    use crate::color_space::WithColorSpace;
+    use crate::encoding::SrgbEncoding;
     use crate::{Rgb, Rgba, Xyza};
-    use color_space::named::SRgb;
-    use color_space::WithColorSpace;
-    use encoding::SrgbEncoding;
+    use approx::*;
 
     #[test]
     fn test_with_color_space() {

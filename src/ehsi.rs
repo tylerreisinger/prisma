@@ -1,25 +1,25 @@
 //! The eHSI device-dependent polar color model
 
+use crate::channel::{
+    AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
+    PosNormalBoundedChannel, PosNormalChannelScalar,
+};
+use crate::color;
+use crate::color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
+use crate::convert::{decompose_hue_segment, FromColor, GetHue};
+use crate::encoding::EncodableColor;
+use crate::hsi::Hsi;
+use crate::rgb::Rgb;
+use crate::tags::EHsiTag;
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle, Rad, Turns};
 #[cfg(feature = "approx")]
 use approx;
-use channel::{
-    AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
-    PosNormalBoundedChannel, PosNormalChannelScalar,
-};
-use color;
-use color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
-use convert::{decompose_hue_segment, FromColor, GetHue};
-use encoding::EncodableColor;
-use hsi::Hsi;
 use num_traits;
 use num_traits::Float;
-use rgb::Rgb;
 use std::fmt;
 use std::mem;
 use std::slice;
-use tags::EHsiTag;
 
 /// The eHSI device-dependent polar color model
 ///
@@ -402,9 +402,10 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use hsi::Hsi;
-    use rgb::Rgb;
-    use test;
+    use crate::hsi::Hsi;
+    use crate::rgb::Rgb;
+    use crate::test;
+    use approx::*;
 
     #[test]
     fn test_construct() {

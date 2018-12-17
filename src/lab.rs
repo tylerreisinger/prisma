@@ -1,17 +1,17 @@
 //! The CIELAB perceptually uniform device-independent color space
 
 #![allow(non_snake_case)]
-#[cfg(feature = "approx")]
-use approx;
-use channel::{
+use crate::channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar, PosFreeChannel,
 };
-use color::{Bounded, Color, FromTuple, Lerp};
+use crate::color::{Bounded, Color, FromTuple, Lerp};
+use crate::tags::LabTag;
+use crate::white_point::{UnitWhitePoint, WhitePoint};
+use crate::xyz::Xyz;
+#[cfg(feature = "approx")]
+use approx;
 use num_traits;
 use std::fmt;
-use tags::LabTag;
-use white_point::{UnitWhitePoint, WhitePoint};
-use xyz::Xyz;
 
 /// The CIELAB perceptually uniform device-independent color space
 ///
@@ -315,8 +315,9 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use white_point::*;
-    use xyz::Xyz;
+    use crate::white_point::*;
+    use crate::xyz::Xyz;
+    use approx::*;
 
     #[test]
     fn test_construct() {

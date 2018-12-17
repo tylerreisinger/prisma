@@ -15,8 +15,8 @@
 //!
 //! The standard illuminants are slightly different between the two, so prisma provides two modules
 //! containing them `deg_2` and `deg_10`. If you don't know which to use, use `deg_2`.
-use xyy::XyY;
-use xyz::Xyz;
+use crate::xyy::XyY;
+use crate::xyz::Xyz;
 
 /// A named standard illuminant, expressed as XYZ coordinates
 pub trait WhitePoint<T>: Clone + PartialEq {

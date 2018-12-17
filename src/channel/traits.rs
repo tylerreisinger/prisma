@@ -1,6 +1,6 @@
 //! Traits used by the color channels
 
-use channel::ChannelFormatCast;
+use crate::channel::ChannelFormatCast;
 use std::ops;
 
 /// The base trait for all channels

@@ -1,26 +1,26 @@
 //! The HSV device-dependent color model
 
+use crate::channel::cast::ChannelFormatCast;
+use crate::channel::{
+    AngularChannel, AngularChannelScalar, ChannelCast, ColorChannel, PosNormalBoundedChannel,
+    PosNormalChannelScalar,
+};
+use crate::color;
+use crate::color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
+use crate::convert;
+use crate::encoding::EncodableColor;
+use crate::rgb;
+use crate::tags::HsvTag;
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle};
 #[cfg(feature = "approx")]
 use approx;
-use channel::cast::ChannelFormatCast;
-use channel::{
-    AngularChannel, AngularChannelScalar, ChannelCast, ColorChannel, PosNormalBoundedChannel,
-    PosNormalChannelScalar,
-};
-use color;
-use color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
-use convert;
-use encoding::EncodableColor;
 use num_traits;
 use num_traits::cast;
-use rgb;
 use std::fmt;
 use std::mem;
 use std::ops;
 use std::slice;
-use tags::HsvTag;
 
 /// The HSV device-dependent polar color model
 ///
@@ -310,13 +310,14 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::color::*;
+    use crate::convert::*;
+    use crate::rgb;
     use angle::*;
-    use color::*;
-    use convert::*;
-    use rgb;
+    use approx::*;
     use std::f32::consts;
 
-    use test;
+    use crate::test;
 
     #[test]
     fn test_construct() {

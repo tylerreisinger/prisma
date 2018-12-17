@@ -1,13 +1,15 @@
 //! The CIE XYZ device-independent color space
 
+use crate::channel::{
+    ChannelCast, ChannelFormatCast, ColorChannel, FreeChannelScalar, PosFreeChannel,
+};
+use crate::color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Lerp};
+use crate::tags::XyzTag;
 #[cfg(feature = "approx")]
 use approx;
-use channel::{ChannelCast, ChannelFormatCast, ColorChannel, FreeChannelScalar, PosFreeChannel};
-use color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Lerp};
 use std::fmt;
 use std::mem;
 use std::slice;
-use tags::XyzTag;
 
 /// The CIE XYZ device-independent color space
 ///
@@ -219,6 +221,7 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+    use approx::*;
 
     #[test]
     fn test_construction() {

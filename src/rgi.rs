@@ -1,20 +1,20 @@
 //! The rgI device-dependent chromaticity color model
 
-#[cfg(feature = "approx")]
-use approx;
-use channel::{
+use crate::channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar,
 };
-use color::{Bounded, Color, Flatten, FromTuple, Lerp};
-use convert::FromColor;
-use encoding::EncodableColor;
+use crate::color::{Bounded, Color, Flatten, FromTuple, Lerp};
+use crate::convert::FromColor;
+use crate::encoding::EncodableColor;
+use crate::rgb::Rgb;
+use crate::tags::RgiTag;
+#[cfg(feature = "approx")]
+use approx;
 use num_traits;
 use num_traits::Float;
-use rgb::Rgb;
 use std::fmt;
 use std::mem;
 use std::slice;
-use tags::RgiTag;
 
 /// The rgI device-dependent chromaticity color model
 ///
@@ -301,8 +301,9 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use rgb::Rgb;
-    use test;
+    use crate::rgb::Rgb;
+    use crate::test;
+    use approx::*;
 
     #[test]
     fn test_construct() {

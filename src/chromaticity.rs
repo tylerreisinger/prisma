@@ -1,5 +1,5 @@
+use crate::convert::{GetChroma, GetHue};
 use angle::{Angle, FromAngle, Rad};
-use convert::{GetChroma, GetHue};
 use num_traits;
 
 // TODO: Improve this module

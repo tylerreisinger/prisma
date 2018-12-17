@@ -1,24 +1,24 @@
 //! The HWB device-dependent polar color model
 
+use crate::channel::{
+    AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
+    PosNormalBoundedChannel, PosNormalChannelScalar,
+};
+use crate::color;
+use crate::color::{Color, FromTuple};
+use crate::convert;
+use crate::encoding::EncodableColor;
+use crate::hsv;
+use crate::rgb;
+use crate::tags::HwbTag;
 use angle;
 use angle::{Angle, Deg, FromAngle, IntoAngle};
 #[cfg(feature = "approx")]
 use approx;
-use channel::{
-    AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
-    PosNormalBoundedChannel, PosNormalChannelScalar,
-};
-use color;
-use color::{Color, FromTuple};
-use convert;
-use encoding::EncodableColor;
-use hsv;
 use num_traits;
-use rgb;
 use std::fmt;
 use std::mem;
 use std::slice;
-use tags::HwbTag;
 
 /// The HWB device-dependent polar color model
 ///
@@ -373,12 +373,13 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::color::*;
+    use crate::convert::{FromColor, GetChroma};
+    use crate::hsv::Hsv;
+    use crate::rgb::Rgb;
+    use crate::test;
     use angle::*;
-    use color::*;
-    use convert::{FromColor, GetChroma};
-    use hsv::Hsv;
-    use rgb::Rgb;
-    use test;
+    use approx::*;
 
     #[test]
     fn test_construct() {

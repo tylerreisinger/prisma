@@ -1,9 +1,9 @@
 //! Channels with no upper and/or lower bound
 
+use super::{ChannelCast, ChannelFormatCast, ColorChannel, FreeChannelScalar};
+use crate::color::{Bounded, Lerp};
 #[cfg(feature = "approx")]
 use approx;
-use channel::{ChannelCast, ChannelFormatCast, ColorChannel, FreeChannelScalar};
-use color::{Bounded, Lerp};
 use num_traits;
 use std::fmt;
 

@@ -2,27 +2,27 @@
 //!
 //! Provides the [Rgb<T>](struct.Rgb.html) type.
 
-use angle;
-#[cfg(feature = "approx")]
-use approx;
-use channel::{
+use crate::channel::{
     AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel, PosNormalBoundedChannel,
     PosNormalChannelScalar,
 };
-use chromaticity::ChromaticityCoordinates;
-use color;
-use color::{Color, FromTuple, HomogeneousColor};
-use convert;
-use encoding::EncodableColor;
-use hsl;
-use hsv;
-use hwb;
+use crate::chromaticity::ChromaticityCoordinates;
+use crate::color;
+use crate::color::{Color, FromTuple, HomogeneousColor};
+use crate::convert;
+use crate::encoding::EncodableColor;
+use crate::hsl;
+use crate::hsv;
+use crate::hwb;
+use crate::tags::RgbTag;
+use angle;
+#[cfg(feature = "approx")]
+use approx;
 use num_traits;
 use num_traits::cast;
 use std::fmt;
 use std::mem;
 use std::slice;
-use tags::RgbTag;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -389,12 +389,13 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::color::*;
+    use crate::convert::*;
+    use crate::hsl::Hsl;
+    use crate::hsv::Hsv;
+    use crate::test;
     use angle::*;
-    use color::*;
-    use convert::*;
-    use hsl::Hsl;
-    use hsv::Hsv;
-    use test;
+    use approx::*;
 
     #[test]
     fn test_construct() {
