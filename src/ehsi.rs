@@ -12,14 +12,12 @@ use crate::hsi::Hsi;
 use crate::rgb::Rgb;
 use crate::tags::EHsiTag;
 use angle;
-use angle::{Angle, Deg, FromAngle, IntoAngle, Rad, Turns};
+use angle::{Angle, Deg, FromAngle, IntoAngle, Rad};
 #[cfg(feature = "approx")]
 use approx;
 use num_traits;
 use num_traits::Float;
 use std::fmt;
-use std::mem;
-use std::slice;
 
 /// The eHSI device-dependent polar color model
 ///
@@ -213,18 +211,6 @@ where
     });
 }
 
-impl<T, A> color::Flatten for eHsi<T, A>
-where
-    T: PosNormalChannelScalar + num_traits::Float,
-    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Turns<T>>,
-{
-    type ScalarFormat = T;
-
-    impl_color_as_slice!(T);
-    impl_color_from_slice_angular!(eHsi<T, A> {hue:AngularChannel - 0, 
-        saturation:PosNormalBoundedChannel - 1, intensity:PosNormalBoundedChannel - 2});
-}
-
 impl<T, A> EncodableColor for eHsi<T, A>
 where
     T: PosNormalChannelScalar + num_traits::Float,
@@ -404,6 +390,7 @@ mod test {
     use crate::hsi::Hsi;
     use crate::rgb::Rgb;
     use crate::test;
+    use angle::Turns;
     use approx::*;
 
     #[test]

@@ -1,7 +1,7 @@
 //! Implements the core `YCbCr` struct and some convenience types.
 
 use crate::channel::{ChannelFormatCast, NormalChannelScalar, PosNormalChannelScalar};
-use crate::color::{Bounded, Color, Flatten, FromTuple, Invert, Lerp};
+use crate::color::{Bounded, Broadcast, Color, Flatten, FromTuple, HomogeneousColor, Invert, Lerp};
 use crate::convert::{FromColor, FromYCbCr};
 use crate::encoding::EncodableColor;
 use crate::rgb::Rgb;
@@ -262,19 +262,45 @@ where
     }
 }
 
+impl<T, M> HomogeneousColor for YCbCr<T, M>
+where
+    T: NormalChannelScalar + PosNormalChannelScalar,
+    M: YCbCrModel<T>,
+{
+    type ChannelFormat = T;
+
+    fn clamp(self, min: T, max: T) -> Self {
+        YCbCr {
+            ycbcr: self.ycbcr.clamp(min.clone(), max),
+            model: self.model,
+        }
+    }
+}
+
+impl<T, M> Broadcast for YCbCr<T, M>
+where
+    T: NormalChannelScalar + PosNormalChannelScalar,
+    M: YCbCrModel<T> + UnitModel<T>,
+{
+    fn broadcast(value: T) -> Self {
+        YCbCr {
+            ycbcr: BareYCbCr::new(value.clone(), value.clone(), value),
+            model: M::unit_value(),
+        }
+    }
+}
+
 impl<T, M> Flatten for YCbCr<T, M>
 where
     T: NormalChannelScalar + PosNormalChannelScalar,
     M: YCbCrModel<T> + UnitModel<T>,
 {
-    type ScalarFormat = T;
+    fn from_slice(vals: &[T]) -> Self {
+        YCbCr::new(vals[0].clone(), vals[1].clone(), vals[2].clone())
+    }
 
     fn as_slice(&self) -> &[T] {
         self.ycbcr.as_slice()
-    }
-
-    fn from_slice(vals: &[T]) -> Self {
-        YCbCr::new(vals[0].clone(), vals[1].clone(), vals[2].clone())
     }
 }
 

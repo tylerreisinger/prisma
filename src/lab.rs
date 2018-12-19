@@ -5,7 +5,7 @@
 use crate::channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar, PosFreeChannel,
 };
-use crate::color::{Bounded, Color, FromTuple, Lerp};
+use crate::color::{Bounded, Broadcast, Color, FromTuple, HomogeneousColor, Lerp};
 use crate::tags::LabTag;
 use crate::white_point::{UnitWhitePoint, WhitePoint};
 use crate::xyz::Xyz;
@@ -151,6 +151,32 @@ where
     fn from_tuple(values: (T, T, T)) -> Self {
         let (L, a, b) = values;
         Lab::new(L, a, b)
+    }
+}
+
+impl<T, W> HomogeneousColor for Lab<T, W>
+where
+    T: FreeChannelScalar,
+    W: WhitePoint<T>,
+{
+    type ChannelFormat = T;
+    fn clamp(self, min: T, max: T) -> Self {
+        Lab {
+            L: self.L.clamp(min.clone(), max.clone()),
+            a: self.a.clamp(min.clone(), max.clone()),
+            b: self.b.clamp(min, max),
+            white_point: self.white_point,
+        }
+    }
+}
+
+impl<T, W> Broadcast for Lab<T, W>
+where
+    T: FreeChannelScalar,
+    W: UnitWhitePoint<T>,
+{
+    fn broadcast(value: T) -> Self {
+        Lab::new(value.clone(), value.clone(), value)
     }
 }
 

@@ -202,8 +202,8 @@ pub mod ycbcr;
 pub mod test;
 
 pub use crate::color::{
-    Bounded, Color, Color3, Color4, DeviceDependentColor, Flatten, FromTuple, HomogeneousColor,
-    Invert, Lerp, PolarColor,
+    Bounded, Broadcast, Color, Color3, Color4, DeviceDependentColor, Flatten, FromTuple,
+    HomogeneousColor, Invert, Lerp, PolarColor,
 };
 
 pub use crate::alpha::{

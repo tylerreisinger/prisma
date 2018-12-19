@@ -17,8 +17,6 @@ use angle::{Angle, Deg, FromAngle, IntoAngle};
 use approx;
 use num_traits;
 use std::fmt;
-use std::mem;
-use std::slice;
 
 /// The HWB device-dependent polar color model
 ///
@@ -200,18 +198,6 @@ where
         whiteness,
         blackness
     });
-}
-
-impl<T, A> color::Flatten for Hwb<T, A>
-where
-    T: HwbBoundedChannelTraits,
-    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
-{
-    type ScalarFormat = T;
-
-    impl_color_as_slice!(T);
-    impl_color_from_slice_angular!(Hwb<T, A> {hue:AngularChannel - 0, 
-        whiteness:PosNormalBoundedChannel - 1, blackness:PosNormalBoundedChannel - 2});
 }
 
 impl<T, A> EncodableColor for Hwb<T, A>
@@ -451,13 +437,6 @@ mod test {
         let c3 = Hwb::new(Deg(360.0), -0.20, 0.55);
         assert_relative_eq!(c3.normalize(), Hwb::new(Deg(0.0), 0.0, 0.55));
         assert!(!c3.is_normalized());
-    }
-
-    #[test]
-    fn test_flatten() {
-        let c1 = Hwb::new(Turns(0.55), 0.43, 0.11);
-        assert_eq!(c1.as_slice(), &[0.55, 0.43, 0.11]);
-        assert_eq!(c1, Hwb::from_slice(c1.as_slice()));
     }
 
     #[test]

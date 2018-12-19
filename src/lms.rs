@@ -6,7 +6,7 @@
 use crate::channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar,
 };
-use crate::color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Lerp};
+use crate::color::{Bounded, Broadcast, Color, Flatten, FromTuple, HomogeneousColor, Lerp};
 use crate::convert::FromColor;
 use crate::linalg::Matrix3;
 use crate::tags::LmsTag;
@@ -167,7 +167,7 @@ where
 {
     type ChannelFormat = T;
 
-    impl_color_homogeneous_color_square!(Lms<T> {l, m, s}, chan=FreeChannel, phantom={model});
+    impl_color_homogeneous_color_square!(Lms<T> {l, m, s}, phantom={model});
 }
 
 impl<T, Model> Bounded for Lms<T, Model>
@@ -176,6 +176,14 @@ where
     Model: LmsModel<T>,
 {
     impl_color_bounded!(Lms { l, m, s }, phantom = { model });
+}
+
+impl<T, Model> Broadcast for Lms<T, Model>
+where
+    T: FreeChannelScalar,
+    Model: LmsModel<T>,
+{
+    impl_color_broadcast!(Lms<T> {l, m, s}, chan=FreeChannel, phantom={model});
 }
 
 impl<T, Model> Lerp for Lms<T, Model>
@@ -193,8 +201,6 @@ where
     T: FreeChannelScalar,
     Model: LmsModel<T>,
 {
-    type ScalarFormat = T;
-
     impl_color_as_slice!(T);
     impl_color_from_slice_square!(Lms<T> {l:FreeChannel - 0, m:FreeChannel - 1,
         s:FreeChannel - 2});

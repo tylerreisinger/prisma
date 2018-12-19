@@ -6,7 +6,8 @@ use crate::channel::{
     PosNormalChannelScalar,
 };
 use crate::color::{
-    Bounded, Color, Color3, Color4, Flatten, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor,
+    Bounded, Broadcast, Color, Color3, Color4, Flatten, FromTuple, HomogeneousColor, Invert, Lerp,
+    PolarColor,
 };
 use crate::convert::{FromColor, FromHsi, FromYCbCr};
 use crate::encoding::EncodableColor;
@@ -164,12 +165,6 @@ where
     InnerColor: Color + HomogeneousColor<ChannelFormat = T>,
 {
     type ChannelFormat = T;
-    fn broadcast(value: T) -> Self {
-        Alpha {
-            color: InnerColor::broadcast(value.clone()),
-            alpha: PosNormalBoundedChannel::new(value),
-        }
-    }
     fn clamp(self, min: T, max: T) -> Self {
         Alpha {
             color: self.color.clamp(min.clone(), max.clone()),
@@ -178,13 +173,24 @@ where
     }
 }
 
+impl<T, InnerColor> Broadcast for Alpha<T, InnerColor>
+where
+    T: PosNormalChannelScalar,
+    InnerColor: Color + HomogeneousColor<ChannelFormat = T> + Broadcast,
+{
+    fn broadcast(value: T) -> Self {
+        Alpha {
+            color: InnerColor::broadcast(value.clone()),
+            alpha: PosNormalBoundedChannel::new(value),
+        }
+    }
+}
+
 impl<T, InnerColor> Flatten for Alpha<T, InnerColor>
 where
     T: PosNormalChannelScalar,
-    InnerColor: Color + Flatten<ScalarFormat = T>,
+    InnerColor: Color + Flatten + HomogeneousColor<ChannelFormat = T>,
 {
-    type ScalarFormat = T;
-
     impl_color_as_slice!(T);
 
     fn from_slice(values: &[T]) -> Self {
@@ -355,7 +361,6 @@ pub type Lmsa<T, M> = Alpha<T, Lms<T, M>>;
 mod test {
     use super::*;
     use crate::rgb::*;
-    use angle::*;
     use approx::*;
 
     #[test]
@@ -429,10 +434,6 @@ mod test {
         let c1 = Rgba::new(Rgb::new(100u8, 50, 175), 254);
         assert_eq!(c1.as_slice(), &[100u8, 50, 175, 254]);
         assert_eq!(Rgba::from_slice(c1.as_slice()), c1);
-
-        let c2 = Hsva::new(Hsv::new(Turns(0.5f32), 0.77f32, 0.5), 0.8765);
-        assert_eq!(c2.as_slice(), &[0.5f32, 0.77, 0.5, 0.8765]);
-        assert_eq!(Hsva::from_slice(c2.as_slice()), c2);
     }
 
     #[test]

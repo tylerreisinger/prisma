@@ -5,7 +5,7 @@
 use crate::channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar, PosFreeChannel,
 };
-use crate::color::{Bounded, Color, FromTuple, Lerp};
+use crate::color::{Bounded, Broadcast, Color, FromTuple, HomogeneousColor, Lerp};
 use crate::tags::LuvTag;
 use crate::xyz::Xyz;
 #[cfg(feature = "approx")]
@@ -146,6 +146,32 @@ where
 {
     fn from_tuple(values: (T, T, T)) -> Self {
         Luv::new(values.0, values.1, values.2)
+    }
+}
+
+impl<T, W> HomogeneousColor for Luv<T, W>
+where
+    T: FreeChannelScalar,
+    W: WhitePoint<T>,
+{
+    type ChannelFormat = T;
+    fn clamp(self, min: T, max: T) -> Self {
+        Luv {
+            L: self.L.clamp(min.clone(), max.clone()),
+            u: self.u.clamp(min.clone(), max.clone()),
+            v: self.v.clamp(min, max),
+            white_point: self.white_point,
+        }
+    }
+}
+
+impl<T, W> Broadcast for Luv<T, W>
+where
+    T: FreeChannelScalar,
+    W: UnitWhitePoint<T>,
+{
+    fn broadcast(value: T) -> Self {
+        Luv::new(value.clone(), value.clone(), value)
     }
 }
 

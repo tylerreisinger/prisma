@@ -5,7 +5,7 @@ use crate::channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar,
     PosNormalBoundedChannel, PosNormalChannelScalar,
 };
-use crate::color::{Bounded, Color, Flatten, FromTuple, Lerp};
+use crate::color::{Bounded, Broadcast, Color, Flatten, FromTuple, HomogeneousColor, Lerp};
 use crate::convert::FromColor;
 use crate::tags::XyYTag;
 use crate::xyz::Xyz;
@@ -211,12 +211,31 @@ where
     impl_color_lerp_square!(XyY { x, y, Y });
 }
 
+impl<T> HomogeneousColor for XyY<T>
+where
+    T: FreeChannelScalar + PosNormalChannelScalar + num_traits::Float,
+{
+    type ChannelFormat = T;
+    impl_color_homogeneous_color_square!(XyY<T> {x, y, Y});
+}
+
+impl<T> Broadcast for XyY<T>
+where
+    T: FreeChannelScalar + PosNormalChannelScalar + num_traits::Float,
+{
+    fn broadcast(val: T) -> Self {
+        XyY {
+            x: PosNormalBoundedChannel(val),
+            y: PosNormalBoundedChannel(val),
+            Y: FreeChannel(val),
+        }
+    }
+}
+
 impl<T> Flatten for XyY<T>
 where
     T: FreeChannelScalar + PosNormalChannelScalar + num_traits::Float,
 {
-    type ScalarFormat = T;
-
     impl_color_as_slice!(T);
     impl_color_from_slice_square!(XyY<T> {x:PosNormalBoundedChannel - 0, 
         y:PosNormalBoundedChannel - 1, Y:FreeChannel - 2});

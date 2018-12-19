@@ -17,8 +17,6 @@ use approx;
 use num_traits;
 use std::f64::consts;
 use std::fmt;
-use std::mem;
-use std::slice;
 
 /// Defines methods for handling out-of-gamut transformations from Hsi to Rgb
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -196,18 +194,6 @@ where
         saturation,
         intensity
     });
-}
-
-impl<T, A> color::Flatten for Hsi<T, A>
-where
-    T: PosNormalChannelScalar + num_traits::Float,
-    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Turns<T>>,
-{
-    type ScalarFormat = T;
-
-    impl_color_as_slice!(T);
-    impl_color_from_slice_angular!(Hsi<T, A> {hue:AngularChannel - 0, 
-        saturation:PosNormalBoundedChannel - 1, intensity:PosNormalBoundedChannel - 2});
 }
 
 impl<T, A> EncodableColor for Hsi<T, A>
@@ -411,7 +397,6 @@ fn to_rgb_out_of_gamut<T, A>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::color::Flatten;
     use crate::rgb::Rgb;
     use crate::test;
     use approx::*;
@@ -429,7 +414,6 @@ mod test {
         assert_eq!(c2.hue(), Turns(0.33));
         assert_eq!(c2.saturation(), 0.62);
         assert_eq!(c2.intensity(), 0.98);
-        assert_eq!(c2.as_slice(), &[0.33, 0.62, 0.98]);
     }
 
     #[test]

@@ -8,7 +8,7 @@ use crate::channel::{
 };
 use crate::chromaticity::ChromaticityCoordinates;
 use crate::color;
-use crate::color::{Color, FromTuple, HomogeneousColor};
+use crate::color::{Broadcast, Color, FromTuple, HomogeneousColor};
 use crate::convert;
 use crate::encoding::EncodableColor;
 use crate::hsl;
@@ -43,8 +43,7 @@ use std::slice;
 /// ## Examples:
 ///
 /// ```rust
-/// // HomogeneousColor provides `broadcast`
-/// use prisma::{HomogeneousColor, Lerp, Rgb};
+/// use prisma::{Broadcast, HomogeneousColor, Lerp, Rgb};
 ///
 /// let black = Rgb::broadcast(0.0f32);
 /// let blue = Rgb::new(0, 0, 255u8);
@@ -165,8 +164,14 @@ where
 {
     type ChannelFormat = T;
 
-    impl_color_homogeneous_color_square!(Rgb<T> {red, green, blue}, 
-        chan=PosNormalBoundedChannel);
+    impl_color_homogeneous_color_square!(Rgb<T> {red, green, blue});
+}
+
+impl<T> Broadcast for Rgb<T>
+where
+    T: PosNormalChannelScalar,
+{
+    impl_color_broadcast!(Rgb<T> {red, green, blue}, chan=PosNormalBoundedChannel);
 }
 
 impl<T> color::Color3 for Rgb<T> where T: PosNormalChannelScalar {}
@@ -197,8 +202,6 @@ impl<T> color::Flatten for Rgb<T>
 where
     T: PosNormalChannelScalar,
 {
-    type ScalarFormat = T;
-
     impl_color_as_slice!(T);
     impl_color_from_slice_square!(Rgb<T> {red:PosNormalBoundedChannel - 0, 
         green:PosNormalBoundedChannel - 1, blue:PosNormalBoundedChannel - 2});

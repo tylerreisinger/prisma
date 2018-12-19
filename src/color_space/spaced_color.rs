@@ -14,9 +14,7 @@ use crate::hsi::{Hsi, HsiOutOfGamutMode};
 use crate::rgb::Rgb;
 use crate::xyz::Xyz;
 use crate::ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
-use crate::{
-    Bounded, Color, Color3, Color4, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor,
-};
+use crate::{Bounded, Broadcast, Color, Color3, Color4, FromTuple, Invert, Lerp, PolarColor};
 use angle::Angle;
 use num_traits;
 
@@ -89,7 +87,7 @@ where
 
 impl<T, C, E, S> SpacedColor<T, C, E, S>
 where
-    C: EncodableColor + HomogeneousColor,
+    C: EncodableColor + Broadcast,
     S: ColorSpace<T> + PartialEq + Clone,
     E: ColorEncoding + PartialEq,
     T: PartialEq + Clone + num_traits::Float,

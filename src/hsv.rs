@@ -18,9 +18,7 @@ use approx;
 use num_traits;
 use num_traits::cast;
 use std::fmt;
-use std::mem;
 use std::ops;
-use std::slice;
 
 /// The HSV device-dependent polar color model
 ///
@@ -177,18 +175,6 @@ where
     });
 }
 
-impl<T, A> color::Flatten for Hsv<T, A>
-where
-    T: PosNormalChannelScalar + num_traits::Float,
-    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
-{
-    type ScalarFormat = T;
-
-    impl_color_as_slice!(T);
-    impl_color_from_slice_angular!(Hsv<T, A> {hue:AngularChannel - 0, 
-        saturation:PosNormalBoundedChannel - 1, value:PosNormalBoundedChannel - 2});
-}
-
 impl<T, A> EncodableColor for Hsv<T, A>
 where
     T: PosNormalChannelScalar + num_traits::Float,
@@ -310,7 +296,6 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::color::*;
     use crate::convert::*;
     use crate::rgb;
     use angle::*;
@@ -369,13 +354,6 @@ mod test {
 
         let c2 = Hsv::new(Turns(11.25), -1.11, 1.11);
         assert_ulps_eq!(c2.normalize(), Hsv::new(Turns(0.25), 0.0, 1.0));
-    }
-
-    #[test]
-    fn test_flatten() {
-        let c1 = Hsv::new(Turns(0.5), 0.3, 0.2);
-        assert_eq!(c1.as_slice(), &[0.5, 0.3, 0.2]);
-        assert_eq!(c1, Hsv::from_slice(c1.as_slice()));
     }
 
     #[test]

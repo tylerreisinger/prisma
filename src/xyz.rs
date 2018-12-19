@@ -3,7 +3,7 @@
 use crate::channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, FreeChannelScalar, PosFreeChannel,
 };
-use crate::color::{Bounded, Color, Flatten, FromTuple, HomogeneousColor, Lerp};
+use crate::color::{Bounded, Broadcast, Color, Flatten, FromTuple, HomogeneousColor, Lerp};
 use crate::tags::XyzTag;
 #[cfg(feature = "approx")]
 use approx;
@@ -144,7 +144,14 @@ where
 {
     type ChannelFormat = T;
 
-    impl_color_homogeneous_color_square!(Xyz<T> {x, y, z}, chan=PosFreeChannel);
+    impl_color_homogeneous_color_square!(Xyz<T> {x, y, z});
+}
+
+impl<T> Broadcast for Xyz<T>
+where
+    T: FreeChannelScalar,
+{
+    impl_color_broadcast!(Xyz<T> {x, y, z}, chan=PosFreeChannel);
 }
 
 impl<T> Bounded for Xyz<T>
@@ -167,8 +174,6 @@ impl<T> Flatten for Xyz<T>
 where
     T: FreeChannelScalar,
 {
-    type ScalarFormat = T;
-
     impl_color_as_slice!(T);
     impl_color_from_slice_square!(Xyz<T> {x:PosFreeChannel - 0, y:PosFreeChannel - 1,
         z:PosFreeChannel - 2});

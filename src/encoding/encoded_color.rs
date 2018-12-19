@@ -7,9 +7,7 @@ use crate::convert::{FromColor, FromHsi, FromYCbCr};
 use crate::encoding::encode::{ColorEncoding, LinearEncoding, TranscodableColor};
 use crate::hsi::{Hsi, HsiOutOfGamutMode};
 use crate::ycbcr::{YCbCr, YCbCrModel, YCbCrOutOfGamutMode};
-use crate::{
-    Bounded, Color, Color3, Color4, FromTuple, HomogeneousColor, Invert, Lerp, PolarColor,
-};
+use crate::{Bounded, Broadcast, Color, Color3, Color4, FromTuple, Invert, Lerp, PolarColor};
 use angle::Angle;
 #[cfg(feature = "approx")]
 use approx;
@@ -107,7 +105,7 @@ where
 
 impl<C, E> EncodedColor<C, E>
 where
-    C: Color + HomogeneousColor + EncodableColor,
+    C: Color + Broadcast + EncodableColor,
     E: ColorEncoding + PartialEq,
 {
     /// Construct a new `EncodedColor` with all channels set to `value` and with `encoding`

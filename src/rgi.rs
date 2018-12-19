@@ -3,7 +3,7 @@
 use crate::channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, PosNormalBoundedChannel, PosNormalChannelScalar,
 };
-use crate::color::{Bounded, Color, Flatten, FromTuple, Lerp};
+use crate::color::{Bounded, Broadcast, Color, Flatten, FromTuple, HomogeneousColor, Lerp};
 use crate::convert::FromColor;
 use crate::encoding::EncodableColor;
 use crate::rgb::Rgb;
@@ -194,12 +194,25 @@ where
     });
 }
 
+impl<T> HomogeneousColor for Rgi<T>
+where
+    T: PosNormalChannelScalar + Float,
+{
+    type ChannelFormat = T;
+    impl_color_homogeneous_color_square!(Rgi<T> {red, green, intensity});
+}
+
+impl<T> Broadcast for Rgi<T>
+where
+    T: PosNormalChannelScalar + Float,
+{
+    impl_color_broadcast!(Rgi<T> {red, green, intensity}, chan=PosNormalBoundedChannel);
+}
+
 impl<T> Flatten for Rgi<T>
 where
     T: PosNormalChannelScalar + Float,
 {
-    type ScalarFormat = T;
-
     impl_color_as_slice!(T);
     impl_color_from_slice_square!(Rgi<T> {red:PosNormalBoundedChannel - 0, 
         green:PosNormalBoundedChannel - 1, intensity:PosNormalBoundedChannel - 2});

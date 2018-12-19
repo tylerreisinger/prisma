@@ -56,9 +56,9 @@ macro_rules! impl_ulps_eq {
 
 macro_rules! impl_color_as_slice {
     ($T: ty) => {
-        fn as_slice(&self) -> &[Self::ScalarFormat] {
+        fn as_slice(&self) -> &[Self::ChannelFormat] {
             unsafe {
-                let ptr: *const Self::ScalarFormat = mem::transmute(self);
+                let ptr: *const Self::ChannelFormat = mem::transmute(self);
                 slice::from_raw_parts(ptr, Self::num_channels() as usize)
             }
         }
@@ -74,17 +74,6 @@ macro_rules! impl_color_from_slice_square {
     ($name: ident<$T:ident> {$($fields:ident:$chan:ident - $i:expr),*}) => {
         impl_color_from_slice_square!($name<$T> {$($fields:$chan - $i),*}, phantom={});
     };
-}
-macro_rules! impl_color_from_slice_angular {
-    ($name: ident<$T:ident, $A:ident> {
-        $ang_field:ident:$ang_chan:ident - $ai:expr, $($fields:ident:$chan:ident - $i:expr),*}) => {
-        fn from_slice(vals: &[$T]) -> Self {
-            $name {
-                $ang_field: $ang_chan($A::from_angle(angle::Turns(vals[$ai].clone()))),
-                $($fields: $chan(vals[$i].clone())),*
-            }
-        }
-    }
 }
 
 macro_rules! impl_color_transform_body_channel_forward {
@@ -232,14 +221,7 @@ macro_rules! impl_color_get_hue_angular {
 }
 
 macro_rules! impl_color_homogeneous_color_square {
-    ($name:ident<$T:ident> {$($fields:ident),*}, chan=$chan:ident,
-    phantom={$($phantom:ident),*}) => {
-        fn broadcast(value: $T) -> Self {
-            $name {
-                $($fields: $chan(value.clone())),*,
-                $($phantom: PhantomData),*
-            }
-        }
+    ($name:ident<$T:ident> {$($fields:ident),*}, phantom={$($phantom:ident),*}) => {
         fn clamp(self, min: $T, max: $T) -> Self {
             $name {
                 $($fields: self.$fields.clamp(min.clone(), max.clone())),*,
@@ -247,8 +229,23 @@ macro_rules! impl_color_homogeneous_color_square {
             }
         }
     };
+    ($name:ident<$T:ident> {$($fields:ident),*}) => {
+        impl_color_homogeneous_color_square!($name<$T> {$($fields),*}, phantom={});
+    };
+}
+
+macro_rules! impl_color_broadcast {
+    ($name:ident<$T:ident> {$($fields:ident),*}, chan=$chan:ident,
+    phantom={$($phantom:ident),*}) =>
+    {
+        fn broadcast(value: $T) -> Self {
+            $name {
+                $($fields: $chan(value.clone())),*,
+                $($phantom: PhantomData),*
+            }
+        }
+    };
     ($name:ident<$T:ident> {$($fields:ident),*}, chan=$chan:ident) => {
-        impl_color_homogeneous_color_square!($name<$T> {$($fields),*},
-        chan=$chan, phantom={});
+        impl_color_broadcast!($name<$T> {$($fields),*}, chan=$chan, phantom={});
     };
 }

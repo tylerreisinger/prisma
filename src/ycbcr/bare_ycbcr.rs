@@ -4,7 +4,7 @@ use crate::channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, NormalBoundedChannel, NormalChannelScalar,
     PosNormalBoundedChannel, PosNormalChannelScalar,
 };
-use crate::color::{Bounded, Color, Flatten, FromTuple, Invert, Lerp};
+use crate::color::{Bounded, Broadcast, Color, Flatten, FromTuple, HomogeneousColor, Invert, Lerp};
 use crate::encoding::EncodableColor;
 #[cfg(feature = "approx")]
 use approx;
@@ -174,12 +174,32 @@ where
     impl_color_lerp_square!(BareYCbCr { luma, cb, cr });
 }
 
+impl<T> HomogeneousColor for BareYCbCr<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
+{
+    type ChannelFormat = T;
+
+    impl_color_homogeneous_color_square!(BareYCbCr<T> {luma, cb, cr});
+}
+
+impl<T> Broadcast for BareYCbCr<T>
+where
+    T: PosNormalChannelScalar + NormalChannelScalar,
+{
+    fn broadcast(value: T) -> Self {
+        BareYCbCr {
+            luma: PosNormalBoundedChannel(value.clone()),
+            cb: NormalBoundedChannel(value.clone()),
+            cr: NormalBoundedChannel(value.clone()),
+        }
+    }
+}
+
 impl<T> Flatten for BareYCbCr<T>
 where
     T: PosNormalChannelScalar + NormalChannelScalar,
 {
-    type ScalarFormat = T;
-
     impl_color_as_slice!(T);
     impl_color_from_slice_square!(BareYCbCr<T> {luma:PosNormalBoundedChannel - 0,
         cb:NormalBoundedChannel - 1, cr:NormalBoundedChannel - 2});

@@ -32,27 +32,27 @@ pub trait PolarColor: Color {
     type Cartesian;
 }
 
-// TODO: This should inherit HomogeneousColor and remove ScalarFormat
 /// A color that can be represented as a slice without any conversion
-pub trait Flatten: Color {
-    /// The scalar type of each channel
-    type ScalarFormat;
+pub trait Flatten: HomogeneousColor {
     /// Return `Self` constructed from `values`
-    fn from_slice(values: &[Self::ScalarFormat]) -> Self;
+    fn from_slice(values: &[Self::ChannelFormat]) -> Self;
     /// Return a slice representation of `Self`
-    fn as_slice(&self) -> &[Self::ScalarFormat];
+    fn as_slice(&self) -> &[Self::ChannelFormat];
 }
 
-// TODO: Move broadcast to its own trait, and implement this for the various wrappers that take extra args
 /// A color only having one type of channel
 pub trait HomogeneousColor: Color {
     /// The scalar type of each channel
     type ChannelFormat;
 
-    /// Construct `Self` with each channel set to `value`
-    fn broadcast(value: Self::ChannelFormat) -> Self;
     /// Clamp the value of each channel between `min` and `max`
     fn clamp(self, min: Self::ChannelFormat, max: Self::ChannelFormat) -> Self;
+}
+
+/// A color that can have all of its channels set from a single value
+pub trait Broadcast: HomogeneousColor {
+    /// Construct `Self` with each channel set to `value`
+    fn broadcast(value: Self::ChannelFormat) -> Self;
 }
 
 /// A color with three channels

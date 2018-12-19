@@ -17,9 +17,7 @@ use angle::{Angle, Deg, FromAngle, IntoAngle};
 use approx;
 use num_traits;
 use std::fmt;
-use std::mem;
 use std::ops;
-use std::slice;
 
 //TODO: Consider adding an `HCL` constructor and conversion
 /// The HSL device-dependent polar color model
@@ -178,18 +176,6 @@ where
     });
 }
 
-impl<T, A> color::Flatten for Hsl<T, A>
-where
-    T: PosNormalChannelScalar + num_traits::Float,
-    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
-{
-    type ScalarFormat = T;
-
-    impl_color_as_slice!(T);
-    impl_color_from_slice_angular!(Hsl<T, A> {hue:AngularChannel - 0, 
-        saturation:PosNormalBoundedChannel - 1, lightness:PosNormalBoundedChannel - 2});
-}
-
 impl<T, A> EncodableColor for Hsl<T, A>
 where
     T: PosNormalChannelScalar + num_traits::Float,
@@ -342,7 +328,6 @@ mod test {
         assert_eq!(c2.hue(), Rad(consts::PI));
         assert_eq!(c2.saturation(), 0.2);
         assert_eq!(c2.lightness(), 0.90);
-        assert_eq!(c2.as_slice(), &[consts::PI, 0.20f32, 0.90]);
     }
 
     #[test]
