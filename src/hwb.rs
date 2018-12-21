@@ -38,14 +38,9 @@ pub struct Hwb<T, A = Deg<T>> {
     blackness: PosNormalBoundedChannel<T>,
 }
 
-/// Combination of traits used to bound `T` in `Hwb`
-pub trait HwbBoundedChannelTraits: PosNormalChannelScalar + num_traits::Float {}
-
-impl<T> HwbBoundedChannelTraits for T where T: PosNormalChannelScalar + num_traits::Float {}
-
 impl<T, A> Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar,
 {
     /// Construct a `Hwb` instance from hue, whiteness and blackness
@@ -106,7 +101,7 @@ where
 
 impl<T, A> Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar,
 {
     /// Returns whether the whiteness + blackness is outside the cylinder (greater than 1)
@@ -133,7 +128,7 @@ where
 
 impl<T, A> Color for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar,
 {
     type Tag = HwbTag;
@@ -149,7 +144,7 @@ where
 
 impl<T, A> FromTuple for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar,
 {
     fn from_tuple(values: Self::ChannelsTuple) -> Self {
@@ -159,7 +154,7 @@ where
 
 impl<T, A> color::PolarColor for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar,
 {
     type Angular = A;
@@ -168,7 +163,7 @@ where
 
 impl<T, A> color::Invert for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar,
 {
     impl_color_invert!(Hwb {
@@ -180,7 +175,7 @@ where
 
 impl<T, A> color::Lerp for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits + color::Lerp,
+    T: PosNormalChannelScalar + num_traits::Float + color::Lerp,
     A: AngularChannelScalar + color::Lerp,
 {
     type Position = A::Position;
@@ -190,7 +185,7 @@ where
 
 impl<T, A> color::Bounded for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar,
 {
     impl_color_bounded!(Hwb {
@@ -202,7 +197,7 @@ where
 
 impl<T, A> EncodableColor for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<angle::Turns<T>>,
 {
 }
@@ -210,7 +205,7 @@ where
 #[cfg(feature = "approx")]
 impl<T, A> approx::AbsDiffEq for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits + approx::AbsDiffEq<Epsilon = A::Epsilon>,
+    T: PosNormalChannelScalar + num_traits::Float + approx::AbsDiffEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::AbsDiffEq,
     A::Epsilon: Clone + num_traits::Float,
 {
@@ -219,7 +214,7 @@ where
 #[cfg(feature = "approx")]
 impl<T, A> approx::RelativeEq for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits + approx::RelativeEq<Epsilon = A::Epsilon>,
+    T: PosNormalChannelScalar + num_traits::Float + approx::RelativeEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::RelativeEq,
     A::Epsilon: Clone + num_traits::Float,
 {
@@ -228,7 +223,7 @@ where
 #[cfg(feature = "approx")]
 impl<T, A> approx::UlpsEq for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits + approx::UlpsEq<Epsilon = A::Epsilon>,
+    T: PosNormalChannelScalar + num_traits::Float + approx::UlpsEq<Epsilon = A::Epsilon>,
     A: AngularChannelScalar + approx::UlpsEq,
     A::Epsilon: Clone + num_traits::Float,
 {
@@ -237,7 +232,7 @@ where
 
 impl<T, A> Default for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits + num_traits::Zero,
+    T: PosNormalChannelScalar + num_traits::Float + num_traits::Zero,
     A: AngularChannelScalar + num_traits::Zero,
 {
     impl_color_default!(Hwb {
@@ -249,7 +244,7 @@ where
 
 impl<T, A> fmt::Display for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits + fmt::Display,
+    T: PosNormalChannelScalar + num_traits::Float + fmt::Display,
     A: AngularChannelScalar + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -263,7 +258,7 @@ where
 
 impl<T, A> convert::GetHue for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar,
 {
     impl_color_get_hue_angular!(Hwb);
@@ -271,7 +266,7 @@ where
 
 impl<T, A> convert::GetChroma for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar,
 {
     type ChromaType = T;
@@ -283,7 +278,7 @@ where
 
 impl<T, A> convert::FromColor<Hwb<T, A>> for rgb::Rgb<T>
 where
-    T: HwbBoundedChannelTraits,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar,
 {
     fn from_color(from: &Hwb<T, A>) -> Self {
@@ -328,7 +323,7 @@ where
 
 impl<T, A> convert::FromColor<hsv::Hsv<T, A>> for Hwb<T, A>
 where
-    T: HwbBoundedChannelTraits + num_traits::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar,
 {
     fn from_color(from: &hsv::Hsv<T, A>) -> Self {
@@ -341,7 +336,7 @@ where
 
 impl<T, A> convert::FromColor<Hwb<T, A>> for hsv::Hsv<T, A>
 where
-    T: HwbBoundedChannelTraits + num_traits::Float,
+    T: PosNormalChannelScalar + num_traits::Float,
     A: AngularChannelScalar,
 {
     fn from_color(from: &Hwb<T, A>) -> Self {

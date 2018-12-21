@@ -268,7 +268,7 @@ where
 impl<T, A> FromColor<Rgb<T>> for Hsi<T, A>
 where
     T: PosNormalChannelScalar + num_traits::Float,
-    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>> + fmt::Display,
+    A: AngularChannelScalar + Angle<Scalar = T> + FromAngle<Rad<T>>,
 {
     fn from_color(from: &Rgb<T>) -> Self {
         let coords = from.chromaticity_coordinates();

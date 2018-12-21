@@ -216,7 +216,7 @@ pub use crate::ehsi::eHsi;
 pub use crate::hsi::{Hsi, HsiOutOfGamutMode};
 pub use crate::hsl::Hsl;
 pub use crate::hsv::Hsv;
-pub use crate::hwb::{Hwb, HwbBoundedChannelTraits};
+pub use crate::hwb::Hwb;
 pub use crate::lab::Lab;
 pub use crate::lchab::Lchab;
 pub use crate::lchuv::Lchuv;
