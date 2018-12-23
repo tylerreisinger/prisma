@@ -181,6 +181,7 @@ mod alpha;
 mod chromaticity;
 mod color;
 mod convert;
+mod from;
 
 mod ehsi;
 mod hsi;
