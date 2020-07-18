@@ -3,6 +3,12 @@ name = "prisma"
 version = "0.1.0"
 authors = ["Tyler Reisinger <reisinger.tyler@gmail.com>"]
 edition = "2018"
+license = "MIT"
+description = "A color library for both simple and complex color manipulation, intending to be the go to rust color library for most tasks. It can handle conversion between a large number of color models, and can convert into the CIE device independent color spaces. Prisma tries to be easy to use while encouraging correct transformations, making mathematically correct conversions easy without knowing the whole field of color science."
+readme = "README.md"
+repository = "https://github.com/tylerreisinger/prisma"
+keywords = ["color", "graphics", "rgb", "hsv", "CIE"]
+categories = ["computer-vision", "graphics"]
 
 [dependencies]
 num-traits = "^0.2"
