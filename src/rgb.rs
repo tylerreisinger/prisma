@@ -26,6 +26,7 @@ use std::slice;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// The `Rgb` device-dependent cartesian color model.
 ///
 /// `Rgb<T>` has three primaries: red, green blue, which are always positive and in the normalized
@@ -568,5 +569,15 @@ mod test {
             Rgb::new(0.60f64, 0.01, 0.99),
             epsilon = 1e-4
         );
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        let color = Rgb::new(0.3f32, 0.8, 0.1);
+        let serialized = serde_json::to_string(&color).unwrap();
+        assert_eq!(serialized, r#"{"red":0.3,"green":0.8,"blue":0.1}"#);
+        let deserialized = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(color, deserialized);
     }
 }

@@ -42,6 +42,7 @@ pub trait LmsModel<T>: Clone + PartialEq {
 /// in the future if a use case arises.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Lms<T, Model> {
     l: FreeChannel<T>,
     m: FreeChannel<T>,
@@ -459,5 +460,15 @@ mod test {
         assert_relative_eq!(c1.color_cast(), c1);
         assert_relative_eq!(c1.color_cast(), LmsCam2002::new(0.25f32, 0.50f32, 0.75f32));
         assert_relative_eq!(c1.color_cast::<f32>().color_cast(), c1);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        let color = LmsCam2002::new(0.25, 0.50, 0.75);
+        let serialized = serde_json::to_string(&color).unwrap();
+        assert_eq!(serialized, r#"{"l":0.25,"m":0.5,"s":0.75,"model":null}"#);
+        let deserialized = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(color, deserialized);
     }
 }

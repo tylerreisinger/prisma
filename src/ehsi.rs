@@ -36,6 +36,7 @@ use std::fmt;
 /// eHSI is fully defined over the cylinder, and is generally visually better at adjusting intensity.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct eHsi<T, A = Deg<T>> {
     hue: AngularChannel<A>,
     saturation: PosNormalBoundedChannel<T>,
@@ -515,5 +516,18 @@ mod test {
             eHsi::new(Turns(0.6666666), 0.22, 0.81),
             epsilon = 1e-5
         );
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        let color = eHsi::new(Deg(120.0), 0.5, 0.5);
+        let serialized = serde_json::to_string(&color).unwrap();
+        assert_eq!(
+            serialized,
+            r#"{"hue":120.0,"saturation":0.5,"intensity":0.5}"#
+        );
+        let deserialized: eHsi<f32> = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialized, color);
     }
 }
