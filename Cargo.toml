@@ -12,7 +12,7 @@ angular-units = "^0.2.4"
 [features]
 default = ["approx"]
 
-[dev.dependencies]
+[dev-dependencies]
 bencher = "0.1.2"
 approx = "0.3.0"
 
