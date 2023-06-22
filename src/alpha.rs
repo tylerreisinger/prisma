@@ -44,10 +44,10 @@ where
     InnerColor: Color,
 {
     /// Construct an `Alpha` object from a color and an alpha value
-    pub fn new(color: InnerColor, alpha: T) -> Self {
+    pub const fn new(color: InnerColor, alpha: T) -> Self {
         Alpha {
             color,
-            alpha: PosNormalBoundedChannel::new(alpha),
+            alpha: PosNormalBoundedChannel::new_const(alpha),
         }
     }
     /// Break apart an `Alpha` into the inner color and alpha channel value

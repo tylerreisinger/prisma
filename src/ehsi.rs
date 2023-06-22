@@ -1,8 +1,8 @@
 //! The eHSI device-dependent polar color model
 
 use crate::channel::{
-    AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
-    PosNormalBoundedChannel, PosNormalChannelScalar,
+    AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, PosNormalBoundedChannel,
+    PosNormalChannelScalar,
 };
 use crate::color;
 use crate::color::{Bounded, Color, FromTuple, Invert, Lerp, PolarColor};
@@ -48,11 +48,11 @@ where
     A: AngularChannelScalar + Angle<Scalar = T>,
 {
     /// Construct an eHsi instance from hue, saturation and intensity.
-    pub fn new(hue: A, saturation: T, intensity: T) -> Self {
+    pub const fn new(hue: A, saturation: T, intensity: T) -> Self {
         eHsi {
             hue: AngularChannel::new(hue),
-            saturation: PosNormalBoundedChannel::new(saturation),
-            intensity: PosNormalBoundedChannel::new(intensity),
+            saturation: PosNormalBoundedChannel::new_const(saturation),
+            intensity: PosNormalBoundedChannel::new_const(intensity),
         }
     }
 

@@ -16,10 +16,25 @@ pub struct PosFreeChannelTag;
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct PosFreeChannel<T>(pub T);
+
+impl<T> PosFreeChannel<T> {
+    /// Construct a new `PosFreeChannel`
+    pub const fn new_const(val: T) -> Self {
+        PosFreeChannel(val)
+    }
+}
+
 /// A free channel with no constraints
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct FreeChannel<T>(pub T);
+
+impl<T> FreeChannel<T> {
+    /// Construct a new `PosFreeChannel`
+    pub const fn new_const(val: T) -> Self {
+        FreeChannel(val)
+    }
+}
 
 impl<T> ColorChannel for PosFreeChannel<T>
 where

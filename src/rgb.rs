@@ -63,11 +63,11 @@ where
     T: PosNormalChannelScalar,
 {
     /// Construct a new `Rgb` instance with the given channel values
-    pub fn new(red: T, green: T, blue: T) -> Self {
+    pub const fn new(red: T, green: T, blue: T) -> Self {
         Rgb {
-            red: PosNormalBoundedChannel::new(red),
-            green: PosNormalBoundedChannel::new(green),
-            blue: PosNormalBoundedChannel::new(blue),
+            red: PosNormalBoundedChannel::new_const(red),
+            green: PosNormalBoundedChannel::new_const(green),
+            blue: PosNormalBoundedChannel::new_const(blue),
         }
     }
 

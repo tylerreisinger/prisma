@@ -1,8 +1,8 @@
 //! The HSL device-dependent polar color model
 
 use crate::channel::{
-    AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, ColorChannel,
-    PosNormalBoundedChannel, PosNormalChannelScalar,
+    AngularChannel, AngularChannelScalar, ChannelCast, ChannelFormatCast, PosNormalBoundedChannel,
+    PosNormalChannelScalar,
 };
 use crate::color;
 use crate::color::{Color, FromTuple};
@@ -52,11 +52,11 @@ where
     A: AngularChannelScalar,
 {
     /// Construct an `Hsl` instance from hue, saturation and lightness
-    pub fn new(hue: A, saturation: T, lightness: T) -> Self {
+    pub const fn new(hue: A, saturation: T, lightness: T) -> Self {
         Hsl {
             hue: AngularChannel::new(hue),
-            saturation: PosNormalBoundedChannel::new(saturation),
-            lightness: PosNormalBoundedChannel::new(lightness),
+            saturation: PosNormalBoundedChannel::new_const(saturation),
+            lightness: PosNormalBoundedChannel::new_const(lightness),
         }
     }
 

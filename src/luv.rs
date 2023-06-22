@@ -41,12 +41,12 @@ where
     ///
     /// Unlike `new_with_whitepoint`, `new` constructs a default instance of a [`UnitWhitePoint`](white_point/trait.UnitWhitePoint.html).
     /// It is only valid when `W` is a `UnitWhitePoint`.
-    pub fn new(L: T, u: T, v: T) -> Self {
+    pub const fn new(L: T, u: T, v: T) -> Self {
         Luv {
-            L: PosFreeChannel::new(L),
-            u: FreeChannel::new(u),
-            v: FreeChannel::new(v),
-            white_point: W::default(),
+            L: PosFreeChannel::new_const(L),
+            u: FreeChannel::new_const(u),
+            v: FreeChannel::new_const(v),
+            white_point: W::DEFAULT,
         }
     }
 }
