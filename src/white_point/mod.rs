@@ -27,7 +27,10 @@ pub trait WhitePoint<T>: Clone + PartialEq {
 }
 
 /// A `WhitePoint` which carries no data
-pub trait UnitWhitePoint<T>: WhitePoint<T> + Default + Copy {}
+pub trait UnitWhitePoint<T>: WhitePoint<T> + Default + Copy {
+    /// The default value for this white point (const function friendly)
+    const DEFAULT: Self;
+}
 
 impl<'a, T, U> WhitePoint<T> for &'a U
 where

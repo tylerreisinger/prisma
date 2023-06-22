@@ -49,11 +49,11 @@ where
     A: AngularChannelScalar,
 {
     /// Construct a `Hwb` instance from hue, whiteness and blackness
-    pub fn new(hue: A, whiteness: T, blackness: T) -> Self {
+    pub const fn new(hue: A, whiteness: T, blackness: T) -> Self {
         Hwb {
             hue: AngularChannel::new(hue),
-            whiteness: PosNormalBoundedChannel::new(whiteness),
-            blackness: PosNormalBoundedChannel::new(blackness),
+            whiteness: PosNormalBoundedChannel::new_const(whiteness),
+            blackness: PosNormalBoundedChannel::new_const(blackness),
         }
     }
 

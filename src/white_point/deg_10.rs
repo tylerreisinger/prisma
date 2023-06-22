@@ -30,7 +30,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for A where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for A
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = A;
+}
 
 /// {obsolete} Direct sunlight at noon.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
@@ -56,7 +61,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for B where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for B
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = B;
+}
 /// {obsolete} Average / North sky Daylight.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct C;
@@ -81,7 +91,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for C where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for C
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = C;
+}
 /// Horizon Light. ICC profile PCS.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct D50;
@@ -106,7 +121,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for D50 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for D50
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = D50;
+}
 /// Mid-morning / Mid-afternoon Daylight.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct D55;
@@ -131,7 +151,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for D55 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for D55
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = D55;
+}
 /// Noon Daylight: Television, sRGB color space.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct D65;
@@ -156,7 +181,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for D65 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for D65
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = D65;
+}
 /// North sky Daylight.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct D75;
@@ -181,7 +211,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for D75 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for D75
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = D75;
+}
 /// Equal energy.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct E;
@@ -206,7 +241,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for E where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for E
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = E;
+}
 /// Daylight Fluorescent.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct F1;
@@ -231,7 +271,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for F1 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for F1
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = F1;
+}
 /// Cool White Fluorescent.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct F2;
@@ -256,7 +301,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for F2 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for F2
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = F2;
+}
 /// White Fluorescent.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct F3;
@@ -281,7 +331,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for F3 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for F3
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = F3;
+}
 /// Warm White Fluorescent.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct F4;
@@ -306,7 +361,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for F4 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for F4
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = F4;
+}
 /// Daylight Fluorescent.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct F5;
@@ -331,7 +391,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for F5 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for F5
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = F5;
+}
 /// Lite White Fluorescent.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct F6;
@@ -356,7 +421,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for F6 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for F6
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = F6;
+}
 /// D65 simulator, Daylight simulator.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct F7;
@@ -381,7 +451,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for F7 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for F7
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = F7;
+}
 /// D50 simulator, Sylvania F40 Design 50.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct F8;
@@ -406,7 +481,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for F8 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for F8
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = F8;
+}
 /// Cool White Deluxe Fluorescent.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct F9;
@@ -431,7 +511,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for F9 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for F9
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = F9;
+}
 /// Philips TL85, Ultralume 50.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct F10;
@@ -456,7 +541,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for F10 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for F10
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = F10;
+}
 /// Philips TL84, Ultralume 40.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct F11;
@@ -481,7 +571,12 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for F11 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for F11
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = F11;
+}
 /// Philips TL83, Ultralume 30.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub struct F12;
@@ -506,4 +601,9 @@ where
         )
     }
 }
-impl<T> UnitWhitePoint<T> for F12 where T: Float + FreeChannelScalar + PosNormalChannelScalar {}
+impl<T> UnitWhitePoint<T> for F12
+where
+    T: Float + FreeChannelScalar + PosNormalChannelScalar,
+{
+    const DEFAULT: Self = F12;
+}
