@@ -487,7 +487,7 @@ mod test {
         let test_data = test::build_hs_test_data();
 
         for item in test_data.iter() {
-            let hsi = eHsi::from_color(&item.rgb);
+            let hsi = eHsi::<f32>::from_color(&item.rgb);
             if hsi.is_same_as_hsi() {
                 println!("{}; {}; {}", hsi, item.hsi, item.rgb);
                 assert_relative_eq!(hsi.hue(), item.hsi.hue(), epsilon = 1e-1);
