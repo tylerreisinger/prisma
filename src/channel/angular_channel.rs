@@ -17,6 +17,7 @@ pub struct AngularChannelTag;
 /// A channel that is represented by an angle
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AngularChannel<T>(pub T);
 
 impl<T> AngularChannel<T>

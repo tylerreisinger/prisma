@@ -25,6 +25,7 @@ use crate::white_point::{UnitWhitePoint, WhitePoint};
 /// Like `Lab`, `Luv` has a polar representation: [`Lchuv`](struct.Lchuv.html).
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Luv<T, W> {
     L: PosFreeChannel<T>,
     u: FreeChannel<T>,
@@ -472,5 +473,18 @@ mod test {
             epsilon = 1e-5
         );
         assert_relative_eq!(c1.color_cast::<f32>().color_cast(), c1, epsilon = 1e-5);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        let color = Luv::new(0.3, 0.8, 0.1);
+        let serialized = serde_json::to_string(&color).unwrap();
+        assert_eq!(
+            serialized,
+            r#"{"L":0.3,"u":0.8,"v":0.1,"white_point":"D65"}"#
+        );
+        let deserialized: Luv<f32, D65> = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialized, color);
     }
 }

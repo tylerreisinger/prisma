@@ -32,6 +32,7 @@ use std::fmt;
 /// transformation and distortion.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Hwb<T, A = Deg<T>> {
     hue: AngularChannel<A>,
     whiteness: PosNormalBoundedChannel<T>,
@@ -532,5 +533,18 @@ mod test {
             Hwb::new(Turns(0.3333), 0.5, 0.3),
             epsilon = 1e-3
         );
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        let c1 = Hwb::new(Deg(120.0_f32), 0.5_f32, 0.3);
+        let serialized = serde_json::to_string(&c1).unwrap();
+        assert_eq!(
+            serialized,
+            r#"{"hue":120.0,"whiteness":0.5,"blackness":0.3}"#
+        );
+        let deserialized: Hwb<f32> = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialized, c1);
     }
 }

@@ -1,6 +1,5 @@
 //! The CIELAB perceptually uniform device-independent color space
 #![allow(clippy::many_single_char_names)]
-
 #![allow(non_snake_case)]
 use crate::channel::{
     ChannelCast, ChannelFormatCast, ColorChannel, FreeChannel, FreeChannelScalar, PosFreeChannel,
@@ -29,6 +28,7 @@ use std::fmt;
 /// and is generally easier to reason about.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Lab<T, W> {
     L: PosFreeChannel<T>,
     a: FreeChannel<T>,
@@ -441,5 +441,18 @@ mod test {
         assert_relative_eq!(c1.color_cast(), c1);
         assert_relative_eq!(c1.color_cast(), Lab::new(30.0f32, -50.0, 76.0));
         assert_relative_eq!(c1.color_cast::<f32>().color_cast(), c1);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        let c1 = Lab::<_, D65>::new(30.0, -50.0, 76.0);
+        let serialized = serde_json::to_string(&c1).unwrap();
+        assert_eq!(
+            serialized,
+            r#"{"L":30.0,"a":-50.0,"b":76.0,"white_point":"D65"}"#
+        );
+        let deserialized: Lab<f32, D65> = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialized, c1.color_cast());
     }
 }

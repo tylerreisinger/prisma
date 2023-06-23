@@ -20,10 +20,12 @@ pub struct NormalChannelTag;
 /// A channel bounded between 0 and a maximum value
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PosNormalBoundedChannel<T>(pub T);
 /// A channel bounded between a minimum and a maximum value
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NormalBoundedChannel<T>(pub T);
 
 macro_rules! impl_bounded_channel_type {

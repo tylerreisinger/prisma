@@ -33,6 +33,7 @@ use crate::{eHsi, Hsl, Hsv, Hwb, Lab, Lchab, Lchuv, Luv, Rgb, Rgi, XyY, Xyz};
 /// underlying color in many situations.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Alpha<T, InnerColor> {
     color: InnerColor,
     alpha: PosNormalBoundedChannel<T>,
@@ -447,5 +448,18 @@ mod test {
 
         c1.set_red(100);
         assert_eq!(c1.red(), 100);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        let color = Rgba::new(Rgb::new(50, 250, 0u8), 100u8);
+        let serialized = serde_json::to_string(&color).unwrap();
+        assert_eq!(
+            serialized,
+            r#"{"color":{"red":50,"green":250,"blue":0},"alpha":100}"#
+        );
+        let deserialized: Rgba<u8> = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialized, color);
     }
 }

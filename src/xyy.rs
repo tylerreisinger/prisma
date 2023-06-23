@@ -52,6 +52,7 @@ use std::slice;
 /// reference white point, this can uniquely define a RGB space.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct XyY<T> {
     x: PosNormalBoundedChannel<T>,
     y: PosNormalBoundedChannel<T>,
@@ -515,5 +516,15 @@ mod test {
         assert_relative_eq!(c1.color_cast(), c1);
         assert_relative_eq!(c1.color_cast::<f32>().color_cast(), c1, epsilon = 1e-6);
         assert_relative_eq!(c1.color_cast(), XyY::new(0.5f32, 0.2, 1.0), epsilon = 1e-6);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        let color = XyY::new(0.3, 0.4, 0.1);
+        let serialized = serde_json::to_string(&color).unwrap();
+        assert_eq!(serialized, r#"{"x":0.3,"y":0.4,"Y":0.1}"#);
+        let deserialized = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(color, deserialized);
     }
 }

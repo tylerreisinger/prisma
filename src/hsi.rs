@@ -48,6 +48,7 @@ pub enum HsiOutOfGamutMode {
 /// original HSI model.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Hsi<T, A = Deg<T>> {
     hue: AngularChannel<A>,
     saturation: PosNormalBoundedChannel<T>,
@@ -503,5 +504,18 @@ mod test {
             epsilon = 1e-6
         );
         assert_relative_eq!(c1.color_cast(), c1, epsilon = 1e-6);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        let c1 = Hsi::new(Deg(120.0), 0.53, 0.94);
+        let serialized = serde_json::to_string(&c1).unwrap();
+        assert_eq!(
+            serialized,
+            r#"{"hue":120.0,"saturation":0.53,"intensity":0.94}"#
+        );
+        let deserialize: Hsi<f32, Deg<f32>> = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialize, c1);
     }
 }

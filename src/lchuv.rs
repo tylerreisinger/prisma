@@ -33,6 +33,7 @@ use std::fmt;
 /// for many values which are not bounded by a simple geometric object.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Lchuv<T, W, A = Deg<T>> {
     L: PosFreeChannel<T>,
     chroma: PosFreeChannel<T>,
@@ -452,5 +453,18 @@ mod test {
             Lchuv::new(88.0f32, 31.0f32, Turns(0.5f32))
         );
         assert_relative_eq!(c1.color_cast::<f32, Rad<f32>>().color_cast(), c1);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        let color = Lchuv::new(88.0, 31.0, Deg(180.0));
+        let serialized = serde_json::to_string(&color).unwrap();
+        assert_eq!(
+            serialized,
+            r#"{"L":88.0,"chroma":31.0,"hue":180.0,"white_point":"D65"}"#
+        );
+        let deserialized: Lchuv<f32, D65, Deg<f32>> = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialized, color)
     }
 }

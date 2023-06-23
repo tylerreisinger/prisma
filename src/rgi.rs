@@ -43,6 +43,7 @@ use std::slice;
 /// RGB, unlike the sometimes used `rg` model.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Rgi<T> {
     red: PosNormalBoundedChannel<T>,
     green: PosNormalBoundedChannel<T>,
@@ -466,5 +467,15 @@ mod test {
         assert_relative_eq!(c1.color_cast(), c1);
         assert_relative_eq!(c1.color_cast::<f64>().color_cast(), c1);
         assert_relative_eq!(c1.color_cast(), Rgi::new(0.6, 0.2, 0.9), epsilon = 1e-6);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        let c1 = Rgi::new(0.6f32, 0.2, 0.9);
+        let serialized = serde_json::to_string(&c1).unwrap();
+        assert_eq!(serialized, r#"{"red":0.6,"green":0.2,"intensity":0.9}"#);
+        let deserialized = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(c1, deserialized);
     }
 }
