@@ -40,6 +40,7 @@ use std::ops;
 /// [Hsi](../hsi/struct.Hsi.html).
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Hsl<T, A = Deg<T>> {
     hue: AngularChannel<A>,
     saturation: PosNormalBoundedChannel<T>,
@@ -382,5 +383,18 @@ mod test {
             c1,
             epsilon = 1e-7
         );
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serialization() {
+        let c1 = Hsl::new(Deg(90.0), 0.23, 0.45);
+        let serialized = serde_json::to_string(&c1).unwrap();
+        assert_eq!(
+            serialized,
+            r#"{"hue":90.0,"saturation":0.23,"lightness":0.45}"#
+        );
+        let deserialized: Hsl<f32, Deg<f32>> = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialized, c1);
     }
 }

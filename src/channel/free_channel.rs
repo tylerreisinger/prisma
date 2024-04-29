@@ -15,6 +15,7 @@ pub struct PosFreeChannelTag;
 /// A free channel that only takes on positive values
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PosFreeChannel<T>(pub T);
 
 impl<T> PosFreeChannel<T> {
@@ -27,6 +28,7 @@ impl<T> PosFreeChannel<T> {
 /// A free channel with no constraints
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FreeChannel<T>(pub T);
 
 impl<T> FreeChannel<T> {

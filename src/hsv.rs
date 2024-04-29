@@ -39,6 +39,7 @@ use std::ops;
 /// [Hsi](../hsi/struct.Hsi.html).
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Hsv<T, A = Deg<T>> {
     hue: AngularChannel<A>,
     saturation: PosNormalBoundedChannel<T>,
@@ -412,5 +413,15 @@ mod test {
 
         let c3 = Hsv::new(Rad(2.0), 0.88, 0.66);
         assert_relative_eq!(c3.color_cast(), c3);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        let color = Hsv::new(Deg(180.0_f32), 0.5_f32, 0.3);
+        let serialized = serde_json::to_string(&color).unwrap();
+        assert_eq!(serialized, r#"{"hue":180.0,"saturation":0.5,"value":0.3}"#);
+        let deserialized: Hsv<f32> = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialized, color);
     }
 }

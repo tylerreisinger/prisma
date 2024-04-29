@@ -5,9 +5,14 @@ use crate::white_point::{UnitWhitePoint, WhitePoint};
 use crate::xyy::XyY;
 use crate::xyz::Xyz;
 use num_traits::{cast, Float};
+#[cfg(feature = "serde")]
+use serde_unit_struct::{
+    Deserialize_unit_struct as DeserializeName, Serialize_unit_struct as SerializeName,
+};
 
 /// Incandescent / Tungsten.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct A;
 impl<T> WhitePoint<T> for A
 where
@@ -39,6 +44,7 @@ where
 
 /// {obsolete} Direct sunlight at noon.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct B;
 impl<T> WhitePoint<T> for B
 where
@@ -70,6 +76,7 @@ where
 
 /// {obsolete} Average / North sky Daylight.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct C;
 impl<T> WhitePoint<T> for C
 where
@@ -101,6 +108,7 @@ where
 
 /// Horizon Light. ICC profile PCS.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct D50;
 impl<T> WhitePoint<T> for D50
 where
@@ -132,6 +140,7 @@ where
 
 /// Mid-morning / Mid-afternoon Daylight.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct D55;
 impl<T> WhitePoint<T> for D55
 where
@@ -163,6 +172,7 @@ where
 
 /// Noon Daylight: Television, sRGB color space.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct D65;
 impl<T> WhitePoint<T> for D65
 where
@@ -194,6 +204,7 @@ where
 
 /// North sky Daylight.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct D75;
 impl<T> WhitePoint<T> for D75
 where
@@ -225,6 +236,7 @@ where
 
 /// Equal energy.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct E;
 impl<T> WhitePoint<T> for E
 where
@@ -256,6 +268,7 @@ where
 
 /// Daylight Fluorescent.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct F1;
 impl<T> WhitePoint<T> for F1
 where
@@ -287,6 +300,7 @@ where
 
 /// Cool White Fluorescent.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct F2;
 impl<T> WhitePoint<T> for F2
 where
@@ -318,6 +332,7 @@ where
 
 /// White Fluorescent.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct F3;
 impl<T> WhitePoint<T> for F3
 where
@@ -349,6 +364,7 @@ where
 
 /// Warm White Fluorescent.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct F4;
 impl<T> WhitePoint<T> for F4
 where
@@ -380,6 +396,7 @@ where
 
 /// Daylight Fluorescent.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct F5;
 impl<T> WhitePoint<T> for F5
 where
@@ -411,6 +428,7 @@ where
 
 /// Lite White Fluorescent.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct F6;
 impl<T> WhitePoint<T> for F6
 where
@@ -442,6 +460,7 @@ where
 
 /// D65 simulator, Daylight simulator.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct F7;
 impl<T> WhitePoint<T> for F7
 where
@@ -473,6 +492,7 @@ where
 
 /// D50 simulator, Sylvania F40 Design 50.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct F8;
 impl<T> WhitePoint<T> for F8
 where
@@ -504,6 +524,7 @@ where
 
 /// Cool White Deluxe Fluorescent.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct F9;
 impl<T> WhitePoint<T> for F9
 where
@@ -535,6 +556,7 @@ where
 
 /// Philips TL85, Ultralume 50.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct F10;
 impl<T> WhitePoint<T> for F10
 where
@@ -566,6 +588,7 @@ where
 
 /// Philips TL84, Ultralume 40.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct F11;
 impl<T> WhitePoint<T> for F11
 where
@@ -597,6 +620,7 @@ where
 
 /// Philips TL83, Ultralume 30.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+#[cfg_attr(feature = "serde", derive(DeserializeName, SerializeName))]
 pub struct F12;
 impl<T> WhitePoint<T> for F12
 where

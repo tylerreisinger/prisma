@@ -54,6 +54,7 @@ use std::slice;
 /// vision, the $`2^{\circ}`$ standard observer is still much more widely used in practice.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Xyz<T> {
     x: PosFreeChannel<T>,
     y: PosFreeChannel<T>,
@@ -286,4 +287,13 @@ mod test {
         assert_relative_eq!(c1.color_cast(), Xyz::new(0.5f32, 1.0, 0.8));
     }
 
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        let color = Xyz::new(0.3, 0.8, 0.1);
+        let serialized = serde_json::to_string(&color).unwrap();
+        assert_eq!(serialized, r#"{"x":0.3,"y":0.8,"z":0.1}"#);
+        let deserialized = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(color, deserialized);
+    }
 }
