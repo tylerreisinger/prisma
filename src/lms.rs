@@ -72,11 +72,11 @@ where
     Model: LmsModel<T>,
 {
     /// Construct an `LMS` instance from `l`, `m` and `s`
-    pub fn new(l: T, m: T, s: T) -> Self {
+    pub const fn new(l: T, m: T, s: T) -> Self {
         Lms {
-            l: FreeChannel::new(l),
-            m: FreeChannel::new(m),
-            s: FreeChannel::new(s),
+            l: FreeChannel::new_const(l),
+            m: FreeChannel::new_const(m),
+            s: FreeChannel::new_const(s),
             model: PhantomData,
         }
     }

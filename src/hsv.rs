@@ -2,7 +2,7 @@
 
 use crate::channel::cast::ChannelFormatCast;
 use crate::channel::{
-    AngularChannel, AngularChannelScalar, ChannelCast, ColorChannel, PosNormalBoundedChannel,
+    AngularChannel, AngularChannelScalar, ChannelCast, PosNormalBoundedChannel,
     PosNormalChannelScalar,
 };
 use crate::color;
@@ -51,11 +51,11 @@ where
     A: AngularChannelScalar,
 {
     /// Construct an Hsv instance from hue, saturation and value
-    pub fn new(hue: A, saturation: T, value: T) -> Self {
+    pub const fn new(hue: A, saturation: T, value: T) -> Self {
         Hsv {
             hue: AngularChannel::new(hue),
-            saturation: PosNormalBoundedChannel::new(saturation),
-            value: PosNormalBoundedChannel::new(value),
+            saturation: PosNormalBoundedChannel::new_const(saturation),
+            value: PosNormalBoundedChannel::new_const(value),
         }
     }
 
