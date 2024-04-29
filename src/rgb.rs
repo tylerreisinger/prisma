@@ -484,12 +484,12 @@ mod test {
     #[test]
     fn test_hue() {
         let c1 = Rgb::new(1.0_f32, 0.0, 0.0);
-        assert_ulps_eq!(c1.get_hue(), Deg(0.0));
-        assert_ulps_eq!(Rgb::new(0.0, 1.0_f32, 0.0).get_hue(), Deg(120.0));
-        assert_ulps_eq!(Rgb::new(0.0, 0.0_f32, 1.0).get_hue(), Deg(240.0));
-        assert_relative_eq!(Rgb::new(0.5, 0.5, 0.0).get_hue(), Deg(60.0), epsilon = 1e-6);
+        assert_ulps_eq!(c1.get_hue::<Deg<f32>>(), Deg(0.0));
+        assert_ulps_eq!(Rgb::new(0.0, 1.0_f32, 0.0).get_hue::<Deg<f32>>(), Deg(120.0));
+        assert_ulps_eq!(Rgb::new(0.0, 0.0_f32, 1.0).get_hue::<Deg<f32>>(), Deg(240.0));
+        assert_relative_eq!(Rgb::new(0.5, 0.5, 0.0).get_hue::<Deg<f32>>(), Deg(60.0), epsilon = 1e-6);
         assert_relative_eq!(
-            Rgb::new(0.5, 0.0, 0.5).get_hue(),
+            Rgb::new(0.5, 0.0, 0.5).get_hue::<Deg<f32>>(),
             Deg(300.0),
             epsilon = 1e-6
         );

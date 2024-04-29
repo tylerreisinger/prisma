@@ -381,12 +381,18 @@ mod test {
 
     #[test]
     fn test_get_hue() {
-        assert_ulps_eq!(Hsv::new(Deg(120.0), 0.25, 0.75).get_hue(), Deg(120.0));
         assert_ulps_eq!(
-            Hsv::new(Deg(180.0_f32), 0.35, 0.55).get_hue(),
+            Hsv::new(Deg(120.0), 0.25, 0.75).get_hue::<Deg<f32>>(),
+            Deg(120.0)
+        );
+        assert_ulps_eq!(
+            Hsv::new(Deg(180.0_f32), 0.35, 0.55).get_hue::<Rad<f32>>(),
             Rad(consts::PI)
         );
-        assert_ulps_eq!(Hsv::new(Turns(0.0), 0.00, 0.00).get_hue(), Rad(0.0));
+        assert_ulps_eq!(
+            Hsv::new(Turns(0.0), 0.00, 0.00).get_hue::<Rad<f32>>(),
+            Rad(0.0)
+        );
     }
 
     #[test]

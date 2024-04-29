@@ -384,8 +384,8 @@ mod test {
     #[test]
     fn test_get_hue() {
         let c1 = Lchuv::<_, D65, _>::new(22.0, 98.0, Deg(120.0));
-        assert_relative_eq!(c1.get_hue(), Deg(120.0));
-        assert_relative_eq!(c1.get_hue(), Turns(1.0 / 3.0));
+        assert_relative_eq!(c1.get_hue::<Deg<f32>>(), Deg(120.0));
+        assert_relative_eq!(c1.get_hue::<Turns<f32>>(), Turns(1.0 / 3.0));
     }
 
     #[test]
